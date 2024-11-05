@@ -1,0 +1,15 @@
+- spr. czemu wolno sie przesuwa
+
+Potencjalne rzeczy : 
+- Bajt z hunger dla MobileObject zawiera dane jakieœ
+- Quest editor (nazwy na questy?)
+- Max number of conversations (256 slots + 64 default monster slots)
+- POPping check? czy nie wyjdzie np stack ponad 400
+- Zapisywanie stringów jest niby OK
+
+Notatki : 
+- Damage Trap flags = ?
+- Triggers enchanted = ?
+- StringBlock 9 size (Text traps) determined by level count
+
+- UW2 x_skills!

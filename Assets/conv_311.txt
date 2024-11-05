@@ -1,0 +1,93 @@
+Conversation 311: 
+Unk00 : 2088, Unk02: 0, CodeSize : 9. Unk06 : 0, Unk08 : 0, StringBlock : 3895, MemorySlots : 32, ImportedGlobals : 82
+Functions : 
+Length : 17,	Name : find_barter_total,	ID : 50,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : find_barter,	ID : 49,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : find_inv,	ID : 48,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : x_obj_stuff,	ID : 47,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : x_obj_pos,	ID : 46,	Unk : 1,	Type : function,	Return : void
+Length : 07,	Name : x_traps,	ID : 45,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : x_skills,	ID : 44,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : set_attitude,	ID : 43,	Unk : 1,	Type : function,	Return : void
+Length : 13,	Name : remove_talker,	ID : 42,	Unk : 1,	Type : function,	Return : void
+Length : 14,	Name : add_to_npc_inv,	ID : 41,	Unk : 1,	Type : function,	Return : void
+Length : 17,	Name : take_from_npc_inv,	ID : 40,	Unk : 1,	Type : function,	Return : void
+Length : 12,	Name : place_object,	ID : 39,	Unk : 1,	Type : function,	Return : void
+Length : 17,	Name : set_race_attitude,	ID : 38,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : gronk_door,	ID : 37,	Unk : 1,	Type : function,	Return : int
+Length : 18,	Name : set_likes_dislikes,	ID : 36,	Unk : 1,	Type : function,	Return : void
+Length : 05,	Name : pause,	ID : 35,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : do_decline,	ID : 34,	Unk : 1,	Type : function,	Return : void
+Length : 12,	Name : do_judgement,	ID : 33,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : end_barter,	ID : 32,	Unk : 1,	Type : function,	Return : void
+Length : 15,	Name : setup_to_barter,	ID : 31,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : count_inv,	ID : 30,	Unk : 1,	Type : function,	Return : int
+Length : 15,	Name : set_inv_quality,	ID : 29,	Unk : 1,	Type : function,	Return : int
+Length : 17,	Name : check_inv_quality,	ID : 28,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : do_inv_delete,	ID : 27,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : do_inv_create,	ID : 26,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : do_demand,	ID : 25,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : do_offer,	ID : 24,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : identify_inv,	ID : 23,	Unk : 1,	Type : function,	Return : int
+Length : 16,	Name : take_id_from_npc,	ID : 22,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : take_from_npc,	ID : 21,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : give_ptr_npc,	ID : 20,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : give_to_npc,	ID : 19,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : show_inv,	ID : 18,	Unk : 1,	Type : function,	Return : int
+Length : 03,	Name : sex,	ID : 17,	Unk : 1,	Type : function,	Return : string
+Length : 09,	Name : set_quest,	ID : 16,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : get_quest,	ID : 15,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : game_mins,	ID : 31,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : game_days,	ID : 30,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : game_time,	ID : 29,	Unk : 1,	Type : variable,	Return : int
+Length : 13,	Name : riddlecounter,	ID : 28,	Unk : 1,	Type : variable,	Return : int
+Length : 13,	Name : dungeon_level,	ID : 27,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_name,	ID : 26,	Unk : 1,	Type : variable,	Return : string
+Length : 09,	Name : npc_level,	ID : 25,	Unk : 1,	Type : variable,	Return : int
+Length : 12,	Name : npc_talkedto,	ID : 24,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_gtarg,	ID : 23,	Unk : 1,	Type : variable,	Return : int
+Length : 12,	Name : npc_attitude,	ID : 22,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_goal,	ID : 21,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_power,	ID : 20,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_arms,	ID : 19,	Unk : 1,	Type : variable,	Return : int
+Length : 06,	Name : npc_hp,	ID : 18,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_health,	ID : 17,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_hunger,	ID : 16,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_whoami,	ID : 15,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_yhome,	ID : 14,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_xhome,	ID : 13,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : play_sex,	ID : 12,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_drawn,	ID : 11,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_poison,	ID : 10,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_name,	ID : 9,	Unk : 1,	Type : variable,	Return : string
+Length : 14,	Name : new_player_exp,	ID : 8,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_level,	ID : 7,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_mana,	ID : 6,	Unk : 1,	Type : variable,	Return : int
+Length : 07,	Name : play_hp,	ID : 5,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_power,	ID : 4,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_arms,	ID : 3,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_health,	ID : 2,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_hunger,	ID : 1,	Unk : 1,	Type : variable,	Return : int
+Length : 07,	Name : respond,	ID : 14,	Unk : 1,	Type : function,	Return : void
+Length : 03,	Name : say,	ID : 13,	Unk : 1,	Type : function,	Return : void
+Length : 03,	Name : val,	ID : 12,	Unk : 1,	Type : function,	Return : int
+Length : 06,	Name : length,	ID : 11,	Unk : 1,	Type : function,	Return : int
+Length : 04,	Name : find,	ID : 10,	Unk : 1,	Type : function,	Return : int
+Length : 04,	Name : copy,	ID : 9,	Unk : 1,	Type : function,	Return : string
+Length : 06,	Name : append,	ID : 8,	Unk : 1,	Type : function,	Return : string
+Length : 08,	Name : contains,	ID : 7,	Unk : 1,	Type : function,	Return : int
+Length : 06,	Name : plural,	ID : 6,	Unk : 1,	Type : function,	Return : string
+Length : 06,	Name : random,	ID : 5,	Unk : 1,	Type : function,	Return : int
+Length : 07,	Name : compare,	ID : 4,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : babl_ask,	ID : 3,	Unk : 1,	Type : function,	Return : int
+Length : 05,	Name : print,	ID : 2,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : babl_fmenu,	ID : 1,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : babl_menu,	ID : 0,	Unk : 1,	Type : function,	Return : int
+Code : 
+START
+PUSHI, arg : 300
+ADDSP
+PUSHI, arg : 1
+SAY_OP
+EXIT_OP
+EXIT_OP

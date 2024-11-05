@@ -1,0 +1,98 @@
+Conversations memory debug
+Conversation 1, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34		Corby
+Conversation 2, MemorySlots : 86, ImportedGlobals : 82, Memory PUSHI : 43, priv. variables : 86		Shak
+Conversation 3, MemorySlots : 38, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 38		Goldthirst
+Conversation 4, MemorySlots : 47, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 47		Shanklick
+Conversation 5, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36		Eyesnack
+Conversation 6, MemorySlots : 85, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 85		Marrowsuck
+Conversation 7, MemorySlots : 38, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 38		Ketchaval
+Conversation 8, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34		Retichall
+Conversation 9, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33		Vernix
+Conversation 10, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Lanugo
+Conversation 11, MemorySlots : 33, ImportedGlobals : 81, Memory PUSHI : 32, priv. variables : 33	Thorlson
+Conversation 12, MemorySlots : 39, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 39	Dorna Ironfist
+Conversation 13, MemorySlots : 43, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 43	Morlock
+Conversation 14, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 35, priv. variables : 36	Dr. Owl
+Conversation 15, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Sseetharee
+Conversation 16, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 35, priv. variables : 36	Ishtass
+Conversation 17, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 34, priv. variables : 35	Sethar Strongarm
+Conversation 18, MemorySlots : 40, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 40	Lakshi Longtooth
+Conversation 19, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34	Hagbard
+Conversation 20, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Gulik
+Conversation 21, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Steeltoe
+Conversation 22, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34	golem
+Conversation 23, MemorySlots : 39, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 39	Judy
+Conversation 24, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	prisoner
+Conversation 25, MemorySlots : 37, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 37	Door
+Conversation 26, MemorySlots : 35, ImportedGlobals : 81, Memory PUSHI : 32, priv. variables : 35	Celaven
+Conversation 27, MemorySlots : 39, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 39	Garamon
+Conversation 28, MemorySlots : 71, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 71	Zak
+Conversation 64, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Jaacar
+Conversation 65, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Eb
+Conversation 66, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Drog
+Conversation 67, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Bragit
+Conversation 88, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Brawnclan
+Conversation 89, MemorySlots : 37, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 37	Hewstone
+Conversation 90, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Ironwit
+Conversation 112, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	bandit
+Conversation 113, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	head bandit
+Conversation 114, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Iss'leek
+Conversation 115, MemorySlots : 33, ImportedGlobals : 81, Memory PUSHI : 32, priv. variables : 33	? Crazy Bob
+Conversation 136, MemorySlots : 77, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 77	Oradinar
+Conversation 137, MemorySlots : 82, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 82	Linnet
+Conversation 138, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Derek
+Conversation 139, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Trish
+Conversation 140, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Ree
+Conversation 141, MemorySlots : 41, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 41	Fenzor
+Conversation 142, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Rodrick
+Conversation 143, MemorySlots : 38, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 38	Biden
+Conversation 144, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Rawstag
+Conversation 146, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Doris
+Conversation 147, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Kyle
+Conversation 148, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Cecil
+Conversation 149, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Meredith
+Conversation 161, MemorySlots : 59, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 59	Anjor
+Conversation 162, MemorySlots : 43, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 43	Kneenibble
+Conversation 184, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Delanrey
+Conversation 185, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Nilpont
+Conversation 186, MemorySlots : 36, ImportedGlobals : 81, Memory PUSHI : 32, priv. variables : 36	Folina
+Conversation 187, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	Illomo
+Conversation 188, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Gralwart
+Conversation 189, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Shenilor
+Conversation 190, MemorySlots : 37, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 37	Bronus
+Conversation 191, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Ranthru
+Conversation 192, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Fyrgen
+Conversation 193, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Louvnon
+Conversation 194, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34	Dominus
+Conversation 208, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34	Cardon
+Conversation 209, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	guard
+Conversation 210, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 35, priv. variables : 36	Naruto
+Conversation 211, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35	Dantes
+Conversation 212, MemorySlots : 37, ImportedGlobals : 82, Memory PUSHI : 36, priv. variables : 37	Kallistan
+Conversation 213, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Fintor
+Conversation 214, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34	Bolinard
+Conversation 215, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34	Smonden
+Conversation 216, MemorySlots : 40, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 40	guard
+Conversation 217, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 34, priv. variables : 35	Gurstang
+Conversation 218, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Griffle
+Conversation 219, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	guard
+Conversation 220, MemorySlots : 38, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 38	guard
+Conversation 221, MemorySlots : 45, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 45	imp
+Conversation 222, MemorySlots : 36, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 36	guard
+Conversation 231, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33	Tyball
+Conversation 232, MemorySlots : 37, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 37	Carasso
+Conversation 262, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35
+Conversation 263, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35
+Conversation 268, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35
+Conversation 272, MemorySlots : 35, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 35
+Conversation 276, MemorySlots : 79, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 79
+Conversation 277, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34
+Conversation 278, MemorySlots : 79, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 79
+Conversation 280, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 33, priv. variables : 34
+Conversation 281, MemorySlots : 34, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 34
+Conversation 282, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33
+Conversation 288, MemorySlots : 40, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 40
+Conversation 291, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33
+Conversation 295, MemorySlots : 51, ImportedGlobals : 81, Memory PUSHI : 50, priv. variables : 51
+Conversation 297, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33
+Conversation 314, MemorySlots : 33, ImportedGlobals : 82, Memory PUSHI : 32, priv. variables : 33

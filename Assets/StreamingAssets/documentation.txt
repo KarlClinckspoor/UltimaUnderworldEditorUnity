@@ -1,0 +1,1433 @@
+Ultimate Underworld Editor Documentation.
+
+1) Main editor view
+1.1) Controls
+1.2) Modes panel
+1.3) Object mode
+1.4) Tile mode
+1.5) Texture mode
+1.6) Player start object
+2) Top menu bar
+2.1) File menu
+2.2) Levels menu
+2.3) Objects menu
+2.4) Graphics menu
+2.5) Strings menu
+2.6) NPC's menu
+3) Conversation editor
+3.1) Main view
+3.2) Right panel
+3.3) Conversation nodes
+3.4) Conversation node conditions
+3.5) Conversation flow
+3.6) Variable types
+3.7) Arrays
+3.8) Operators
+3.9) If and endif
+3.10) Functions
+3.11) Text replacements
+4) Objects
+4.1) Object properties panel
+4.2) Doors
+4.3) Triggers
+4.4) Traps
+4.5) Monsters
+4.6) Object properties
+4.7) Object ID's
+5) Limitations
+6) Unknown features
+7) Possible features
+8) Contact
+
+
+1) Main editor view
+1.1)	Controls
+		Camera movement is controlled by W/S/A/D keys. 
+		Zoom in and ouy by Q/E keys
+		Depending on which mode you are in, mouse LMB and RMB will do different things (check modes below).
+1.2)	Modes panel
+		Bottom left of main editor view is a panel in which you can select editor mode and change levels.
+1.3)	Object mode
+		In this mode you can move objects by dragging them with LMB, or select them by clicking LMB over them.
+		If you drag an object, you will get a green shadow object that tells you where the object will be placed
+		after drag. If you release LMB over an object which is a container (e.g. sack or chest) or over an object
+		that "accepts" other objects (some traps or triggers accepts other traps, wands accept spells, etc.), 
+		it will be added to it's inventory.
+		You can spawn context menu by clicking RMB over a tile or an existing object. This can be used to
+		add new objects, remove objects, select an object within other object's inventory, and other things.
+1.4)	Tile mode
+		In this mode you can edit level layout by "painting" tiles or selecting a tile and changing it's properties.
+		Clicking LMB over a tile will select this tile and display it's properties. Holding RMB will "paint" tile
+		with a template that is displayed over modes panel. Using scroll wheel over a tile will change tile height.
+1.5)	Texture mode
+		In this mode you can paint tiles with new textures, selected in a panel over modes panel. If you want only
+		floors or only walls to be changed, use toggles to determine which will be changed.
+1.6)	Player start object
+		After loading data camera will center over a "happy face" - that is a player start. This can't be changed
+		unfortunately (player starting position is hard coded in game).
+	
+2) Top menu bar
+2.1)	File Menu
+		2.1a)	UW File Path 
+				Runs a file explorer for finding LEV.ARK in Data in Ultima Underworld folder. You need to use "Load" after that to load
+				data into editor.
+		2.1b)	Load
+				Loads data from UW files to editor.
+		2.1c)	Save
+				Save edited data to UW files.
+		
+
+2.2)	Levels Menu
+		2.2a)	Clear Levels
+				Erases all map data and / or conversation data. After clearing you have 9 empty levels (except starting position in 
+				level 1 which needs to be open).
+		2.2b)	Key editor
+				Used to change key descriptions. ID of key is used in object properties.
+		2.2c)	Mantra editor
+				Used to change mantras.
+		
+2.3)	Objects menu
+		2.3a)	Level Objects
+				Displays a list of objects within current level. Clicking on an object will center camera over it.
+				Object number is also reffered as object "adress".
+				Object count - how much objects is in current level (including monsters).
+				Active mobs - how much active (green) mobs (monsters) are in current level.
+				Static counter & mobile counter - debug info.
+				Prev - adress of a "previous" object in master object list (for debugging)
+				Green objects on list are "active" monsters (monsters that are on map, not within a "create object trap".
+				Yellow objects are animated objects.
+		2.3b)	Add Object
+				Creates a list of objects to spawn in a center of camera. You can also add objects by clicking RMB in
+				object mode inside level.
+		2.3c)	Object Editor
+				Used to edit some of properties of objects. Some of these properties are unknown, but most can be changed
+				(especially monsters).
+				In game description - item name in game. A "_" is used to determine when the actual item name starts. A "&"
+				is used to determine it's plural form.
+				Pickup flag - if toggled, item can be picked up.
+				Is talisman - if toggled, item is considered a talisman (don't know what that specifically means, maybe
+				can't be lost in water?)
+				Quality enabled - if toggled, item will be considered desctructible (if possible) and will display quality
+				if looked at. Quality type is chosen in "Quality description".
+				Height - used mostly for monsters and 3D models.
+				Weapon properties :
+					Slash / Bash / Stab - damage values added for each attack type
+					Unknown values x 3 - ?
+					Skill - skill used for this weapon
+					Durability - probability for this weapon to be damaged. 255 - indestructible
+				Projectile properties
+					Damage & 2 Unknown properties (maybe speed?)
+				Ranged properties
+					Ammo - ID of object to shoot, 0 - stone, 1 - bolt, 2 - arrow, 255 - none?
+					Four objects are not used (use jeweled bow sprite) 
+				Armour properties
+					1 unknown property.
+					Three objects are not used (use iron ring sprite)
+				Monster properties
+					Attack - not sure what this means, attacks are also stored later.
+					Experience - experience gained from killing.
+					Equipment damage - chance for this monster to damage your stuff.
+					Monster sprite - sprite used by this monster. Probably not wise to change monsters that have more animations
+					(like goblins - shooting animations) for sprites that lack these.
+					Sprite palette - colour variants for monsters that use the same sprites.
+					Attacks - three types of attacks of monster. 
+					Inventory - for looting or bartering. Two seem to be "always" and two "randomized" but I did not checked this.
+				Container properties
+					Slots - don't know what this does.
+		2.3d)	Wall & Floor editor
+				Used to change descriptions of looking and general type of wall / floor. Useful for creating "water" type terrain.
+				
+2.4)	Graphics
+		2.4a)	Level Floors
+				Changes floor textures current level can use. In UW, each level can have maximum of 10 different floor textures.
+				You can select them from "loaded" floor textures.
+		2.4b)	Level Walls		
+				Changes wall textures current level can use. In UW, each level can have maximum of 42 different wall textures.
+				You can select them from "loaded" wall textures.
+		2.4c)	Level Doors
+				Changes door textures current level can use. Each level can have up to 6 different door types (excluding
+				secret and portcullis). Last door texture is used for an always massive door variant.
+		2.4d)	Floors, Walls and Doors
+				Changes textures "loaded" into game data. You can add more textures, to maximum of 256 floor, wall or door textures.
+				Textures can be loaded from external PNG files, put them in /Textures/Floors or /Textures/Walls or /Textures/Doors
+				folder. Floor textures must	have a 32x32 resolution, walls must have 64x64 and doors 32x64 (bigger will be cut). 
+				After loading into game, the colors might change slightly, because of UW palette used for textures.
+		2.4e)	Switches / Levers and Other
+				Changes other textures, like levers, switches, buttons, dial levers, writings, graves, bridges, pillars etc.
+				These textures must have the same resolution as original (use Export To PNG to check all textures and their
+				resolutions).
+		2.4f)	Generic Portraits
+				Changes portraits used in "generic" conversations (non NPC's like goblins, mountainmen, lizardmen). Each
+				portrait is matched to a monster, check the descriptions.
+		2.4g)	NPC Portraits
+				Changes NPC ("named" monsters) portraits. Each portrait is matched to NPC's ID (or conversation ID). You
+				can add up to 64 (possibly?) portraits. NPC's with higher ID's will use generic portraits.
+		2.4h)	Object Graphics
+				Changes item / object graphics (sprites). New graphics must have the same resolution (most are 16x16 with
+				the exception for fountain and monster remains). After picking new graphic, you also need to choose 
+				internal UW palette for that graphic (UW use these palettes for sprites, each have only 16 colors).
+		2.4i)	Export To PNG
+				Exports default UW (not changed after using this program) graphics. This includes floors, walls, doors,
+				levers, "other graphics", portraits and objects.
+2.5)	Strings
+		2.5a)	String list
+				Used for checking / and changing in game strings (almost all string data from game is modifiable). 
+				For keys and mantras use key and mantra editor in "Objects" menu. Scrolls, books, wall writings
+				are handled automatically when creating / removing these type of objects. Conversation strings are also
+				stored here (updated after succesfully compiling a conversation).
+2.6)	NPC's
+		2.6a)	Play conversation
+				Runs a simulation (almost perfect) of in-game conversation with an NPC. This can be used to debug
+				own conversations, or check existing conversations. When an internal function is called in conversation, 
+				a popup window will appear and you can input a value that normally would be "calculated" in game.
+				Debug mode & single code processing - for debugging.
+				Clean conversation - resets the progress of conversation to 0.
+				Parameters - changes the starting conversation parameters (really only useful is attitude, and in some
+				instances game time / days / mins).
+		2.6b)	Add conversation
+				Adds a new empty conversation slot ready to be edited.
+		2.6c)	Edit conversation
+				Runs conversation editor, explained in 3).
+		2.6d)	Delete conversation
+				Deletes conversation and all strings of that conversation.
+
+3)	Conversation Editor
+	This is a resizable and movable window.
+	3.1)	Main view
+			In here you add new conversation nodes, and connect them. This is controlled by dragging LMB or using W/S/A/D keys.
+			Use RMB on it to add a new conversation node.
+			
+	3.2)	Right panel
+			NPC Name - used to name an NPC. This will save only after succesful compiling.
+			Saved variables count - the number of conversation variables that will be saved after finishing conversation.
+			Saved variables - used for naming these variables.
+			Barter strings - used for changing default barter dialogue.
+			Liked & Disliked items - used for adding items or categories of items that NPC will favour / ignore in barter.
+			Find start - used to quickly find starting node.
+			Find node - used to find any node by it's name.
+			Save -	saves this conversation to a file to be edited after. This DOES NOT save conversation to game, just saves
+					conversation for editing purposes.
+			Compile - compiles the conversation. If succesful, when saving game data this will be also loaded in game files.
+			
+	3.3)	Conversation nodes
+			This is where you program your conversation. You can move them around and link them by clicking on "output"
+			(orange) circles or "input" (blue) circles. 
+			Right clicking on a node (not the input field, but the border / main panel) will create context menu.
+			Node name can be changed by clicking on it.
+			
+	3.4)	Conversation node conditions
+			Each node can have multiple "conditions" or "outputs" that can lead to different nodes. You can add them by
+			clicking RMB over a node (not it's input field) and choosing "Add condition". This will add another smaller
+			input field and a orange circle right of node. Clicking on this orange circle will create another context menu.
+			Remove if statement - removes the input field (the condition will always be true).
+			
+	3.5)	Conversation flow
+			Conversation starts in a "staring" node (which you define by RMB clicking on a normal (green) node and choosing
+			"set as conversation start". It then reads all code within it's main input field. Then, if there are conditions, 
+			it will start from the top condition and go through to bottom condition. First it checks if the condition is true
+			(the input field is filled with any kind of condition, or erased completely). If it is, then the conversation jumps
+			to the node that condition is leading. If no conditions are true, or there are no conditions on the current node,
+			the conversation will end.
+			
+	3.6)	Variable types
+			There are couple of variable types used in conversation editor. 
+			- "Saved variables" - these variables are global and will be saved after conversation ends.
+			Saved variables are defined only on "Saved variables" menu.
+			- "Global variables" - these variables are global but are not saved after conversation ends.
+			Global variables can only be defined in starting node. Example : 
+			
+			global Pos
+			
+			This will create global variable called "pos".
+			- "Local variables" - these variables are not global, and will only be valid within ONE node.
+			Example : 
+			
+			local att
+			
+			This will create local variable called "att".
+			One special global variable is called "response" and thus this name can't be used. It is used
+			to store player responses.
+			
+	3.7)	Arrays
+			You can define arrays by using word "array" after declaring the type of a variable. Then you add [n]
+			where n is array length. Example:
+			
+			global array InvPos[4]
+			local array invIds[4]
+			
+			After declaration you get particular array element by adding [n] where n is array element (0 index based)
+			Example:
+			
+			local pos = invPos[0]
+			
+	3.8)	Operators
+			Supported operations are : 
+			sum : +
+			substraction : -
+			multiplication : *
+			division : /
+			modulo : %
+			Logical operations : 
+			or : |
+			and : &
+			not : !
+			Comparison operations :
+			==, !=, >, <, >=, <=
+			
+	3.9)	If and endif
+			These are used to compare variables. "If" must be closed by an "endif". Example : 
+			
+			local pos = 2
+			local other
+			if (pos == 2)
+				other = 10
+			endif
+			if (other > pos)
+				pos = pos + 1
+			endif
+			
+	3.10)	Functions
+			
+			void Say(string str)
+				Most common function used for NPC to say something. Example : 
+				
+				Say("Hello world!")
+				
+			void Responses(string resp_a, ..., resp_d)
+				Stops conversation and creates a menu for player to choose one of up to four responses. Example : 
+				
+				Responses("Hello to you too!", "Hey dude", "Who are you?", "Die monster!")
+				
+				It then stores the response in "response" variable. This is "1" based! So if player chooses "Hello
+				to you too!" response will be 1. Example:
+				
+				Say("Hello world!")
+				Responses("Hello to you too!", "Hey dude", "Who are you?", "Die monster!")
+				if(response == 1)
+					Say("Nice to see you!")
+				endif
+				if(response == 2)
+					Say("Yo")
+				endif
+				if(response == 3)
+					Say("Why I'm the great Murad of Bolothia, how you have never heard of me?")
+				endif
+				if(response == 4)
+					Say("Wait, wha...")
+				endif
+			
+			void ResponsesIf(condition cond_a, ..., cond_d)
+				The same as "Responses" but uses "conditions" instead of plain strings. Condition is a string followed by
+				variable (or not, if required). Example : 
+				
+				Responses("Hello to you too!", "Hey dude" if pos, "Who are you?" if other, "Die monster!")
+				
+				It checks variables if are greater than 0. If true, that response will be printed, if not, it will not be printed.
+				In this example, if pos and other is 0, there will be only two responses (first and fourth).
+		
+			void Jump(string nodeName)
+				Instantly moves conversation to another node. Example : 
+				
+				Say("Hello world!")
+				Responses("Hello to you too!", "Hey dude", "Who are you?", "Die monster!")
+				if(response == 1)
+					Jump("Node 10")
+				endif			
+				
+			void End()
+				Ends conversation. This is not required most of the time - conversation will end itself when reaching
+				end of node and no conditions are met or present.
+				
+			void Description(string str)
+				The same as "Say", but the string printed is in black font, in UW this is used to describe something 
+				going on around the conversation.
+				
+			int Ask()
+				This will stop conversation and ask player for input. Used in UW's for asking for passwords and in Murgo
+				conversation. Can be used to get integer values too, and then converted to integers by "ValueOf".
+				This returns the pointer to the string that player had input. Example:
+				
+				Say("Stop right there, what's the password!")
+				local pass = Ask()
+				local comp = Compare("Kamehameha", pass)
+				if(comp == 1)
+					Jump("Node 2")
+				endif
+				
+			int Compare(string str, int ptr)
+				This will compare a string to a previously inputted (is this a word?) string. For usage see "Ask".
+				Returns 1 if strings are identical, otherwise 0.
+				
+			int Contains(string str, int ptr)
+				The same as "Compare", but checks if the string contains another, not if they are equal.
+				
+			int Random(int max)
+				Generates random value from 1 to max. Example
+				
+				local rnd = Random(64)
+				if(rnd > 40)
+					Jump("Node 4")
+				endif
+			
+			int ValueOf(int ptr)
+				Converts string to an integer value. Used with "Ask". If string is not a integer, it will return 0.
+				Example : 
+				
+				local val = Ask()
+				val = ValueOf(val)
+				if(val == 2)
+					Jump("Node 4")
+				endif
+				
+			int GetAttitude()
+				Returns current NPC attitude. 0 - hostile, 1 - upset, 2 - mellow, 3 - friendly. Example:
+				local att = GetAttitude()
+				if(att == 3)
+					Jump("Node 10")
+				endif
+				
+			int GetTalked()
+				Returns 1 if already talked to that NPC.
+				
+			int GetHomeX()
+			int GetHomeY()
+				Returns the X/Y of NPC "Home" (the tile that NPC will always try to come back)
+				
+			int GetProperty(string propName)
+				Returns current value of a NPC property, possible values : 
+				"game_mins":		minutes passed ? 
+				"game_days": 		in game days passed?
+				"game_time": 		?
+				"riddlecounter": 	?
+				"dungeon_level": 	current dungeon level
+				"npc_name": 		pointer to NPC name string
+				"npc_level": 		NPC level (?)
+				"npc_talkedto": 	if already talked to NPc
+				"npc_gtarg": 		NPC target (1 - player)
+				"npc_attitude": 	NPC attitude
+				"npc_goal": 		NPC current behaviour (check objects to see what it means)
+				"npc_power": 		?
+				"npc_arms": 		?
+				"npc_hp": 			NPC current HP
+				"npc_health": 		?
+				"npc_hunger": 		?
+				"npc_whoami": 		NPC ID
+				"npc_yhome": 		NPC Home X
+				"npc_xhome": 		NPC Home Y
+				"play_sex": 		?
+				"play_drawn": 		If player weapons is drawn?
+				"play_poison": 		?
+				"play_name": 		pointer to player name string
+				"new_player_exp": 	gained XP ?
+				"play_level": 		player level?
+				"play_mana": 		player current mana
+				"play_hp": 			player current HP
+				"play_power": 		?
+				"play_arms":		?
+				"play_health": 		? something with poison?
+				"play_hunger": 		?
+				
+			void SetProperty(string propName, int val)
+				Sets the property to a value, check "GetProperty" to see possible values.
+				
+			int GetQuest(int questID)
+				Returns 0 or 1 for the given quest ID (from 0 to 31) or 0 to 4 for quest ID 32
+				
+			void SetQuest(int questID, int val)
+				Sets the quest with the given ID to a value. Quests from 0 to 31 - only 0/1 possible (I don't
+				know what will happen if set to higher values)
+				
+			int GetSex(string male, string female)
+				Adds two strings to conversation string list and checks what sex is player character. Returns a pointer 
+				to the valid string. Example:
+				
+				local sex = GetSex("lad", "lass")
+				Say("Hello $S:sex")
+				
+			int ArrayContains(array arr, int val)
+				Checks if an array contains a value, returns the index of array element which contains this (1 based), or 
+				0 if did not find. Example : 
+				
+				local array invPos[4]
+				local index = ArrayContains(invPos, 1)
+				if(index > 0)
+					Jump("Node 3")
+				endif
+				
+			int GetInventorySlots(array invIds, array invPos)
+				Checks the "barter" area for items. Fills the provided arrays (must be 4 in size) with values found. The first
+				(invIds) will be filled by object ID's found, the second (invPos) will be filled by objects master list
+				positions found. It returns the number of objects found. Example : 
+				
+				local array invPos[4]
+				local array invIds[4]
+				local slots = GetInventorySlots(invIds, invPos)
+				if(slots == 0)			//No items found
+					Say("No item found.")
+					End()
+				endif
+				if(slots > 1)			//More than one item found
+					Say("More than one item found")
+					Jump("Multiple")
+				endif
+				local pos = invPos[0]	//Getting the only item found in the barter area
+				local id = invIds[0]
+				
+			int FindItemInBarter(int id)
+				Searches the "barter" area for an item with specific ID. If found, it returns it's position in object
+				master list. Example:
+				
+				local pos = FindItemInBarter(161)	//Gold coins
+				local count = CountItem(pos)		//Checking how many gold coins
+				
+			int FindItem(int id, int inventoryType)
+				Searches specific inventory (not barter area) for an item with specific ID. 
+				If inventoryType = 0, it searches NPC inventory.
+				If inventoryType = 1, it searches player inventory.
+				Example:
+				
+				local pos = FindItem(186, 1)		//Bottle of ale
+				
+			int CountItem(int masterPosition)
+				Returns item quantity of an item with master list position provided. Check "FindItemInBarter" for example use.
+				
+			int GiveMany(array itemPos, int itemCount)
+				Transfers items to NPC inventory. Items master list position is stored in itemPos array. ItemCount is number of
+				items to transfer (number of items in array to transfer). It returns 1 if transfered something, or 0 if 
+				transfered nothing. Example: 
+				
+				local array invPos[4]
+				local array invIds[4]
+				local slots = GetInventorySlots(invIds, invPos)
+				if(slots > 1)
+					local result = GiveMany(invPos, slots)
+					if(result == 1)
+						Say("Thanks for these items!")
+						Jump("Node2")
+					endif
+				endif
+				
+			int GiveItem(int itemPos, int quantity)
+				Transfers a single item to NPC inventory. itemPos - item master list position. Quantity - seems to not work
+				in UW anyway, -1 to ignore quantity - transfer whole item. But it always transfers all, so...
+				Returns 1 if transfered item, or 0 if not. Example:
+				
+				local array invPos[4]
+				local array invIds[4]
+				local slots = GetInventorySlots(invIds, invPos)
+				if(slots == 1)
+					if(invIds[0] == 168)		//Amulet
+						GiveItem(invPos[0], -1)	//Ignoring return value, don't need this
+						Jump("_Test_Amulet")
+					endif
+					Jump("_NotFound_Amulet")
+				endif
+				if(slots > 1)
+					local index = ArrayContains(invIds, 168)
+					if(index > 0)
+						index = index - 1
+						GiveItem(invPos[index], -1)
+						Jump("_Test_Amulet")
+					endif
+					Jump("_NotFound_Amulet")
+				endif
+				
+			int TakeItemByPos(int itemPos)
+				Transfers an item from NPC inventory to player. itemPos - item master list position. Returns 1 if succesfully
+				transfered item, or 2 if player has no capacity to carry this item. Example:
+				
+				local applePos = FindItem(179, 0)
+				if(applePos > 0)
+					local result = TakeItemByPos(applePos)
+					if(result == 1)
+						Responses("Thanks for this apple")
+						End()
+					endif
+					if(result == 2)
+						Say("I'll place this item here")
+						Responses("Thanks for this apple")
+						End()
+					endif
+				endif
+				
+			int TakeItemByID(int itemId)
+				Transfers an item from NPC inventory to player, by ID. Also you can pass an item "category" to get items.
+				1000 - weapons
+				1001 - projectiles & ranged weapons
+				1002 - armour
+				1003 - rings & shields
+				1008 - containers
+				1009 - light & wands
+				1010 - treasures
+				1011 - food & drink
+				1019 - books & scrolls
+				Returns 1 if succesfully transfered item, or 2 if player has no capacity to carry this item. Example:
+				
+				local result = TakeItemByID(144)
+				if(result == 1)
+					Responses("Thanks for this lantern")
+					End()
+				endif
+				if(result == 2)
+					Say("I'll place this here")
+					Responses("Thanks for this lantern")
+					End()
+				endif			
+				
+			int GetNPCItemPos(int itemIndex)
+				Gets a master list position of an item from NPC inventory. ItemIndex - which item from 0 to n in NPC inventory to get.
+				It returns 0 if an item does not exist. For example, if NPC has got two items (a fish & a rune), to get fish, you pass
+				0, and to get rune, you pass 1. Useful if you already added something to NPC inventory, and now you want it back. Example:
+				
+				local fishPos = GetNPCItemPos(0)
+				if(fishPos > 0)
+					TakeItemByPos(fishPos)
+				endif
+				
+			int CreateItem(int itemId)
+				Creates item in NPC inventory, by item ID. Item properties are "default" (not enchanted, quantity is on, special (quantity)
+				is 1, quality is 40 (i think). Returns the item master list position. Possibly returns 0 if it fails? (too many items
+				in current level). Example:
+				
+				Responses("Create me an arrow", "Goodbye")
+				if(response == 1)
+					Say("Fine, i'll do it.")
+					int arrow = CreateItem(18)
+					if(arrow > 0)
+						int transfer = TakeItemByPos(arrow)
+						if(transfer == 2)
+							Say("Hey, you don't have enough space in your inventory. Clean it up!")
+						endif
+					endif
+					if(arrow == 0)
+						Say("There are too many item's in this level! And I also broke the fourth wall, sorry about that.")
+					endif
+				endif
+				
+			int RemoveItem(int itemId)
+				Removes item in NPC inventory, by item ID (not master list position). This is used in UW in Shak conversation (he
+				removes broken hilt and blade), and Shanclick (she removes dragon scales and thread). Returns 1 if found item 
+				and removed ? (return value is not used in UW anyway).
+				
+			void PlaceItem(int itemPos, int tile_x, int tile_y)
+				Places an item from NPC inventory into world. itemPos - master list position. Example:
+				
+				global npcPos = 180					//Hard coded NPC object adress
+				local itemPos = FindItem(3, 0)		//Finding a dagger in NPC inventory
+				local npc_x = GetItemQuality(180)	//Monsters store current tile X in quality field (not tested - i'm not sure)
+				local npc_y = GetItemOwner(180)		//							  Y    owner
+				PlaceItem(itemPos, npc_x, npc_y)
+				
+			int HandleDoor(int door_x, int door_y, int actionType)
+				Tries to open or close door at given coordinates. ActionType 0 - tries to open, 1 - tries to close. (Not tested
+				2 - maybe tries to open or close, depending on current state? Door locks have these). Returns 1 if found door?
+				(return values are not used in UW).
+				
+			int GetItemQuality(int itemPos)
+			int GetItemOwner(int itemPos)
+			int GetItemDirection(int itemPos)
+			int GetItemSpecial(int itemPos)
+			int GetItemFlags(int itemPos)
+				Gets the item quality / owner / direction / special / flags value. ItemPos - master list position. Example:
+				
+				Say("Show me the list from John.")
+				Responses("Here", "Sorry, I don't have it")
+				if(response == 1)
+					local scrPos = FindItemInBarter(316)	//Some scroll type
+					if(scrPos > 0)
+						local scrSpecial = GetItemSpecial(scrPos)
+						if(scrSpecial == 515)				//Hard coded "special" value that indicates what scroll it is.
+							GiveItem(scrPos, -1)
+							Say("By the gods, so this is true!")
+							Jump("_List_Given")
+						endif
+						Say("This is not the list I was waiting for!")
+						Jump("_Repeat_Give_List")
+					endif
+					Say("There's nothing here!")
+					Jump("_Repeat_Give_List")
+				endif
+				
+			void SetItemQuality(int itemPos, int value)
+			void SetItemOwner(int itemPos, int value)
+			void SetItemDirection(int itemPos, int value)
+			void SetItemSpecial(int itemPos, int value)
+			void SetItemFlags(int itemPos, int value)
+				Sets the item quality / owner / direction / special / flags value. ItemPos - master list position. Example:
+				
+				Say("I'll have a list for you.")
+				local scrPos = CreateItem(316)		//Not checking if created
+				SetItemSpecial(scrPos, 515)			//Setting this scroll special field so it matches the scroll string
+				TakeItemByPos(scrPos)
+				Responses("Thank you for this!")
+				
+				Note : this is only for special cases if you want an NPC not to have an existing item in his inventory, so that
+				when killed, they will not drop it. Otherwise, you would just create it in editor and put it in NPC inventory, 
+				and then just give itto player, without having to use "CreateItem" or "SetItemSpecial".
+				
+			void IdentifyItem(int itemPos)
+				Sets the item to be identified, by it's master list position.
+				
+			int GetSkill(int skillId)
+			int AddSkill(int skillId)
+				Gets or adds a value and then gets a skill value, by skill ID. Skills are :
+				0 - Attack
+				1 - Defense
+				2 - Unarmed
+				3 - Sword
+				4 - Axe
+				5 - Mace
+				6 - Missile
+				7 - Mana
+				8 - Lore
+				9 - Casting
+				10 - Traps
+				11 - Search
+				12 - Track
+				13 - Sneak
+				14 - Repair
+				15 - Charm
+				16 - Picklock
+				17 - Acrobat
+				18 - Appraise
+				19 - Swimming
+				Add skill adds a random (possibly?) value. When skill is low (below 10) it mostly adds 2-3 points. If higher, it adds 1-2 points.
+				This can be used to create UW2-like trainer NPCs.
+				
+			int GetTrapVariable(int varId)
+			int SetTrapVariable(int varId, int value)
+				Gets or sets a "trap" variable. Trap variable IDs are 0-63 (safe), and can hold a value from 0 to 63 (I think). This is a good
+				alternative to quest variables, because quest variables possibly can be altered by game code, and trap variables not.
+				These are mostly used by "traps" in UW (or rather puzzles), but can store any value for any purpose. I do not recommend
+				using higher values than 63, I did not test what happens then, and in UW all trap variables are lower than 64.
+				
+			void SetRaceAttitude(int race, int attitude, int unknown)
+				Sets attitude for nearby monsters by their "race" / "species". List of possible "race" values : 
+				0 - denizens of the area (?)
+				1 - rotworms
+				2 - slugs
+				3 - bats
+				4 - rats
+				5 - spiders
+				6 - green goblins
+				7 - skeletons
+				8 - imps
+				9 - gray goblins
+				10 - mountainmen
+				11 - lizardmen
+				12 - lurkers
+				13 - knights (all human fighters, but not outcasts)
+				14 - headlesses
+				15 - trolls
+				16 - ghosts
+				17 - ghouls
+				18 - gazers
+				19 - mages
+				20 - golems
+				21 - shadow beasts
+				22 - reapers
+				23 - fire elementals
+				24 - wisps
+				25 - Tyball
+				26 - Slasher of Veils
+				27 - outcasts
+				28 - creatures (?)
+				Attitude 0 - hostile, 1 - upset, 2 - mellow, 3 - friendy.
+				Unknown value - possibly range? In UW values used are : 10 for bandits in level 3, 6 for goblins in level 7.
+				
+			void SetNPCAttitude(int npcId, int attitude)
+				Sets attitude for particular NPC (by it's NPC ID, NOT master list position). Attitude 0 - hostile,
+				1 - upset, 2 - mellow, 3 - friendy.
+				
+			void SetAttitude(int attitude)
+				Set this NPC attitude. Attitude 0 - hostile, 1 - upset, 2 - mellow, 3 - friendy.
+				
+			void RemoveNPC()
+				Removes the NPC from game.
+				
+			void Barter()
+				Sets up default barter conversation. Uses "Barter strings" from conversation editor right panel.
+				
+	3.11)	Text replacements
+			For functions that print strings (Say, Responses, ResponsesIf, Description) you can use text replacements to print 
+			variables in conversations. To do this, use $I:var or $S:var, where var is your variable name. Example:
+			local myVar = 10
+			local mySex = GetSex("lad", "lass")
+			Say("Hello $S:mySex. You wanted me to print a variable, here it is : $I:myVar")
+			
+
+4) Objects
+	4.1)	Object properties panel
+			When in "object mode", selecting (LMB over an object)  an object will show a "properties" panel in top right corner.
+			This have two tabs - basic and advanced. Most of the time it is recommended only to use basic panel. Changing values
+			in advanced directly can lead to game problems. Use it only if you know what you are doing. I'll try to explain
+			how these values work, so you can modify them in advanced.
+			
+	4.2)	Doors
+			Doors in UW have two types of objects that can be attached to them. Locks & door traps. 
+			Locks are used to tell if a door is locked (of course), and if a key can unlock this door (if any). 
+			Lock also holds info on how hard is it to pick it by using picklock skill.	
+			Door traps are used to open / close doors by other means (triggers, like levers, or just move triggers).
+			They have an action type (can only open, only close, or do both). On activating (triggering), they will destroy
+			any lock that is attached to the door. If a door trap has a lock attached to them, they will then copy it and
+			attach it to the door (thus the door will always have a lock then - this is used to create doors that can
+			only be opened by triggers - levers and such). Best practice is to attach the same lock type to both doors and any
+			door traps attached to doors.
+			When selecting door type (texture), last "normal" door is always considered as massive (indestructible). Portcullis
+			are also always indestructible.
+			
+	4.3)	Triggers
+			These are objects that can trigger objects that are called "traps" (but actually traps are not always actual traps).
+			After creating a trigger, RMB over it to create a link between it and any trap, or door. When linking to a door, 
+			it will link to a door trap.
+			4.3a)	Move trigger
+					This trigger is activated when player moves through it. Can be placed directly on map.
+			4.3b)	Pick up trigger
+					This trigger is activated when player picks up an item that this trigger is attached to. This can't be placed
+					on map (doesn't make any sense), only attached to other objects.
+			4.3c)	Use trigger
+					This trigger is activated when players "uses" an item with this trigger attached to. This trigger is only
+					attached to other objects.
+			4.3d)	Look trigger
+					This trigger is activated when player "looks" at an item with this trigger attached to. This trigger is only
+					attached to other objects.
+			4.3e)	Open trigger
+					This trigger is activated when a door (or possibly chest?) is opened with this trigger attached to. This trigger
+					is only attached to doors.
+			4.3f)	Unlock trigger
+					This trigger is activated when a door (or possibly chest?) is unlocked with this trigger attached to. This trigger
+					is only attached to doors.
+					
+	4.4)	Traps
+			Traps are objects that manipulate other objects, level tiles, harm players, or do other stuff. They need to be activated
+			by triggers, or sometimes directly by other traps. 
+			4.4a)	Damage trap
+					Damages or poisons player. Can also trigger other triggers & traps if they are attached to it.
+			4.4b)	Teleport trap
+					Moves player from one position to other, within one level or between levels. This is used in UW in any type
+					of travelling between tiles, so stairs are actually teleport traps. This can also trigger other triggers & traps
+					if they are attached to it. It's values are based on it's position, so don't move it after creating!
+			4.4c)	Arrow trap
+					This shoots a projectile (or any object - try a chair) to a direction. Can also trigger other triggers & traps
+					if they are attached to it.
+			4.4d)	Pit trap
+					This seems to do nothing in UW. But this can be used as a "dummy" trap that does nothing, for special cases, 
+					like check variable trap (see level 3 three-switches puzzle).
+			4.4e)	Change terrain trap
+					Changes terrain tile or more tiles at a maximum range of 8. Can change textures, tile type and height.
+					This can also trigger other triggers & traps if they are attached to it. It's values are based on it's position,
+					so don't move it after creating!
+			4.4f)	Spell trap
+					This casts some spells. Also in UW this play cutscenes (not implemented and too unknown). Most spells don't work.
+					Probably can also trigger attached traps & triggers.
+			4.4g)	Create object trap
+					This creates a new object from a "template" object that you need to attach to it (by dragging it from map).
+					This will NOT activate any further traps (because it is already linked to a "template" object).
+			4.4h)	Delete object trap
+					This will delete any object that this is linked to. Link by clicking LMB over it. 
+					This will NOT activate any further traps (because it is already linked to an object).
+			4.4i)	Inventory trap
+					Searches through player inventory for an object type, if it is found, it triggers next trap / trigger.
+			4.4j)	Set variable trap
+					A trap that is used to change "trap" variables (game variables saved in between games, etc). Can also be used
+					to set a "quest" variable. 
+					Possible "trap" variable indexes - from 1 to 127 (not tested, recommend using 63 as maximum, though the 
+					value that holds this (height) can hold up to 127).
+					Possible operations : 
+					- Add : adds a value to variable
+					- Substract : substracts a value from variable
+					- Set : sets a variable (default)
+					- And : logical "and" operation on variable
+					- Or : logical "or" operation on variable
+					- Xor : logical "xor" operation on variable
+					- Shift left : shifts all bits in variable ;eft by 1, and cuts to 7 bits.
+					When using this to set quests, the value is used as a quest ID (from 0 to 31), and operation types
+					"add", "set", "and", "or", "shift left" sets the value to 1, "sub" sets the value to 0, and "xor"
+					flips the value from 0 to 1 or otherwise.
+					This and check variable trap can be "chained" to create puzzles that involves couple of switches, etc. 
+					Check 3-button puzzle in level 3, or puzzles in level 5 to check how they work.
+					This can also trigger other triggers & traps if they are attached to it. It's values are based on it's position, 
+					so don't move it after creating!
+			4.4k)	Check variable trap
+					This checks a "trap" variable and if it is equal to a value that it searches for, it triggers next trap / trigger.
+					This can also check multiple "trap" variables in range. These values will be added to each other through iterations. 
+					Example : we set the variable index to 12, range to 4, and searched as 8. Variables saved are:
+						var[12] = 2
+						var[13] = 2
+						var[14] = 2
+						var[15] = 2
+					It gets the first value
+						currentValue = var[12]  (2)
+					Which is 2. Then it compares to the searched values
+						currentValue == 10
+					Which is not true. Next, adds next variable in range to current, and checks again
+						currentValue = currentValue + var[13] (4)
+					Let's check again
+						currentValue == 10 (false)
+					And so on. So at the end the value will be equal to searched:
+						currentValue = current + var[15] (8)
+						currentValue == 10 (true)
+					So it will trigger a trap.
+					If "shift instead" is used, it will not add values, but shift each value left by 3 bits, and add next value's
+					3 lower bits. Example:
+						first check : currentValue = 2
+						second check : currentValue = (currentValue << 3) + (var[13] & 0x07)
+						third check : currentValue = (currentValue << 3) + (var[14] & 0x07)
+						fourth check : currentValue = (currentValue << 3) + (var[15] & 0x07)
+					If you don't know how bit operations work, just don't use "shift instead".	
+					If there are two triggers / traps attached, it will trigger the first one on succesful comparison, and 
+					second one on failed comparison (used in level 3 switch puzzle - when failed pushing switches in right order,
+					it spawn a skeleton in the room - once). 
+					This and set variable traps are used to create puzzles. Check level 3 three-button puzzle and level 5 mine dispatch
+					chamber puzzle, or ring of humility puzzle. 
+					This trap will trigger other traps (it's its purpose). It's values are based on it's position, so don't move it after 
+					creating!
+			4.4l)	Do trap
+					This trap has several "modes". I created "shortcuts" to create these easily.
+					- Attitude trap : pisses off nearby monsters, based on species
+					- Platform trap : changes current floor height. Not much use because of superior "change terrain trap"
+					- Camera trap : when triggered, it will change the player view to point of view from this trap. 
+						Used in UW in orbs together with "look" triggers.
+					- Conversation trap : starts a conversation. In UW it is hard coded to start a conversation with NPC in slot 25
+						unfortunately...
+					- End game trap : ends the game! And plays the default end game cutscene, and then score.
+					
+	4.5)	Monsters
+			Monsters (NPC's) in UW have couple of additional properties, of which couple are important.
+			Attitude : this sets monster mood, can be used also in conversations. Can be hostile (0), upset (1), mellow (2), friendly (3)
+			Goal : this is what the monster is doing right now. Default is some type of "Wander".
+				Possibilities : 
+				- Wander (2, 4, 8) - monster will wander around, but not too far away (don't know what is the differance between different
+					wanders).
+				- Stand (0, 7, 11, 12) - monster will stand and not move. Again, don't know differance between different types of stand.
+				- Awaiting conversation - monster will trigger a conversation when approached.
+				Other goals are used in game to determine what is going on, and should not be used as a "starting" goal.
+			NPC ID - this specifies if this monster is a specific one, with it's own name & conversation. Monsters can have name but
+				not have a conversation (example - a spectre called Warren in level 6). - not implemented to the editor yet.
+			HP : monster current hit points.
+	
+	4.6)	Object properties
+			In advanced tab you can directly modify these (not recommended until you know what are you doing).
+			ObjectID : determines what is this object. Check the ID list for object types.
+			Tile Pos : position of object on current tile (from 0 to 7 in X and Y)
+			Height : height that objects is on (not height OF object). For most objects it should be the same as height of tile, multiplied by
+				8 (object lying on ground).
+			Enchanted : flag, if true, object is magical and will do different things depending on object type. Used by potions, weapons, 
+				armour, rings, treasures, wands.
+			Invisible : flag, when true, it will be invisible to player. Used by triggers & traps.
+			Is quantity : flag, when true, it is a "normal" object that can have some kind of quantity. If false, this object either
+				is a monster, is a container (and points to it's inventory), is a trigger, is a trap, or is a special magical object, that
+				points to it's special ability. Can be used to create "special" objects (eg. special apple) that can have a special value
+				specified, so that it can be checked inside conversations.
+			Door (?) : flag, used for doors if door should be indestructible, other than that, unknown.
+			Direction : the direction this object is pointing at. For items, setting it to 7 will make this object identified.
+			Flags : used for traps & triggers
+			Quality : for typical items it stores quality, for monsters, it stores tile X position, for traps & triggers it have 
+				a specific meaning.
+			Owner : if an object is "ownable", this stores an nearby "species" that owns it. Other than that, it stores different
+				type of information for differant objects.
+			Special : if "Is quantity" is set, this can either indicate quantity of an object, or it's special value.
+				If special is lower than 256, than it is used as object quantity. If it's higher than 512, then it is used as a special value.
+				This special value is used by magical objects to determine their enchantment, or scrolls to determine their text.
+				If "Is quantity" is off, then special points to next object in it's inventory (adress to next object). This is used in
+				containers, magical wands and treasures, triggers, traps, doors, and others.
+				
+	4.7)	Object ID's
+				0	:	Hand axe
+				1	:	Battle axe
+				2	:	Axe
+				3	:	Dagger
+				4	:	Shortsword
+				5	:	Longsword
+				6	:	Broadsword
+				7	:	Cudgel
+				8	:	Light mace
+				9	:	Mace
+				10	:	Shiny sword
+				11	:	Jeweled axe
+				12	:	Black sword
+				13	:	Jeweled sword
+				14	:	Jeweled mace
+				15	:	Fist
+				16	:	Sling stone
+				17	:	Crossbow bolt
+				18	:	Arrow
+				19	:	Stone
+				20	:	Fireball
+				21	:	Lightning bolt
+				22	:	Acid
+				23	:	Magic missile
+				24	:	Sling
+				25	:	Bow
+				26	:	Crossbow
+				27	:	Unknown
+				28	:	Unknown
+				29	:	Unknown
+				30	:	Unknown
+				31	:	Jeweled bow
+				32	:	Leather vest
+				33	:	Mail shirt
+				34	:	Breastplate
+				35	:	Leather leggings
+				36	:	Mail leggings
+				37	:	Plate leggings
+				38	:	Leather gloves
+				39	:	Chain gauntlets
+				40	:	Plate gauntlets
+				41	:	Leather boots
+				42	:	Chain boots
+				43	:	Plate boots
+				44	:	Leather cap
+				45	:	Chain cowl
+				46	:	Helmet
+				47	:	Dragon skin boots
+				48	:	Crown
+				49	:	Crown
+				50	:	Crown
+				51	:	Unknown
+				52	:	Unknown
+				53	:	Unknown
+				54	:	Iron ring
+				55	:	Shiny shield
+				56	:	Gold ring
+				57	:	Silver ring
+				58	:	Red ring
+				59	:	Tower shield
+				60	:	Wooden shield
+				61	:	Small shield
+				62	:	Buckler
+				63	:	Jeweled shield
+				64	:	Rotworm
+				65	:	Flesh slug
+				66	:	Cave bat
+				67	:	Giant rat
+				68	:	Giant spider
+				69	:	Acid slug
+				70	:	Green goblin
+				71	:	Green goblin
+				72	:	Giant rat
+				73	:	Vampire bat
+				74	:	Skeleton
+				75	:	Imp
+				76	:	Grey goblin
+				77	:	Green goblin
+				78	:	Grey goblin
+				79	:	Ethereal Void Creatures
+				80	:	Grey goblin
+				81	:	Mongbat
+				82	:	Bloodworm
+				83	:	Wolf spider
+				84	:	Mountainman
+				85	:	Green lizardman
+				86	:	Mountainman
+				87	:	Lurker
+				88	:	Red lizardman
+				89	:	Gray lizardman
+				90	:	Outcast
+				91	:	Headless
+				92	:	Dread spider
+				93	:	Fighter
+				94	:	Fighter
+				95	:	Fighter
+				96	:	Troll
+				97	:	Ghost
+				98	:	Fighter
+				99	:	Ghoul
+				100	:	Ghost
+				101	:	Ghost
+				102	:	Gazer
+				103	:	Mage
+				104	:	Fighter
+				105	:	Dark ghoul
+				106	:	Mage
+				107	:	Mage
+				108	:	Mage
+				109	:	Mage
+				110	:	Feral ghoul
+				111	:	Feral troll
+				112	:	Great troll
+				113	:	Dire ghost
+				114	:	Earth golem
+				115	:	Mage
+				116	:	Deep lurker
+				117	:	Shadow beast
+				118	:	Reaper
+				119	:	Stone golem
+				120	:	Fire elemental
+				121	:	Metal golem
+				122	:	Wisp
+				123	:	Tybal
+				124	:	Slasher of veils
+				125	:	Unknown
+				126	:	Unknown
+				127	:	Adventurer
+				128	:	Sack
+				129	:	Open sack
+				130	:	Pack
+				131	:	Open pack
+				132	:	Box
+				133	:	Open box
+				134	:	Pouch
+				135	:	Open pouch
+				136	:	Map case
+				137	:	Open map case
+				138	:	Gold coffer
+				139	:	Open gold coffer
+				140	:	Urn
+				141	:	Quiver
+				142	:	Bowl
+				143	:	Rune bag
+				144	:	Lantern
+				145	:	Torch
+				146	:	Candle
+				147	:	Taper
+				148	:	Lit lantern
+				149	:	Lit torch
+				150	:	Lit candle
+				151	:	Lit taper
+				152	:	Wand
+				153	:	Wand
+				154	:	Wand
+				155	:	Wand
+				156	:	Broken wand
+				157	:	Broken wand
+				158	:	Broken wand
+				159	:	Broken wand
+				160	:	Coin
+				161	:	Gold coin
+				162	:	Ruby
+				163	:	Red gem
+				164	:	Small blue gem
+				165	:	Large blue gem
+				166	:	Sapphire
+				167	:	Emerald
+				168	:	Amulet
+				169	:	Goblet
+				170	:	Sceptre
+				171	:	Gold chain
+				172	:	Gold plate
+				173	:	Ankh pendant
+				174	:	Cup
+				175	:	Gold nugget
+				176	:	Meat
+				177	:	Bread
+				178	:	Cheese
+				179	:	Apple
+				180	:	Corn
+				181	:	Bread
+				182	:	Fish
+				183	:	Popcorn
+				184	:	Mushroom
+				185	:	Toadstool
+				186	:	Bottle of ale
+				187	:	Red potion
+				188	:	Green potion
+				189	:	Bottle of water
+				190	:	Flask of port
+				191	:	Bottle of wine
+				192	:	Plant
+				193	:	Grass
+				194	:	Skull
+				195	:	Skull
+				196	:	Bone
+				197	:	Bone
+				198	:	Pile of bones
+				199	:	Vines
+				200	:	Broken axe
+				201	:	Broken sword
+				202	:	Broken mace
+				203	:	Broken shield
+				204	:	Piece of wood
+				205	:	Piece of wood
+				206	:	Plant
+				207	:	Plant
+				208	:	Pile of debris
+				209	:	Pile of debris
+				210	:	Pile of debris
+				211	:	Stalactite
+				212	:	Plant
+				213	:	Pile of debris
+				214	:	Pile of debris
+				215	:	Anvil
+				216	:	Pole
+				217	:	Dead rotworm
+				218	:	Rubble
+				219	:	Pile of wood chips
+				220	:	Pile of bones
+				221	:	Blood stain
+				222	:	Blood stain
+				223	:	Blood stain
+				224	:	Runestone
+				225	:	The key of truth
+				226	:	The key of love
+				227	:	The key of courage
+				228	:	Two part key
+				229	:	Two part key
+				230	:	Two part key
+				231	:	Key of infinity
+				232	:	An rune
+				233	:	Bet rune
+				234	:	Corp rune
+				235	:	Des rune
+				236	:	Ex rune
+				237	:	Flam rune
+				238	:	Grav rune
+				239	:	Hur rune
+				240	:	In rune
+				241	:	Jux rune
+				242	:	Kal rune
+				243	:	Lor rune
+				244	:	Mani rune
+				245	:	Nox rune
+				246	:	Ort rune
+				247	:	Por rune
+				248	:	Quas rune
+				249	:	Rel rune
+				250	:	Sanct rune
+				251	:	Tym rune
+				252	:	Uus rune
+				253	:	Vas rune
+				254	:	Wis rune
+				255	:	Ylem rune
+				256	:	Key
+				257	:	Lockpick
+				258	:	Key
+				259	:	Key
+				260	:	Key
+				261	:	Key
+				262	:	Key
+				263	:	Key
+				264	:	Key
+				265	:	Key
+				266	:	Key
+				267	:	Key
+				268	:	Key
+				269	:	Key
+				270	:	Key
+				271	:	Lock
+				272	:	Picture of tom
+				273	:	Crystal splinter
+				274	:	Orb rock
+				275	:	The gem cutter of coulnes
+				276	:	Exploding book
+				277	:	Block of burning incense
+				278	:	Block of incense
+				279	:	Orb
+				280	:	Broken blade
+				281	:	Broken hilt
+				282	:	Figurine
+				283	:	Rotworm stew
+				284	:	Strong thread
+				285	:	Dragon scales
+				286	:	Resilient sphere
+				287	:	Standard
+				288	:	Spell
+				289	:	Bedroll
+				290	:	Silver seed
+				291	:	Mandolin
+				292	:	Flute
+				293	:	Leeches
+				294	:	Moonstone
+				295	:	Spike
+				296	:	Rock hammer
+				297	:	Glowing rock
+				298	:	Campfire
+				299	:	Fishing pole
+				300	:	Medallion
+				301	:	Oil flask
+				302	:	Fountain
+				303	:	Cauldron
+				304	:	Book
+				305	:	Book
+				306	:	Book
+				307	:	Book
+				308	:	Book
+				309	:	Book
+				310	:	Book
+				311	:	Book
+				312	:	Scroll
+				313	:	Scroll
+				314	:	Scroll
+				315	:	Map
+				316	:	Scroll
+				317	:	Scroll
+				318	:	Scroll
+				319	:	Scroll
+				320	:	Door
+				321	:	Door
+				322	:	Door
+				323	:	Door
+				324	:	Door
+				325	:	Massive Door
+				326	:	Portcullis
+				327	:	Secret door
+				328	:	Open door
+				329	:	Open door
+				330	:	Open door
+				331	:	Open door
+				332	:	Open door
+				333	:	Open massive door
+				334	:	Open portcullis
+				335	:	Secret door
+				336	:	Bench
+				337	:	Arrow
+				338	:	Crossbow bolt
+				339	:	Large boulder
+				340	:	Large boulder
+				341	:	Boulder
+				342	:	Small boulder
+				343	:	Shrine
+				344	:	Table
+				345	:	Beam
+				346	:	Moongate
+				347	:	Barrel
+				348	:	Chair
+				349	:	Chest
+				350	:	Nightstand
+				351	:	Lotus turbo esprit
+				352	:	Pillar
+				353	:	Dial lever
+				354	:	Dial lever
+				355	:	Unknown
+				356	:	Bridge
+				357	:	Grave
+				358	:	Writing
+				359	:	Unknown
+				360	:	Unknown
+				361	:	Unknown
+				362	:	Unknown
+				363	:	Unknown
+				364	:	Unknown
+				365	:	Unknown (force field?)
+				366	:	Passable wall
+				367	:	Impassable wall
+				368	:	Button
+				369	:	Button
+				370	:	Button
+				371	:	Switch
+				372	:	Switch
+				373	:	Lever
+				374	:	Pull chain
+				375	:	Pull chain
+				376	:	Button
+				377	:	Button
+				378	:	Button
+				379	:	Switch
+				380	:	Switch
+				381	:	Lever
+				382	:	Pull chain
+				383	:	Pull chain
+				384	:	Damage trap
+				385	:	Teleport trap
+				386	:	Arrow trap
+				387	:	Do trap
+				388	:	Pit trap
+				389	:	Change terrain trap
+				390	:	Spelltrap
+				391	:	Create object trap
+				392	:	Door trap
+				393	:	Ward trap
+				394	:	Tell trap
+				395	:	Delete object trap
+				396	:	Inventory trap
+				397	:	Set variable trap
+				398	:	Check variable trap
+				399	:	Combination trap
+				400	:	Text string trap
+				401	:	Unknown
+				402	:	Unknown
+				403	:	Unknown
+				404	:	Unknown
+				405	:	Unknown
+				406	:	Unknown
+				407	:	Unknown
+				408	:	Unknown
+				409	:	Unknown
+				410	:	Unknown
+				411	:	Unknown
+				412	:	Unknown
+				413	:	Unknown
+				414	:	Unknown
+				415	:	Unknown
+				416	:	Move trigger
+				417	:	Pick up trigger
+				418	:	Use trigger
+				419	:	Look trigger
+				420	:	Step on trigger
+				421	:	Open trigger
+				422	:	Unlock trigger
+				423	:	Unknown
+				424	:	Unknown
+				425	:	Unknown
+				426	:	Unknown
+				427	:	Unknown
+				428	:	Unknown
+				429	:	Unknown
+				430	:	Unknown
+				431	:	Unknown
+				432	:	Unknown
+				433	:	Unknown
+				434	:	Unknown
+				435	:	Unknown
+				436	:	Unknown
+				437	:	Unknown
+				438	:	Unknown
+				439	:	Unknown
+				440	:	Unknown
+				441	:	Unknown
+				442	:	Unknown
+				443	:	Unknown
+				444	:	Unknown
+				445	:	Unknown
+				446	:	Unknown
+				447	:	Unknown
+				448	:	Blood splatter
+				449	:	Mist cloud
+				450	:	Explosion
+				451	:	Explosion
+				452	:	Explosion
+				453	:	Splash
+				454	:	Water splash
+				455	:	Spell effect
+				456	:	Smoke
+				457	:	Fountain
+				458	:	Silver tree
+				459	:	Damage
+				460	:	Zap	
+			
+5)	Limitations
+	Because some of the level specific features are hard coded in game, it is not possible to change these from the game data, until some other means
+	is discovered. Here are known limitations for this editor:
+	
+	-	Level 7 & 9 specific features
+		Upon entering level 7 mana will automatically drain. This can be removed by adding any "orb" and using any "orb rock" on it within this level.
+		That cancels the mana drain.
+		Level 9 is worse, it has constant slow health drain and screen shaking. Also it is fully bright.	
+	-	Advanced conversation features
+		Not possible to do conversations that check for player health or NPC health (like conversation with golem on level 6).			
+	-	Level limit
+		Adding more than 9 levels crashes the game.		
+	-	Changing object types
+		Object types are hard coded and can't be changed (so you can't swap a dagger for a carrot etc.).		
+	-	Adding more objects
+		UW has a maximum of 460 objects.
+	-	Starting position
+		Seems to be hard coded in game.
+			
+6)	Unknown features
+	There are some features that possibly can be altered, but I did not experiment / check them enough to be sure. That includes:
+	-	scrolls that show a message / map on screen (in UW1 one scroll on level 7 does this)
+	-	starting a cutscene from within game (in UW1 spell traps do this)
+	-	more conversation features (some internal conversation functions in UW are still unknown and possibly can be used, also I need to check
+		some day how does conversation with Menzar - he sells magical potions)
+	-	more monster properties (some properties are still unknown but it's possible to figure out what they do (example - some monsters shooting
+		projectiles have particular properties set) ).
+	
+7)	Possible features
+	-	changing monster sprites (that is possible but I ignored it because amount of work to be done to create new sprites would be
+		pretty big and you can already swap palettes for monsters).
+		
+8)	Contact
+	If you have any questions about editor, or Ultima Underworld format in general, or found out a bug, or have an idea for a feature, you
+	can contact me at my email:
+	rafal@krokowski.org

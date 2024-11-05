@@ -1,0 +1,1269 @@
+Conversation 1: 
+Unk00 : 2088, Unk02: 0, CodeSize : 1774. Unk06 : 0, Unk08 : 0, StringBlock : 3585, MemorySlots : 34, ImportedGlobals : 82
+Functions : 
+Length : 17,	Name : find_barter_total,	ID : 50,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : find_barter,	ID : 49,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : find_inv,	ID : 48,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : x_obj_stuff,	ID : 47,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : x_obj_pos,	ID : 46,	Unk : 1,	Type : function,	Return : void
+Length : 07,	Name : x_traps,	ID : 45,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : x_skills,	ID : 44,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : set_attitude,	ID : 43,	Unk : 1,	Type : function,	Return : void
+Length : 13,	Name : remove_talker,	ID : 42,	Unk : 1,	Type : function,	Return : void
+Length : 14,	Name : add_to_npc_inv,	ID : 41,	Unk : 1,	Type : function,	Return : void
+Length : 17,	Name : take_from_npc_inv,	ID : 40,	Unk : 1,	Type : function,	Return : void
+Length : 12,	Name : place_object,	ID : 39,	Unk : 1,	Type : function,	Return : void
+Length : 17,	Name : set_race_attitude,	ID : 38,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : gronk_door,	ID : 37,	Unk : 1,	Type : function,	Return : int
+Length : 18,	Name : set_likes_dislikes,	ID : 36,	Unk : 1,	Type : function,	Return : void
+Length : 05,	Name : pause,	ID : 35,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : do_decline,	ID : 34,	Unk : 1,	Type : function,	Return : void
+Length : 12,	Name : do_judgement,	ID : 33,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : end_barter,	ID : 32,	Unk : 1,	Type : function,	Return : void
+Length : 15,	Name : setup_to_barter,	ID : 31,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : count_inv,	ID : 30,	Unk : 1,	Type : function,	Return : int
+Length : 15,	Name : set_inv_quality,	ID : 29,	Unk : 1,	Type : function,	Return : int
+Length : 17,	Name : check_inv_quality,	ID : 28,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : do_inv_delete,	ID : 27,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : do_inv_create,	ID : 26,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : do_demand,	ID : 25,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : do_offer,	ID : 24,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : identify_inv,	ID : 23,	Unk : 1,	Type : function,	Return : int
+Length : 16,	Name : take_id_from_npc,	ID : 22,	Unk : 1,	Type : function,	Return : int
+Length : 13,	Name : take_from_npc,	ID : 21,	Unk : 1,	Type : function,	Return : int
+Length : 12,	Name : give_ptr_npc,	ID : 20,	Unk : 1,	Type : function,	Return : int
+Length : 11,	Name : give_to_npc,	ID : 19,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : show_inv,	ID : 18,	Unk : 1,	Type : function,	Return : int
+Length : 03,	Name : sex,	ID : 17,	Unk : 1,	Type : function,	Return : string
+Length : 09,	Name : set_quest,	ID : 16,	Unk : 1,	Type : function,	Return : void
+Length : 09,	Name : get_quest,	ID : 15,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : game_mins,	ID : 31,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : game_days,	ID : 30,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : game_time,	ID : 29,	Unk : 1,	Type : variable,	Return : int
+Length : 13,	Name : riddlecounter,	ID : 28,	Unk : 1,	Type : variable,	Return : int
+Length : 13,	Name : dungeon_level,	ID : 27,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_name,	ID : 26,	Unk : 1,	Type : variable,	Return : string
+Length : 09,	Name : npc_level,	ID : 25,	Unk : 1,	Type : variable,	Return : int
+Length : 12,	Name : npc_talkedto,	ID : 24,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_gtarg,	ID : 23,	Unk : 1,	Type : variable,	Return : int
+Length : 12,	Name : npc_attitude,	ID : 22,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_goal,	ID : 21,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_power,	ID : 20,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : npc_arms,	ID : 19,	Unk : 1,	Type : variable,	Return : int
+Length : 06,	Name : npc_hp,	ID : 18,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_health,	ID : 17,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_hunger,	ID : 16,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : npc_whoami,	ID : 15,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_yhome,	ID : 14,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : npc_xhome,	ID : 13,	Unk : 1,	Type : variable,	Return : int
+Length : 08,	Name : play_sex,	ID : 12,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_drawn,	ID : 11,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_poison,	ID : 10,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_name,	ID : 9,	Unk : 1,	Type : variable,	Return : string
+Length : 14,	Name : new_player_exp,	ID : 8,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_level,	ID : 7,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_mana,	ID : 6,	Unk : 1,	Type : variable,	Return : int
+Length : 07,	Name : play_hp,	ID : 5,	Unk : 1,	Type : variable,	Return : int
+Length : 10,	Name : play_power,	ID : 4,	Unk : 1,	Type : variable,	Return : int
+Length : 09,	Name : play_arms,	ID : 3,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_health,	ID : 2,	Unk : 1,	Type : variable,	Return : int
+Length : 11,	Name : play_hunger,	ID : 1,	Unk : 1,	Type : variable,	Return : int
+Length : 07,	Name : respond,	ID : 14,	Unk : 1,	Type : function,	Return : void
+Length : 03,	Name : say,	ID : 13,	Unk : 1,	Type : function,	Return : void
+Length : 03,	Name : val,	ID : 12,	Unk : 1,	Type : function,	Return : int
+Length : 06,	Name : length,	ID : 11,	Unk : 1,	Type : function,	Return : int
+Length : 04,	Name : find,	ID : 10,	Unk : 1,	Type : function,	Return : int
+Length : 04,	Name : copy,	ID : 9,	Unk : 1,	Type : function,	Return : string
+Length : 06,	Name : append,	ID : 8,	Unk : 1,	Type : function,	Return : string
+Length : 08,	Name : contains,	ID : 7,	Unk : 1,	Type : function,	Return : int
+Length : 06,	Name : plural,	ID : 6,	Unk : 1,	Type : function,	Return : string
+Length : 06,	Name : random,	ID : 5,	Unk : 1,	Type : function,	Return : int
+Length : 07,	Name : compare,	ID : 4,	Unk : 1,	Type : function,	Return : int
+Length : 08,	Name : babl_ask,	ID : 3,	Unk : 1,	Type : function,	Return : int
+Length : 05,	Name : print,	ID : 2,	Unk : 1,	Type : function,	Return : void
+Length : 10,	Name : babl_fmenu,	ID : 1,	Unk : 1,	Type : function,	Return : int
+Length : 09,	Name : babl_menu,	ID : 0,	Unk : 1,	Type : function,	Return : int
+Code : 
+START
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 33
+PUSHI, arg : 0
+STO
+CALL, arg : 669
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 32
+PUSHI, arg : 1
+STO
+EXIT_OP
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 1
+ADDSP
+PUSHI, arg : 21
+FETCHM
+PUSHI, arg : 5
+TSTEQ
+PUSHI, arg : 21
+FETCHM
+PUSHI, arg : 6
+TSTEQ
+OPOR
+PUSHI, arg : 21
+FETCHM
+PUSHI, arg : 9
+TSTEQ
+OPOR
+PUSHI, arg : 23
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+OPAND
+PUSHI, arg : 22
+FETCHM
+PUSHI, arg : 0
+TSTEQ
+OPOR
+BEQ, arg : 11
+PUSHI, arg : 0
+PUSHI_EFF, arg : 1
+SWAP
+STO
+JMP, arg : 91
+BRA, arg : 9
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+SWAP
+STO
+JMP, arg : 91
+PUSHI_EFF, arg : 1
+FETCHM
+SAVE_REG
+POP
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 23
+PUSHI, arg : 1
+STO
+PUSHI, arg : 22
+PUSHI, arg : 1
+STO
+PUSHI, arg : 21
+PUSHI, arg : 6
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 21
+PUSHI, arg : 1
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 23
+PUSHI, arg : 1
+STO
+PUSHI, arg : 21
+PUSHI, arg : 5
+STO
+PUSHI, arg : 22
+PUSHI, arg : 1
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 22
+PUSHI, arg : 6
+STO
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 22
+PUSHI_EFF, arg : 65534
+FETCHM
+FETCHM
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 22
+PUSHI, arg : 2
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 22
+PUSHI, arg : 1
+STO
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+CALL, arg : 18
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 30
+FETCHM
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 31
+FETCHM
+STO
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 4
+ADDSP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 2
+OFFSET
+PUSHI, arg : 30
+FETCHM
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 2
+OFFSET
+PUSHI, arg : 31
+FETCHM
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 2
+OFFSET
+FETCHM
+PUSHI, arg : 0
+TSTLT
+BEQ, arg : 31
+PUSHI, arg : 2
+PUSHI_EFF, arg : 2
+OFFSET
+PUSHI, arg : 2
+PUSHI_EFF, arg : 2
+OFFSET
+FETCHM
+PUSHI, arg : 1440
+OPADD
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 2
+OFFSET
+PUSHI, arg : 1
+PUSHI_EFF, arg : 2
+OFFSET
+FETCHM
+PUSHI, arg : 1
+OPSUB
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 2
+OFFSET
+FETCHM
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+TSTGE
+PUSHI, arg : 2
+PUSHI_EFF, arg : 2
+OFFSET
+FETCHM
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+TSTGE
+OPAND
+BEQ, arg : 11
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+SWAP
+STO
+JMP, arg : 391
+BRA, arg : 9
+PUSHI, arg : 0
+PUSHI_EFF, arg : 1
+SWAP
+STO
+JMP, arg : 391
+PUSHI_EFF, arg : 1
+FETCHM
+SAVE_REG
+POP
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 30
+FETCHM
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65532
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 31
+FETCHM
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65532
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 0
+TSTLT
+BEQ, arg : 35
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1440
+OPADD
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1
+OPSUB
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 0
+TSTLT
+BEQ, arg : 35
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1440
+OPADD
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1
+OPSUB
+STO
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 30
+FETCHM
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 31
+FETCHM
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65533
+FETCHM
+OFFSET
+FETCHM
+OPSUB
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 0
+TSTLT
+BEQ, arg : 35
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 2
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1440
+OPADD
+STO
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+PUSHI, arg : 1
+PUSHI_EFF, arg : 65534
+FETCHM
+OFFSET
+FETCHM
+PUSHI, arg : 1
+OPSUB
+STO
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 32
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1216
+BRA, arg : 110
+PUSHI, arg : 0
+PUSHI, arg : 0
+STO
+PUSHI, arg : 1
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 2
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 3
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 4
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 5
+STO
+PUSHI, arg : 5
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 798
+JMP, arg : 795
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1610
+JMP, arg : 795
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1526
+JMP, arg : 795
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 4
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 99
+JMP, arg : 795
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 6
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 7
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 8
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 9
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 10
+STO
+PUSHI, arg : 5
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 17
+PUSHI, arg : 0
+FETCHM
+PUSHI, arg : 0
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 922
+BRA, arg : 3
+CALL, arg : 1702
+JMP, arg : 919
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 919
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1610
+JMP, arg : 919
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 4
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1526
+JMP, arg : 919
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 0
+PUSHI, arg : 1
+STO
+PUSHI, arg : 11
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 12
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 13
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 14
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1019
+JMP, arg : 1016
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1019
+JMP, arg : 1016
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1203
+JMP, arg : 1016
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 15
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 16
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 17
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 18
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1111
+JMP, arg : 1108
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 1108
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1526
+JMP, arg : 1108
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 19
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 20
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 21
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 22
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1203
+JMP, arg : 1200
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 1200
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 224
+JMP, arg : 1200
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 0
+ADDSP
+PUSHI, arg : 23
+SAY_OP
+CALL, arg : 209
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 44
+ADDSP
+PUSHI, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 107
+PUSHI, arg : 24
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 25
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 26
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 27
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 28
+STO
+PUSHI, arg : 5
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1526
+JMP, arg : 1333
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 99
+JMP, arg : 1333
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 194
+JMP, arg : 1333
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 4
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1610
+JMP, arg : 1333
+BRA, arg : 97
+PUSHI, arg : 29
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 23
+OFFSET
+PUSHI, arg : 30
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 23
+OFFSET
+PUSHI, arg : 31
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 23
+OFFSET
+PUSHI, arg : 32
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 23
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 23
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 44
+SWAP
+STO
+PUSHI_EFF, arg : 44
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 17
+PUSHI, arg : 0
+FETCHM
+PUSHI, arg : 0
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 922
+BRA, arg : 3
+CALL, arg : 1702
+JMP, arg : 1431
+PUSHI_EFF, arg : 44
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 209
+JMP, arg : 1431
+PUSHI_EFF, arg : 44
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 1431
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 33
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 34
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 35
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 36
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 194
+JMP, arg : 1523
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 99
+JMP, arg : 1523
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1610
+JMP, arg : 1523
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 37
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 38
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 39
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 17
+PUSHI, arg : 0
+FETCHM
+PUSHI, arg : 0
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 922
+BRA, arg : 3
+CALL, arg : 1702
+JMP, arg : 1607
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 194
+JMP, arg : 1607
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 40
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 41
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 42
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 43
+STO
+PUSHI, arg : 4
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 194
+JMP, arg : 1699
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 1699
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 3
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1526
+JMP, arg : 1699
+BPTOSP
+POPBP
+RET
+PUSHBP
+SPTOBP
+PUSHI, arg : 22
+ADDSP
+PUSHI, arg : 44
+SAY_OP
+PUSHI, arg : 1
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 45
+STO
+PUSHI, arg : 2
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 46
+STO
+PUSHI, arg : 3
+PUSHI_EFF, arg : 1
+OFFSET
+PUSHI, arg : 0
+STO
+PUSHI_EFF, arg : 1
+PUSHI, arg : 0
+CALLI, func : babl_menu
+POP
+POP
+PUSH_REG
+PUSHI_EFF, arg : 22
+SWAP
+STO
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 1
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 1434
+JMP, arg : 1771
+PUSHI_EFF, arg : 22
+FETCHM
+PUSHI, arg : 2
+TSTEQ
+BEQ, arg : 5
+CALL, arg : 922
+JMP, arg : 1771
+BPTOSP
+POPBP
+RET
