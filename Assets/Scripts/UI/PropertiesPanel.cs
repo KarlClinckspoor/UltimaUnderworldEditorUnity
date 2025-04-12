@@ -537,6 +537,13 @@ public class PropertiesPanel : MonoBehaviour {
 			else if (so.ObjectID == 385)    //Teleport
 			{
 				bool teleInThisLvl = so.ZPos == 0 ? true : false;
+				// In v0.2, sometimes when this is called, uiManager wasn't initialized yet.
+				// For instance, the teleport trap in Lvl3, idx 974.
+				// This would lead to a null reference exception, and the UI would become wonky.
+				// This fix is hacky, as this should've been called automatically, I think.
+				// TODO: Figure out why this is needed.
+				if (!uiManager)
+					Start();
 				GameObject targetLevel = createSliderProperty("Target level", BasicPanel.transform, so.ZPos, 1.0f, uiManager.MapCreator.GetLevelCount(), (f) => changeObjectZPos(so, (int)f));
 				if (teleInThisLvl)
 					targetLevel.SetActive(false);
