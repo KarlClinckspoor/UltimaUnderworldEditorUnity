@@ -664,6 +664,7 @@ public static class DataReader {
 				t64tex.Add(ConvertToTexture("Tex64_" + i, t64raw[i], 64, 64, pals[0], true));
 				t32tex.Add(ConvertToTexture("Floor32_" + i, Downscale(t64raw[i], 64, 64), 32, 32, pals[0], true));
 			}
+			Uw2T64.Remember(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/T64.TR"), t64o, t64tex, t32tex, pals[0]);
 			floors = new TextureContainer(t32tex, tFirst, 0, new AdditionalTextureInfo(false, 32, 32, -1, -1));
 			walls = new TextureContainer(t64tex, tFirst, 0, new AdditionalTextureInfo(false, 64, 64, -1, -1));
 		}
@@ -1097,14 +1098,14 @@ public static class DataReader {
 	public static List<Texture2D> GetLevelFloors(LevelData level)
 	{
 		List<Texture2D> list = new List<Texture2D>();
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < level.FloorTextures.Length; i++)   // 10 in UW1, 16 in UW2
 			list.Add(MapCreator.GetFloorTextureFromIndex(i, level.Level));
 		return list;
 	}
 	public static List<Texture2D> GetLevelWalls(LevelData level)
 	{
 		List<Texture2D> list = new List<Texture2D>();
-		for (int i = 0; i < 48; i++)
+		for (int i = 0; i < level.WallTextures.Length; i++)    // 48 in UW1, 64 in UW2
 			list.Add(MapCreator.GetWallTextureFromIndex(i, level.Level));
 		return list;
 	}

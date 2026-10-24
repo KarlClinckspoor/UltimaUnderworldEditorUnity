@@ -118,9 +118,19 @@ public static class DataWriter {
 
 	public static void SaveTextureData(TextureData textures)
 	{
-		// The writers below produce UW1's files (F32/W64 and the rest); UW2's T64.TR is not written yet.
+		// The writers below produce UW1's files (F32/W64 and the rest). UW2: T64.TR is patched
+		// for the textures that were replaced (Uw2T64); the other UW2 graphics are not written.
 		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
+			List<int> changed; List<string> warnings;
+			var t64 = Uw2T64.Build(textures.Walls, textures.Floors, out changed, out warnings);
+			foreach (var w in warnings) Debug.LogWarning("T64.TR: " + w);
+			if (t64 != null && changed.Count > 0)
+			{
+				BackupData("T64.TR");
+				File.WriteAllBytes(Uw2T64.Path, t64);
+				Uw2T64.Saved(t64, textures.Walls, textures.Floors);
+			}
 			SaveTerrainData(textures);
 			return;
 		}
