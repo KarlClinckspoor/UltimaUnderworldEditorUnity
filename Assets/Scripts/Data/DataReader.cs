@@ -1382,8 +1382,39 @@ public static class DataReader {
 		ConversationData convData = new ConversationData(convs, ReadPrivateVariables());
 		if (!Directory.Exists(Application.dataPath + "/Conversations"))
 			Directory.CreateDirectory(Application.dataPath + "/Conversations");
-		convData.DefaultFunctions = ReadDefaultConversationFunctions();
+		convData.DefaultFunctions = LevArk.Game.Kind == GameKind.UW2 ? Uw2ImportTemplate(convs) : ReadDefaultConversationFunctions();
 		return convData;
+	}
+
+	/// <summary>
+	/// UW2's import table for new conversations, from the game's own scripts: every shipped
+	/// UW2 conversation imports the same 94 names with the same function ids; only the
+	/// variables' addresses shift with the private globals. The compiler places the
+	/// imported variables from address 1 (as functions.dat does for UW1), so the table is
+	/// taken from a script with play_hunger at 1, or shifted to that.
+	/// </summary>
+	public static ConversationFunction[] Uw2ImportTemplate(Conversation[] convs)
+	{
+		Conversation best = null; int bestShift = int.MaxValue;
+		foreach (var c in convs)
+		{
+			if (c == null || c.Functions == null) continue;
+			int hunger = -1;
+			foreach (var f in c.Functions) if (f.Name == "play_hunger") hunger = f.Id_Adress;
+			if (hunger < 0) continue;
+			int shift = Math.Abs(hunger - 1);
+			if (best == null || shift < bestShift || (shift == bestShift && c.Functions.Length > best.Functions.Length)) { best = c; bestShift = shift; }
+		}
+		if (best == null) return ReadDefaultConversationFunctions();
+		int delta = 0;
+		foreach (var f in best.Functions) if (f.Name == "play_hunger") delta = 1 - f.Id_Adress;
+		var r = new ConversationFunction[best.Functions.Length];
+		for (int i = 0; i < r.Length; i++)
+		{
+			var f = best.Functions[i];
+			r[i] = new ConversationFunction { NameLength = f.NameLength, Name = f.Name, Id_Adress = f.Type == ConversationFunction.Variable ? f.Id_Adress + delta : f.Id_Adress, Unk04 = f.Unk04, Type = f.Type, Return = f.Return };
+		}
+		return r;
 	}
 
 	public static Conversation[] LoadConversations(Stream fs)

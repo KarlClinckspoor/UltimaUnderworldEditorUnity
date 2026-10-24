@@ -435,7 +435,22 @@ public static class ConversationConverter {
 	private static void calli(int id)
 	{
 		op(OperationType.CALLI);
-		conv.Code.Add(id);
+		conv.Code.Add(MapFunctionId(id));
+	}
+
+	/// <summary>
+	/// The ids above are UW1's (functions.dat, ConversationFunction.GetFuncName). A script
+	/// binds its imports by name (uw2 conv/BABL.C load_script), so for UW2 the id is the
+	/// one the UW2 import table gives that name; the variables keep the same addresses.
+	/// </summary>
+	private static int MapFunctionId(int uw1Id)
+	{
+		var table = MapCreator.ConversationData != null ? MapCreator.ConversationData.DefaultFunctions : null;
+		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW2 || table == null) return uw1Id;
+		string name = ConversationFunction.GetFuncName(uw1Id);
+		foreach (var f in table)
+			if (f.Type == ConversationFunction.Function && f.Name == name) return f.Id_Adress;
+		throw new ConverterException(string.Format("UW2 conversations have no function {0}", name), currentNode);
 	}
 	private static void pop() => op(OperationType.POP);
 	private static void pop(int c)
@@ -511,7 +526,7 @@ public static class ConversationConverter {
 		conv.Unk00 = 2088;
 		conv.CodeSize = conv.Code.Count;
 		conv.Functions = MapCreator.ConversationData.DefaultFunctions;
-		conv.ImportedFunctionsAndVariables = 82;
+		conv.ImportedFunctionsAndVariables = conv.Functions != null ? conv.Functions.Length : 82;   // 82 in UW1, 94 in UW2
 		conv.SetConverted();
 	}
 	private static int getNextVarAdress()
