@@ -21,6 +21,8 @@ namespace UltimateEditor.Uw1.UI
 		/// <summary>Zone id painted with the left button; 1 = unassigned (the right button always paints 1).</summary>
 		public static int PaintZone = 2;
 		public static bool OverlayOn = true;
+		/// <summary>Sector mode paints zones while the Zones window is open; otherwise the editor's own sector colours.</summary>
+		public static bool PaintEnabled;
 		public static bool FillMode;
 		public static event Action Changed;
 
@@ -51,7 +53,7 @@ namespace UltimateEditor.Uw1.UI
 					if (Changed != null) Changed();
 					return "Loaded " + Path + ": " + Zones.Zones.Count + " zones, " + Zones.Links.Count + " links.";
 				}
-				catch (Exception e) { return "Could not read " + Path + ": " + e.Message; }
+				catch (Exception e) { return "Could not read " + Path + ": " + e.Message + " Started a new zoning instead (saving would overwrite the file)." + " " + New(); }
 			}
 			return New();
 		}
@@ -143,6 +145,7 @@ namespace UltimateEditor.Uw1.UI
 			byte zone = (byte)(erase ? ZoneSet.Unassigned : Mathf.Clamp(PaintZone, 1, 255));
 			int level = tile.Level;
 			if (level < 1 || level > ZoneSet.Levels) return;
+			SyncTile(tile);
 			if (Zones.ZoneAt(level, tile.Position.x, tile.Position.y) == zone) return;
 			if (FillMode)
 			{
@@ -156,6 +159,35 @@ namespace UltimateEditor.Uw1.UI
 			}
 			if (zone > ZoneSet.Unassigned) Zones.EnsureZone(zone);
 			MarkDirty();
+		}
+
+		/// <summary>
+		/// Keeps the zone map in step with a tile whose type was edited: an opened tile becomes
+		/// 'unassigned', a filled one 'solid'. Called by the painter and by the editor's tile edits.
+		/// </summary>
+		public static void SyncTile(MapTile tile)
+		{
+			if (Zones == null || tile == null || tile.Level < 1 || tile.Level > ZoneSet.Levels) return;
+			byte z = Zones.ZoneAt(tile.Level, tile.Position.x, tile.Position.y);
+			bool open = tile.TileType != TileType.Solid;
+			if (open && z == ZoneSet.Solid) { Zones.SetZone(tile.Level, tile.Position.x, tile.Position.y, ZoneSet.Unassigned); MarkDirty(); }
+			else if (!open && z != ZoneSet.Solid) { Zones.SetZone(tile.Level, tile.Position.x, tile.Position.y, ZoneSet.Solid); MarkDirty(); }
+		}
+
+		/// <summary>After the editor rebuilt a tile's meshes (new material instances), put the overlay back on it and its neighbours.</summary>
+		public static void TileEdited(MapTile tile)
+		{
+			if (Zones == null || tile == null || MapCreator.LevelData == null) return;
+			SyncTile(tile);
+			var lv = tile.Level >= 1 && tile.Level <= MapCreator.LevelData.Count ? MapCreator.LevelData[tile.Level - 1] : null;
+			ApplyOverlay(tile);
+			if (lv == null) return;
+			int[] dx = { 1, -1, 0, 0 }, dy = { 0, 0, 1, -1 };
+			for (int k = 0; k < 4; k++)
+			{
+				int nx = tile.Position.x + dx[k], ny = tile.Position.y + dy[k];
+				if (nx >= 0 && ny >= 0 && nx < 64 && ny < 64) ApplyOverlay(lv.MapTiles[nx, ny]);
+			}
 		}
 
 		// ---------------------------------------------------------------- overlay

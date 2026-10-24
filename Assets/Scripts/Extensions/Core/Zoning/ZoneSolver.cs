@@ -129,7 +129,8 @@ namespace UltimateEditor.Uw1.Zoning
 		readonly SolverOptions options;
 		readonly HashSet<string> tokens = new HashSet<string>();
 		readonly HashSet<int> reachable = new HashSet<int>();
-		readonly Dictionary<int, Requirement> parsed = new Dictionary<int, Requirement>();
+		readonly Dictionary<ZoneLink, Requirement> parsed = new Dictionary<ZoneLink, Requirement>();
+		readonly Dictionary<Placement, Requirement> parsedPlacements = new Dictionary<Placement, Requirement>();
 
 		public SolverOptions Options { get { return options; } }
 		public bool HasToken(string token) { return tokens.Contains(Requirement.Normalize(token)); }
@@ -150,7 +151,7 @@ namespace UltimateEditor.Uw1.Zoning
 		Requirement Req(ZoneLink k, SolveResult res)
 		{
 			Requirement r;
-			if (parsed.TryGetValue(k.Id, out r)) return r;
+			if (parsed.TryGetValue(k, out r)) return r;
 			string err;
 			r = Requirement.TryParse(k.Requires, out err);
 			if (r == null)
@@ -158,7 +159,26 @@ namespace UltimateEditor.Uw1.Zoning
 				res.Warnings.Add(string.Format("Link {0} ({1} -> {2}): cannot read '{3}': {4}. Treated as impossible.", k.Id, k.From, k.To, k.Requires, err));
 				r = Requirement.Parse("flag:__unparsable__");
 			}
-			parsed[k.Id] = r;
+			parsed[k] = r;
+			return r;
+		}
+
+		Requirement PlacementReq(Placement p, SolveResult res)
+		{
+			Requirement r;
+			if (parsedPlacements.TryGetValue(p, out r)) return r;
+			if (string.IsNullOrEmpty(p.Requires)) r = Requirement.Parse("free");
+			else
+			{
+				string err;
+				r = Requirement.TryParse(p.Requires, out err);
+				if (r == null)
+				{
+					res.Warnings.Add("Placement " + p.Grants + " in zone " + p.Zone + ": cannot read '" + p.Requires + "': " + err + ". Never granted.");
+					r = Requirement.Parse("flag:__unparsable__");
+				}
+			}
+			parsedPlacements[p] = r;
 			return r;
 		}
 
@@ -253,9 +273,7 @@ namespace UltimateEditor.Uw1.Zoning
 			{
 				string t = Requirement.Normalize(p.Grants);
 				if (tokens.Contains(t) || !reachable.Contains(p.Zone) || string.IsNullOrEmpty(p.Requires)) continue;
-				string err;
-				var r = Requirement.TryParse(p.Requires, out err);
-				if (r == null) continue;
+				var r = PlacementReq(p, res);
 				var missing = new List<string>();
 				r.Missing(this, missing);
 				res.UngrantedPlacements.Add(t + " (zone " + p.Zone + ") needs " + string.Join(" | ", missing.ToArray()));
@@ -264,12 +282,13 @@ namespace UltimateEditor.Uw1.Zoning
 			// tokens without a source
 			var needed = new List<string>();
 			foreach (var k in zs.Links) Req(k, res).Tokens(needed);
+			foreach (var p in zs.Placements) if (!string.IsNullOrEmpty(p.Requires)) PlacementReq(p, res).Tokens(needed);
 			var granted = new HashSet<string>();
 			foreach (var p in zs.Placements) granted.Add(Requirement.Normalize(p.Grants));
 			foreach (var t in options.StartTokens) granted.Add(Requirement.Normalize(t));
 			foreach (var t in needed)
 			{
-				if (t == "free" || t == "bash" || t.StartsWith("pick:") || t.StartsWith("zone:")) continue;
+				if (t == "free" || t == "" || t == "none" || t == "true" || t == "bash" || t.StartsWith("pick:") || t.StartsWith("zone:")) continue;
 				if (t.StartsWith("talismans:"))
 				{
 					int n;
@@ -308,13 +327,7 @@ namespace UltimateEditor.Uw1.Zoning
 				if (p.Zone != zone) continue;
 				string t = Requirement.Normalize(p.Grants);
 				if (string.IsNullOrEmpty(t) || tokens.Contains(t)) continue;
-				if (!string.IsNullOrEmpty(p.Requires))
-				{
-					string err;
-					var r = Requirement.TryParse(p.Requires, out err);
-					if (r == null) { res.Warnings.Add("Placement " + p.Grants + " in zone " + p.Zone + ": cannot read '" + p.Requires + "': " + err); continue; }
-					if (!r.Eval(this)) continue;
-				}
+				if (!PlacementReq(p, res).Eval(this)) continue;
 				tokens.Add(t);
 				sphere.Tokens.Add(t);
 				sphere.TokenSources.Add(t + " (zone " + zone + (string.IsNullOrEmpty(p.Requires) ? "" : ", with " + p.Requires) + ")");

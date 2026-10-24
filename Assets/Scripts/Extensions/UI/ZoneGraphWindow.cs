@@ -39,6 +39,7 @@ namespace UltimateEditor.Uw1.UI
 			var zs = ZoneTools.Zones;
 			UiKit.Clear(w.Toolbar);
 			UiKit.Clear(w.Content);
+			if (zs == null) { w.Status.text = "No zoning loaded: open the game data, then Tools > Zones."; return; }
 			var legend = UiKit.Row(w.Toolbar, 18, 8);
 			foreach (var kv in KindColors)
 			{
@@ -118,7 +119,7 @@ namespace UltimateEditor.Uw1.UI
 				var bg = Color.Lerp(col, Color.black, 0.45f);
 				var b = UiKit.Button(canvas, label, () => { ZoneWindow.SelectZone(zone.Id); if (open != null) open.Status.text = "Selected zone " + zone.Id + " " + zone.Name; }, NodeWidth, NodeHeight, bg);
 				var t = b.GetComponentInChildren<Text>();
-				if (t) { t.fontSize = 10; t.alignment = TextAnchor.MiddleLeft; }
+				if (t) { t.fontSize = 10; t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Overflow; t.verticalOverflow = VerticalWrapMode.Truncate; }
 				Place(b.GetComponent<RectTransform>(), p.x - NodeWidth / 2, p.y + NodeHeight / 2, NodeWidth, NodeHeight);
 				var sw = UiKit.Swatch(canvas, col, 6);
 				Place(sw.rectTransform, p.x - NodeWidth / 2 - 8, p.y + 3, 6, 6);

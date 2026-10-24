@@ -765,6 +765,7 @@ public class UIManager : MonoBehaviour {
 		MapTile tile = mts.MapTile;
 		tile.TileType = (TileType)dropdown.value;
 		MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 	}
 
 	public void ChangeTemplateType(Dropdown dropdown)
@@ -815,6 +816,7 @@ public class UIManager : MonoBehaviour {
 				value = 0;
 			tile.FloorHeight = value;
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 			List<StaticObject> doors = tile.GetTileObjects((so) => { return so.IsDoor(); });
 			if (doors == null)
 				return;
@@ -842,6 +844,7 @@ public class UIManager : MonoBehaviour {
 		{
 			tile.FloorHeight = value;
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 			List<StaticObject> doors = tile.GetTileObjects((so) => { return so.IsDoor(); });
 			if (doors == null)
 				return;
@@ -868,6 +871,7 @@ public class UIManager : MonoBehaviour {
 			tile.FloorTexture = templateFloor;
 			tile.WallTexture = templateWall;
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 
 			if (InputManager.SelectedObject)
 			{
@@ -889,6 +893,7 @@ public class UIManager : MonoBehaviour {
 			if(TextureTemplateWallToggle.isOn)
 				tile.WallTexture = templateWall;
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 			if (InputManager.SelectedObject)
 			{
 				MapTileScript otherMts = InputManager.SelectedObject.GetComponent<MapTileScript>();
@@ -906,7 +911,7 @@ public class UIManager : MonoBehaviour {
 		if (!tile)
 			return;
 		// Zoning (Tools > Zones): left button paints the selected zone, right button unassigns.
-		if (UltimateEditor.Uw1.UI.ZoneTools.Zones != null)
+		if (UltimateEditor.Uw1.UI.ZoneTools.PaintEnabled && UltimateEditor.Uw1.UI.ZoneTools.Zones != null)
 		{
 			UltimateEditor.Uw1.UI.ZoneTools.Paint(tile, erase);
 			return;
@@ -931,6 +936,7 @@ public class UIManager : MonoBehaviour {
 		tile.FloorHeight = height;
 		tile.UpdateObjectsHeight();
 		MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 
 	
 		if (InputManager.SelectedObject)

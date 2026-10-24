@@ -184,7 +184,7 @@ namespace UltimateEditor.Uw1.Zoning
 			var t = Tiles[level1 - 1];
 			if (t == null) return 0;
 			byte from = t[y * Side + x];
-			if (from == zone) return 0;
+			if (from == zone || from == Solid) return 0;   // never flood the rock
 			int n = 0;
 			var stack = new Stack<int>();
 			stack.Push(y * Side + x);
