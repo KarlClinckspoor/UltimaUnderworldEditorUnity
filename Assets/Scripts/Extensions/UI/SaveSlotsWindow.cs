@@ -38,7 +38,7 @@ namespace UltimateEditor.Uw1.UI
 			UiKit.Button(row, "Save name", () =>
 			{
 				GameSession.WriteDesc(descPath, desc);
-				w.Status.text = s.Name + ": description saved.";
+				w.Status.text = s.Name + ": description saved" + (desc.Length > GameSession.DescMax ? " (cut to the game's 30 characters)." : ".");
 			}, 80, 20);
 			UiKit.Button(row, "Open", () =>
 			{

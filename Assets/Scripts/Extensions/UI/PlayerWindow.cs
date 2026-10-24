@@ -92,7 +92,9 @@ namespace UltimateEditor.Uw1.UI
 					p.ExperienceTenths = (long)Math.Round(v * 10);
 				else w.Status.text = "Experience is a number (stored in tenths).";
 			}, 100);
-			Position(w, p, kind.Value);
+			// heights come from the loaded levels only when they are this save's
+			bool sameSave = GameSession.IsSave && string.Equals(System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(path)), System.IO.Path.GetFullPath(GameSession.SaveFolder), StringComparison.OrdinalIgnoreCase);
+			Position(w, p, kind.Value, sameSave);
 			UiKit.Label(w.Content, "Skills", 12, FontStyle.Bold);
 			for (int i = 0; i < 20; i += 2)
 			{
@@ -108,7 +110,7 @@ namespace UltimateEditor.Uw1.UI
 		}
 
 		/// <summary>Where the save puts the player: level, square and heading (PlayerDat.SetPosition).</summary>
-		static void Position(Window w, PlayerDat p, GameKind kind)
+		static void Position(Window w, PlayerDat p, GameKind kind, bool levelsLoaded)
 		{
 			UiKit.Label(w.Content, "Position", 12, FontStyle.Bold);
 			int level = p.SavedLevel, x = p.TileX, y = p.TileY, heading = p.Heading;
@@ -136,7 +138,7 @@ namespace UltimateEditor.Uw1.UI
 				// the floor height comes from the level as the editor has it loaded
 				int h = 0; bool slope = false; string note = "";
 				var lev = MapCreator.LevelData != null && level <= MapCreator.LevelData.Count ? MapCreator.LevelData[level - 1] : null;
-				if (lev != null && lev.Present && LevArk.Game.Kind == kind)
+				if (levelsLoaded && lev != null && lev.Present && LevArk.Game.Kind == kind)
 				{
 					var t = lev.MapTiles[x, y];
 					if (t.TileType == TileType.Solid) { w.Status.text = "That square is solid rock."; return; }

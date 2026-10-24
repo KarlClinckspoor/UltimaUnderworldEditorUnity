@@ -105,8 +105,12 @@ public static class GameSession
 		return new string(c, 0, n);
 	}
 
+	/// <summary>The game's save dialog takes up to 30 characters.</summary>
+	public const int DescMax = 30;
+
 	public static void WriteDesc(string path, string text)
 	{
+		if (text != null && text.Length > DescMax) text = text.Substring(0, DescMax);
 		var b = new byte[(text ?? "").Length];
 		for (int i = 0; i < b.Length; i++) b[i] = text[i] < 256 ? (byte)text[i] : (byte)'?';
 		BackupOnce(path);

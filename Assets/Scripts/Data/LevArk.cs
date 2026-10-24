@@ -59,6 +59,9 @@ public static class LevArk
 		int mobCount = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.MobActive, ms);
 		int freeMob = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.Mobile, ms);
 		int freeStat = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.Static, ms);
+		// an empty stack's top is stored as -1 (0xFFFF); keep it signed
+		if (freeMob >= 0x8000) freeMob -= 0x10000;
+		if (freeStat >= 0x8000) freeStat -= 0x10000;
 		int[] free = DataReader.ReadFreeObjectIndexes(l, 0, ms);
 		int[] mobList = DataReader.ReadActiveMobs(l, 0, ms);
 		StaticObject[] objects = DataReader.ReadStaticObjects(ms, tiles, 0, l, mobList, mobCount);

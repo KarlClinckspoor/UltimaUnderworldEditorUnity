@@ -155,6 +155,9 @@ public static class LevelFixes
 	/// <summary>Pushes an index on its free stack (mobile 2-255, static 256-1023).</summary>
 	public static void PushFree(LevelData ld, int i)
 	{
+		// an empty stack's top is -1 (stored 0xFFFF; an older load may hold it as 65535)
+		if (ld.MobileListStart > 253) ld.MobileListStart = -1;
+		if (ld.StaticListStart > 767) ld.StaticListStart = -1;
 		if (i < LevelBlock.Mobiles)
 		{
 			if (ld.MobileListStart >= 253) return;
@@ -174,6 +177,11 @@ public static class LevelFixes
 	{
 		var o = ld.Objects[i];
 		if (o == null) return;
+		// links to it from traps and triggers (is_quant links) are cleared, as RemoveObject does,
+		// so a reused slot is not set off by an old trigger
+		foreach (var other in ld.Objects)
+			if (other != null && other.IsQuantity && other.Special == i && other.ObjectID >= 0x180 && other.ObjectID < 0x1C0)
+				other.Special = 0;
 		ld.Objects[i] = null;
 		if (i < LevelBlock.Mobiles) RemoveActive(ld, i);
 		PushFree(ld, i);
@@ -202,6 +210,8 @@ public static class LevelFixes
 	{
 		var mob = new List<int>(); var stat = new List<int>();
 		var seen = new HashSet<int>();
+		if (ld.MobileListStart > 253) ld.MobileListStart = -1;
+		if (ld.StaticListStart > 767) ld.StaticListStart = -1;
 		for (int k = 0; k <= ld.MobileListStart && k < 254; k++) { int i = ld.FreeObjects[k]; if (i >= 2 && i < 256 && ld.Objects[i] == null && seen.Add(i)) mob.Add(i); }
 		for (int k = 0; k <= ld.StaticListStart && k < 768; k++) { int i = ld.FreeObjects[254 + k]; if (i >= 256 && i < 1024 && ld.Objects[i] == null && seen.Add(i)) stat.Add(i); }
 		var mobMissing = new List<int>(); var statMissing = new List<int>();

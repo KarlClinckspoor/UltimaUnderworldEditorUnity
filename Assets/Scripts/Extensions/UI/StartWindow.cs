@@ -40,7 +40,8 @@ namespace UltimateEditor.Uw1.UI
 			}, 150, 22);
 			UiKit.Button(row2, "Write to the executable", () =>
 			{
-				var lev = MapCreator.LevelData != null && MapCreator.LevelData.Count > 0 ? MapCreator.LevelData[0] : null;
+				// new games use DATA's level 1; with a save open the loaded level 1 is the save's
+				var lev = !GameSession.IsSave && MapCreator.LevelData != null && MapCreator.LevelData.Count > 0 ? MapCreator.LevelData[0] : null;
 				if (x < 1 || x > 62 || y < 1 || y > 62) { w.Status.text = "Squares 1-62."; return; }
 				if (lev != null && lev.MapTiles[x, y].TileType == TileType.Solid) { w.Status.text = "That square of level 1 is solid rock."; return; }
 				var b = File.ReadAllBytes(exe);

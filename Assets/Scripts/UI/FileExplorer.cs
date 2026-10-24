@@ -193,9 +193,16 @@ public class FileExplorer : ResizableWindow {
 			return;
 		}
 		string path = currentPath + "/" + file;
+		DataWriter.SavePathToFile(path);
+		// with data loaded, switching files would mix the session (levels of one file, saves
+		// and schedules of another); the choice takes effect at the next start
+		if (uiManager && uiManager.MapCreator && uiManager.MapCreator.IsInitialized)
+		{
+			uiManager.SpawnPopupMessage("Data is already loaded. The chosen LEV.ARK opens the next time the editor starts.");
+			return;
+		}
 		// a save's LEV.ARK (SAVEn) is edited with DATA for the other files (Data/GameSession.cs)
-		DataReader.FilePath = GameSession.Choose(path);
-		DataWriter.SavePathToFile(path);		
+		DataReader.FilePath = GameSession.Choose(path);		
 		//UIManager.SetMenu(MainPanel);
 	}
 }

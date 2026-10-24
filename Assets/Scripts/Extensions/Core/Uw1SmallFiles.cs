@@ -241,7 +241,7 @@ namespace UltimateEditor.Uw1
 				if (i > range) { shades[i] = 15; continue; }
 				int t = (i << 8) >> 5;
 				int u = ISqrt(t * t * 2);
-				t = (u * div) >> 6;
+				t = (short)(u * div) >> 6;   // a 16-bit int in the game: large values wrap
 				t += low;
 				if (t < 0) t = 0;
 				u = t + bas;
@@ -276,6 +276,8 @@ namespace UltimateEditor.Uw1
 			if (Rows[row, 3] < 1) sb.Append("A view radius under 1 shows almost nothing. ");
 			if (Rows[row, 3] > 7) sb.Append("A view radius above 7 is untested; UW-Formats reports crashes above about 9. ");
 			if (Rows[row, 3] > 15) sb.Append("Above 15 the grid is not rebuilt at all (preset_grid needs range < 16). ");
+			int far = ISqrt(128 * Math.Min(15, Math.Max(0, (int)Rows[row, 3])) * Math.Min(15, Math.Max(0, (int)Rows[row, 3])));
+			if ((long)far * Math.Max(1, (int)Rows[row, 0]) > short.MaxValue) sb.Append("smooth_div is too large for this view radius: the game's 16-bit sum wraps and far squares turn bright. ");
 			return sb.ToString();
 		}
 

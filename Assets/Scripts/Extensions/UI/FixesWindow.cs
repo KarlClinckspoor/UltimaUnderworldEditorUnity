@@ -111,7 +111,7 @@ namespace UltimateEditor.Uw1.UI
 				w.Status.text = n + " objects removed. Run Fixes > Check to confirm the levels.";
 				found = Preview(w, ui, f);
 			}, 110, 22, UiKit.WarnColor);
-			UiKit.Paragraph(w.Toolbar, "Never listed: anything a trap or trigger refers to (create-object templates, delete targets, inventory-trap items), keys and quest items, critters, objects with a conversation, locks, doors, traps and triggers, and containers that still hold something.", 10);
+			UiKit.Paragraph(w.Toolbar, "Never listed: anything a trap or trigger links to (create-object templates, delete targets), every item of a kind an inventory trap checks for, the puzzle pieces the game looks up by kind (" + (LevArk.Game.Kind == GameKind.UW2 ? "storage crystals" : "emeralds") + "), keys and quest items, books, scrolls and writings, critters and what characters with a conversation carry, locks, doors, traps and triggers, and containers that still hold something. Conversations can also ask for ordinary items: check quest areas before removing there.", 10);
 		}
 
 		static List<StaticObject> Preview(Window w, UIManager ui, CleanFilter f)
@@ -137,6 +137,7 @@ namespace UltimateEditor.Uw1.UI
 		public static List<StaticObject> Select(CleanFilter f)
 		{
 			var list = new List<StaticObject>();
+			var guarded = GuardedItems();
 			for (int l = 1; l <= MapCreator.LevelData.Count; l++)
 			{
 				if (f.Level != 0 && f.Level != l) continue;
@@ -146,7 +147,10 @@ namespace UltimateEditor.Uw1.UI
 				foreach (var so in ld.Objects)
 				{
 					if (so == null || so.CurrentAdress < 2) continue;
-					if (!Removable(so, referenced)) continue;
+					if (!Removable(so, referenced) || guarded.Contains(so.ObjectID)) continue;
+					// what a character with a conversation carries may be asked for or given in it
+					var holder = so.GetFirstContainer() as MobileObject;
+					if (holder != null && holder.Whoami > 0) continue;
 					if ((Uw1ItemCategories.Of(so.ObjectID) & f.Categories) == 0) continue;
 					if (f.Name.Length > 0 && StaticObject.GetName(so.ObjectID).IndexOf(f.Name, StringComparison.OrdinalIgnoreCase) < 0) continue;
 					var container = so.GetContainer();
@@ -186,8 +190,31 @@ namespace UltimateEditor.Uw1.UI
 			return set;
 		}
 
+		/// <summary>
+		/// Item kinds the game looks for by kind rather than by link, kept on every level:
+		/// what an inventory trap checks the player for (item quality * 32 + owner, both games),
+		/// and the puzzle pieces the special-case code searches for (UW1's emerald puzzle,
+		/// 0xA7; UW2's storage crystals, 0xA1, for the Bliy Skup Ductosnore chamber).
+		/// Conversations can also ask for items; their scripts are not read here.
+		/// </summary>
+		static HashSet<int> GuardedItems()
+		{
+			var set = new HashSet<int>();
+			set.Add(LevArk.Game.Kind == GameKind.UW2 ? 0xA1 : 0xA7);
+			foreach (var ld in MapCreator.LevelData)
+			{
+				if (ld == null || !ld.Present) continue;
+				foreach (var o in ld.Objects)
+					if (o != null && o.ObjectID == 0x18C) set.Add((o.Quality << 5 | o.Owner) & 0x1FF);
+			}
+			return set;
+		}
+
 		static bool Removable(StaticObject so, HashSet<int> referenced)
 		{
+			// objects that show a text: their text slot may be shared or wanted later
+			if (so.IsBook() || so.IsScroll() || so.IsWriting() || so.IsGrave()) return false;
+			if (StaticObject.GetObjectType(so.ObjectID) == ObjectType.Map) return false;   // UW2 maps and map scraps (they write the automap)
 			if (referenced.Contains(so.CurrentAdress)) return false;
 			if (so.IsMonster() || so.IsDoor() || so.IsLock()) return false;
 			if (so.ObjectID >= 0x180) return false;   // traps, triggers, animated objects

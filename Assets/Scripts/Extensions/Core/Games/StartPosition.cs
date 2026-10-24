@@ -34,8 +34,18 @@ namespace UltimateEditor.Games
 				if (Original(exe, i, game)) original.Add(i);
 			}
 			if (original.Count == 1) return original[0];
-			if (original.Count == 0 && all.Count == 1) return all[0];   // patched before
+			// patched before: accepted only with the shipped executable's call target, so another
+			// version's code is never taken for it
+			if (original.Count == 0 && all.Count == 1 && CallTargetKnown(exe, all[0], game)) return all[0];
 			return -1;
+		}
+
+		/// <summary>The far call's target in the shipped executables (UW.EXE d1 06 48 00, UW2.EXE d8 0a 48 00).</summary>
+		static bool CallTargetKnown(byte[] exe, int i, GameKind game)
+		{
+			var t = game == GameKind.UW2 ? new byte[] { 0xD8, 0x0A, 0x48, 0x00 } : new byte[] { 0xD1, 0x06, 0x48, 0x00 };
+			for (int k = 0; k < 4; k++) if (exe[i + 7 + k] != t[k]) return false;
+			return true;
 		}
 
 		static bool Original(byte[] exe, int i, GameKind game)
@@ -83,7 +93,7 @@ namespace UltimateEditor.Games
 				int x, y;
 				if (Read(File.ReadAllBytes(p), game, out x, out y)) { ExeX = x; ExeY = y; }
 			}
-			catch (IOException) { }
+			catch (Exception) { }   // unreadable executable: the default start is shown
 		}
 	}
 }

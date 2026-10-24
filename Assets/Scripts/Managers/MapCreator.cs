@@ -1221,14 +1221,14 @@ public class MapCreator : MonoBehaviour {
 		int index = 0;
 		if (so is MobileObject)
 		{
-			if (LevelData[level - 1].MobileListStart == 0)
+			if (LevelData[level - 1].MobileListStart < 0 || LevelData[level - 1].MobileListStart > 253)   // empty (top -1) or not a valid top
 				return false;
 			index = GetNextFreeMobileIndex(level);
 			LevelData[level - 1].MobileListStart--;
 		}
 		else if (so is StaticObject)
 		{
-			if (LevelData[level - 1].StaticListStart == 0)
+			if (LevelData[level - 1].StaticListStart < 0 || LevelData[level - 1].StaticListStart > 767)
 				return false;
 			index = GetNextFreeStaticIndex(level);
 			LevelData[level - 1].StaticListStart--;
@@ -1251,7 +1251,7 @@ public class MapCreator : MonoBehaviour {
 		int index = 0;
 		if (StaticObject.IsMonster(id))
 		{
-			if (LevelData[level - 1].MobileListStart == 0)
+			if (LevelData[level - 1].MobileListStart < 0 || LevelData[level - 1].MobileListStart > 253)   // empty (top -1) or not a valid top
 				return null;
 			index = GetNextFreeMobileIndex(level);
 			LevelData[level - 1].MobileListStart--;
@@ -1259,7 +1259,7 @@ public class MapCreator : MonoBehaviour {
 		}
 		else
 		{
-			if (LevelData[level - 1].StaticListStart == 0)
+			if (LevelData[level - 1].StaticListStart < 0 || LevelData[level - 1].StaticListStart > 767)
 				return null;
 			index = GetNextFreeStaticIndex(level);
 			LevelData[level - 1].StaticListStart--;
@@ -1294,19 +1294,21 @@ public class MapCreator : MonoBehaviour {
 	{
 		int level = so.CurrentLevel;
 		int listStart = 0;
-		//Update the free lists
-		if (so is StaticObject)
-		{
-			listStart = LevelData[level - 1].StaticListStart + 254;
-			// the static stack holds 768 entries (FreeObjects[254..1021]); this compared with 768,
-			// which refused to remove anything on a level with more than 514 free statics
-			if (listStart >= 254 + 767)
-				return false;
-		}
+		//Update the free lists: the mobile stack is FreeObjects[0..253], the static one
+		//FreeObjects[254..1021]; the starts are the top indexes (-1 empty). A MobileObject is
+		//also a StaticObject, so the mobile test comes first.
 		if (so is MobileObject)
 		{
 			listStart = LevelData[level - 1].MobileListStart;
-			if (listStart == 254)   //Theoretically impossible (can't remove if no mobs in map)
+			if (listStart >= 253)   // full
+				return false;
+		}
+		else
+		{
+			listStart = LevelData[level - 1].StaticListStart + 254;
+			// this compared with 768, which refused to remove anything on a level with more
+			// than 514 free statics
+			if (listStart >= 254 + 767)
 				return false;
 		}
 		//Debug.LogFormat("List start at {0}, index {1}", listStart, LevelData[level - 1].FreeObjects[listStart]);
@@ -1361,11 +1363,36 @@ public class MapCreator : MonoBehaviour {
 				}
 			}
 		}
-		//Call additional info
-		so.OnRemove?.Invoke(so);
+		//Call additional info: clears the object's text, unless another object shows the same
+		//text (text slots can be shared: UW2's slot 96 is used by three objects of level 33)
+		if (!SharesText(so))
+			so.OnRemove?.Invoke(so);
 		LevelData[level - 1].Objects[index] = null;
 		Debug.LogFormat("Removed {0}, after, start at {1}, index {2}", so.Name, listStart, LevelData[level - 1].FreeObjects[listStart]);
 		return true;
+	}
+
+	/// <summary>Another object on any level uses the same text as this one (book or scroll text,
+	/// writing or grave, or text trap string).</summary>
+	public static bool SharesText(StaticObject so)
+	{
+		string key = TextKey(so);
+		if (key == null || LevelData == null) return false;
+		foreach (var ld in LevelData)
+		{
+			if (ld == null || ld.Objects == null) continue;
+			foreach (var o in ld.Objects)
+				if (o != null && o != so && TextKey(o) == key) return true;
+		}
+		return false;
+	}
+
+	static string TextKey(StaticObject o)
+	{
+		if (o.ObjectID == 400) return "trap " + (o.Quality * 32 + o.Owner);
+		if (o.IsWriting() || o.IsGrave()) return "writing " + o.Special;
+		if ((o.IsBook() || o.IsScroll()) && !o.IsEnchanted) return "scroll " + o.Special;
+		return null;
 	}
 
 	public static void SetNewPosition(StaticObject so, MapTile oldTile, MapTile newTile, Vector2Int offsets)
