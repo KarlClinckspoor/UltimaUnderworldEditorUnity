@@ -529,6 +529,11 @@ public static class DataReader {
 			int byt4 = fs.ReadByte();
 			//Debug.LogFormat("raw data : {0}, {1}, {2}, {3}, {4}, {5}", ToHex(byt1_a), ToHex(byt1_b), ToHex(byt2_a), ToHex(byt2_b), ToHex(byt3), ToHex(byt4));
 			int adress = (byt1 >> 6) & 0x3FF;
+			// Anim_Load (reference obj/EFFECT.C): the list ends at the first zero object index;
+			// entries after it are stale and the game never runs them. The shipped file has such
+			// stale entries (level 4's list is empty but holds 12), so stop here like the game.
+			if (adress == 0)
+				break;
 			if(adress > 0)
 			{
 				AnimationOverlay anim = new AnimationOverlay();

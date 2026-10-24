@@ -444,8 +444,11 @@ public static class DataWriter {
 
 	public static void SaveAnimationOverlay(AnimationOverlay anim, FileStream fs)
 	{
-		byte adr_a = (byte)(anim.Adress & 0xFF);
-		byte adr_b = (byte)((anim.Adress & 0xFF00) >> 8);
+		// struct Anim.link: object index in bits 6-15 (reference object.h, FORMATS.md);
+		// the reader takes (word >> 6) & 0x3FF, so shift back. Bits 0-5 are 0 in the shipped file.
+		int link = (anim.Adress & 0x3FF) << 6;
+		byte adr_a = (byte)(link & 0xFF);
+		byte adr_b = (byte)((link & 0xFF00) >> 8);
 		byte dur_a = (byte)(anim.Duration & 0xFF);
 		byte dur_b = (byte)((anim.Duration & 0xFF00) >> 8);
 		fs.WriteByte(adr_a);
