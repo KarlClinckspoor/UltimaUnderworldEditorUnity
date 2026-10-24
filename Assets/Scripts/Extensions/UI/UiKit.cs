@@ -183,6 +183,31 @@ namespace UltimateEditor.Uw1.UI
 			return b;
 		}
 
+		/// <summary>A check box as a button: "[x] label" / "[ ] label".</summary>
+		public static Button Check(Transform parent, string label, bool value, Action<bool> onChange, float width = 140)
+		{
+			bool v = value;
+			Button b = null;
+			b = Button(parent, (v ? "[x] " : "[  ] ") + label, () =>
+			{
+				v = !v;
+				SetButtonText(b, (v ? "[x] " : "[  ] ") + label);
+				if (onChange != null) onChange(v);
+			}, width);
+			return b;
+		}
+
+		/// <summary>A coloured square.</summary>
+		public static Image Swatch(Transform parent, Color color, float size = 16)
+		{
+			var rt = Rect("Swatch", parent);
+			var img = rt.gameObject.AddComponent<Image>();
+			img.color = color;
+			img.raycastTarget = false;
+			Size(rt.gameObject, size, size);
+			return img;
+		}
+
 		public static RectTransform Row(Transform parent, float height = 20, float spacing = 6)
 		{
 			var rt = Rect("Row", parent);

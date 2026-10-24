@@ -40,6 +40,8 @@ namespace UltimateEditor.Uw1.Zoning
 		public List<PathStep> Path = new List<PathStep>();
 		public List<BlockedLink> Blocked = new List<BlockedLink>();
 		public List<int> Unreached = new List<int>();
+		/// <summary>Placements in reachable zones whose own requirement never held.</summary>
+		public List<string> UngrantedPlacements = new List<string>();
 		/// <summary>Tokens some link needs that no placement grants anywhere.</summary>
 		public List<string> NoSource = new List<string>();
 		/// <summary>Pairs of zones joined by a free two-way link: they could be one zone.</summary>
@@ -76,6 +78,12 @@ namespace UltimateEditor.Uw1.Zoning
 				sb.AppendLine("Blocked at the end (reachable side -> other side: what is missing):");
 				foreach (var b in Blocked)
 					sb.AppendLine(string.Format("  {0} -> {1} [{2} {3}]: {4}", ZoneName(zs, b.FromZone), ZoneName(zs, b.ToZone), b.Link.Kind, b.Link.Id, string.Join(" | ", b.Missing.ToArray())));
+				sb.AppendLine();
+			}
+			if (UngrantedPlacements.Count > 0)
+			{
+				sb.AppendLine("In reach but not obtained (the placement's own requirement):");
+				foreach (var u in UngrantedPlacements) sb.AppendLine("  " + u);
 				sb.AppendLine();
 			}
 			if (Unreached.Count > 0)
@@ -166,7 +174,7 @@ namespace UltimateEditor.Uw1.Zoning
 			sphere0.Zones.Add(start);
 			res.ZoneSphere[start] = 0;
 			res.FirstReach[start] = new PathStep { Zone = start, Sphere = 0 };
-			Grant(start, sphere0, res);
+			while (Grant(start, sphere0, res)) { }
 			res.Spheres.Add(sphere0);
 
 			while (true)
@@ -184,14 +192,21 @@ namespace UltimateEditor.Uw1.Zoning
 					if (k.TwoWay && reachable.Contains(k.To) && !reachable.Contains(k.From) && r.Eval(this))
 						if (!next.Zones.Contains(k.From)) { next.Zones.Add(k.From); next.LinksUsed.Add(k); newly.Add(new KeyValuePair<int, PathStep>(k.From, new PathStep { Zone = k.From, Link = k, Reverse = true, Sphere = next.Index })); }
 				}
-				if (newly.Count == 0) break;
 				foreach (var kv in newly)
 				{
 					reachable.Add(kv.Key);
 					res.ZoneSphere[kv.Key] = next.Index;
 					res.FirstReach[kv.Key] = kv.Value;
 				}
-				foreach (var kv in newly) Grant(kv.Key, next, res);
+				// placements: everything a reachable zone grants whose own requirement now holds
+				bool gained = true;
+				while (gained)
+				{
+					gained = false;
+					foreach (var z in new List<int>(reachable))
+						if (Grant(z, next, res)) gained = true;
+				}
+				if (newly.Count == 0 && next.Tokens.Count == 0) break;
 				res.Spheres.Add(next);
 				if (res.Spheres.Count > 1000) { res.Warnings.Add("Stopped after 1000 spheres."); break; }
 			}
@@ -234,6 +249,17 @@ namespace UltimateEditor.Uw1.Zoning
 			}
 			foreach (var zone in zs.Zones)
 				if (zone.Id > ZoneSet.Unassigned && !reachable.Contains(zone.Id)) res.Unreached.Add(zone.Id);
+			foreach (var p in zs.Placements)
+			{
+				string t = Requirement.Normalize(p.Grants);
+				if (tokens.Contains(t) || !reachable.Contains(p.Zone) || string.IsNullOrEmpty(p.Requires)) continue;
+				string err;
+				var r = Requirement.TryParse(p.Requires, out err);
+				if (r == null) continue;
+				var missing = new List<string>();
+				r.Missing(this, missing);
+				res.UngrantedPlacements.Add(t + " (zone " + p.Zone + ") needs " + string.Join(" | ", missing.ToArray()));
+			}
 
 			// tokens without a source
 			var needed = new List<string>();
@@ -273,18 +299,29 @@ namespace UltimateEditor.Uw1.Zoning
 			return res;
 		}
 
-		void Grant(int zone, Sphere sphere, SolveResult res)
+		/// <summary>Grants the tokens of zone's placements whose requirement holds. Returns true if any was new.</summary>
+		bool Grant(int zone, Sphere sphere, SolveResult res)
 		{
+			bool any = false;
 			foreach (var p in zs.Placements)
 			{
 				if (p.Zone != zone) continue;
 				string t = Requirement.Normalize(p.Grants);
 				if (string.IsNullOrEmpty(t) || tokens.Contains(t)) continue;
+				if (!string.IsNullOrEmpty(p.Requires))
+				{
+					string err;
+					var r = Requirement.TryParse(p.Requires, out err);
+					if (r == null) { res.Warnings.Add("Placement " + p.Grants + " in zone " + p.Zone + ": cannot read '" + p.Requires + "': " + err); continue; }
+					if (!r.Eval(this)) continue;
+				}
 				tokens.Add(t);
 				sphere.Tokens.Add(t);
-				sphere.TokenSources.Add(t + " (zone " + zone + ")");
+				sphere.TokenSources.Add(t + " (zone " + zone + (string.IsNullOrEmpty(p.Requires) ? "" : ", with " + p.Requires) + ")");
 				res.TokenSphere[t] = sphere.Index;
+				any = true;
 			}
+			return any;
 		}
 	}
 }

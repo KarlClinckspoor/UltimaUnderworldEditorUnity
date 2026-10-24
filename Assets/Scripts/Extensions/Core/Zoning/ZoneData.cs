@@ -46,6 +46,7 @@ namespace UltimateEditor.Uw1.Zoning
 	{
 		public int Zone;
 		public string Grants = "";  // one token: key:5, item:medallion, flag:gazer_dead, npc:eb, talisman:cup
+		public string Requires = "";    // optional: granted only when this holds too (Judy's key of Love needs item:picture_tom)
 		public string Notes = "";
 		public string Source = "";  // "" (hand), "levark" (found by the audit)
 	}
@@ -314,7 +315,7 @@ namespace UltimateEditor.Uw1.Zoning
 				foreach (var o in places)
 				{
 					var d = MiniJson.Obj(o);
-					zs.Placements.Add(new Placement { Zone = MiniJson.Int(d, "zone"), Grants = MiniJson.Str(d, "grants"), Notes = MiniJson.Str(d, "notes"), Source = MiniJson.Str(d, "source") });
+					zs.Placements.Add(new Placement { Zone = MiniJson.Int(d, "zone"), Grants = MiniJson.Str(d, "grants"), Requires = MiniJson.Str(d, "requires"), Notes = MiniJson.Str(d, "notes"), Source = MiniJson.Str(d, "source") });
 				}
 			var open = MiniJson.Obj(MiniJson.Get(root, "openSources"));
 			if (open != null) foreach (var kv in open) zs.OpenSources[kv.Key] = kv.Value == null ? "" : kv.Value.ToString();
@@ -371,7 +372,9 @@ namespace UltimateEditor.Uw1.Zoning
 			foreach (var p in Placements)
 			{
 				var d = new Dictionary<string, object>();
-				d["zone"] = p.Zone; d["grants"] = p.Grants; d["notes"] = p.Notes;
+				d["zone"] = p.Zone; d["grants"] = p.Grants;
+				if (!string.IsNullOrEmpty(p.Requires)) d["requires"] = p.Requires;
+				d["notes"] = p.Notes;
 				if (!string.IsNullOrEmpty(p.Source)) d["source"] = p.Source;
 				places.Add(d);
 			}

@@ -96,6 +96,8 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
 			Entry(root, "Built-in 3D models (UW.EXE)...", () => ModelViewerWindow.Show(), false);
+			Entry(root, "Zones (randomizer logic)...", () => ZoneWindow.Show(), true);
+			Entry(root, "Zone graph...", () => ZoneGraphWindow.Show(), true);
 			root.SetAsLastSibling();
 		}
 

@@ -287,7 +287,7 @@ PLACEMENTS = [
     (33, "key:11", "L3 (8,26), in a pouch in the corridor with skeletons (zone 33), per the audit of LEV.ARK."),
     (67, "key:10", "Shadow beasts."),
     (2, "key:13", "Rodrick, L4 (32,61), stands in zone 2 by the maze door (audit)."),
-    (52, "key:15", "The ghost (create-object trap template at L5 (53,3), in the tomb) carries it; the notes put the summoning trigger in the vestibule."),
+    (51, "key:15", "The ghost carries it (create-object trap template at L5 (53,3), in the tomb); the notes say the summoning trigger is in the vestibule, so the key is counted there."),
     (2, "item:pole", "Poles lie around on L1-L2 (goblin storage)."),
     (2, "talisman:cup", "Cup of Wonder, L3 (needs the flute and the mantra)."),
     (2, "talisman:taper", "Zak has the taper, L3 (47,38)."),
@@ -295,7 +295,15 @@ PLACEMENTS = [
     (2, "talisman:sword_needs_blade_and_hilt", "placeholder removed below"),
     (68, "talisman:key_of_courage_is_not_a_talisman", "placeholder removed below"),
     (25, "item:broken_blade", "Sword blade area."),
-    (25, "talisman:sword", "Counts the Sword of Justice here for the solver: the blade (zone 25) and the hilt (L5 tombs, zone 2) are reforged at an anvil in zone 2."),
+    (2, "talisman:sword", "Shak (L2, conversation slot 0x02) reforges the Sword of Justice (do_inv_create 0x0A) from the blade and the hilt.", "item:broken_blade & item:broken_hilt"),
+    (2, "item:key_of_love", "Judy (L5, slot 0x17) creates the key of Love (do_inv_create 0xE2) for Tom's picture.", "item:picture_tom"),
+    (2, "item:key_of_truth", "Illomo (L6, slot 0xBB) and the Gurstang phrase (quest 9); exact dialogue not checked.", "flag:gurstang_phrase"),
+    (2, "item:tripartite_key", "The three keys joined.", "item:key_of_truth & item:key_of_love & item:key_of_courage"),
+    (2, "item:lava_boots", "Marrowsuck the ghoul (L5 (34,23), slot 0x06) creates the dragon skin boots (do_inv_create 47 = 0x2F). What he wants for them is in his dialogue, not checked.", "npc:marrowsuck"),
+    (2, "npc:marrowsuck", "Marrowsuck, L5 (34,23)."),
+    (2, "flag:talismans_quest", "Garamon appears at his grave on L5 (54,53) (create-object trap); quest 5 is set when he asks for the talismans. Needs the incense/figurine ritual (USEITEMS.C), not modelled.", "npc:garamon"),
+    (2, "npc:garamon", "Garamon's ghost, trap template at L5 (54,53)."),
+    (2, "flag:fought_guards", "Fighting through the L7 guard posts is always possible; option-like, kept as a free placement here."),
     (2, "talisman:ring", "Ring of Humility: created by a trap at L5 (16,59) (audit)."),
     (2, "item:broken_hilt", "Sword hilt in the tombs, L5."),
     (2, "talisman:book", "Book of Honesty, L6."),
@@ -324,13 +332,9 @@ OPEN_SOURCES = {
     "flag:deco_morono": "Where is the password learned? Not in the notes.",
     "flag:lizard_friend": "Quest 6: set by the game when the creature with whoami 0x18 ('prisoner', Murgo) dies; Sseetharee's conversation reads it. Alternative routes to Murgo's prison are not in the notes.",
     "flag:crux_writ": "Knights' quest (quest byte 32 reaching 3/4): find the writ of Lorne; Dorna opens the armoury.",
-    "flag:fought_guards": "Fighting through the L7 guard posts instead of showing the medallion.",
     "flag:bullfrog_solved": "Solving the bullfrog puzzle (wand 555 resets it).",
     "flag:maze_memorised": "Walking the damaging maze from memory.",
     "flag:kneenibble_code": "Kneenibble's code for the zanium mine (notes say the corridor is otherwise free).",
-    "flag:talismans_quest": "Quest 5: Garamon, at his grave with the incense/figurine, asks for the talismans.",
-    "item:tripartite_key": "Keys of Truth (Illomo, after Gurstang's phrase), Love (Judy, after Tom's picture) and Courage (zone 68).",
-    "item:lava_boots": "Dragon skin boots: where found? Not in the notes.",
     "talismans:8": "sword (blade from zone 25 + hilt from L5 tombs, reforged at the anvil), shield, ring, taper, cup, wine, book, standard (Dorna). The sword counts only once reforged.",
 }
 
@@ -372,7 +376,12 @@ def main(src, out):
     links = []
     for i, (a, b, kind, req, two, note, conf) in enumerate(LINKS):
         links.append({"id": i + 1, "from": a, "to": b, "kind": kind, "requires": req, "twoWay": two, "notes": note, "confidence": conf})
-    places = [{"zone": z, "grants": t, "notes": n} for z, t, n in PLACEMENTS]
+    places = []
+    for p in PLACEMENTS:
+        d = {"zone": p[0], "grants": p[1]}
+        if len(p) > 3: d["requires"] = p[3]
+        d["notes"] = p[2]
+        places.append(d)
     doc = {
         "format": "uw1-zones",
         "version": 1,

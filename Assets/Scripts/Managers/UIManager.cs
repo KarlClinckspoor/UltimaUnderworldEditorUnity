@@ -899,19 +899,23 @@ public class UIManager : MonoBehaviour {
 		}
 	}
 
-	public void ChangeTileSector(GameObject tileObj)
+	public void ChangeTileSector(GameObject tileObj, bool erase = false)
 	{
+		MapTileScript mts = tileObj.GetComponent<MapTileScript>();
+		MapTile tile = mts ? mts.MapTile : null;
+		if (!tile)
+			return;
+		// Zoning (Tools > Zones): left button paints the selected zone, right button unassigns.
+		if (UltimateEditor.Uw1.UI.ZoneTools.Zones != null)
+		{
+			UltimateEditor.Uw1.UI.ZoneTools.Paint(tile, erase);
+			return;
+		}
 		Sector sec = getSector();
 		if (sec == null)
 			return;
-		Debug.Log("C");
-		MapTileScript mts = tileObj.GetComponent<MapTileScript>();
-		MapTile tile = mts.MapTile;
-		if (tile)
-		{
-			mts.SetOverlay(true);
-			mts.SetOverlayColor(sec.SectorColor);
-		}
+		mts.SetOverlay(true);
+		mts.SetOverlayColor(sec.SectorColor);
 	}
 
 	public void ChangeTileHeight(GameObject tileObj, float val)

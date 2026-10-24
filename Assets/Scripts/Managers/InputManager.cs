@@ -207,12 +207,10 @@ public class InputManager : MonoBehaviour {
 	{		
 		if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
 		{
-			Debug.Log($"A, currentObject : {currentObject}, {GetDataType(currentObject)}");
 			if (currentObject && GetDataType(currentObject) == DataType.Tile)
 			{
-				Debug.Log("B");
 				clickedObject = currentObject.transform.parent.gameObject;
-				UIManager.ChangeTileSector(clickedObject);
+				UIManager.ChangeTileSector(clickedObject, Input.GetMouseButton(1) && !Input.GetMouseButton(0));
 			}
 		}
 	}

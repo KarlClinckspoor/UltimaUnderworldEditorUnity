@@ -2130,9 +2130,9 @@
    "notes": "Rodrick, L4 (32,61), stands in zone 2 by the maze door (audit)."
   },
   {
-   "zone": 52,
+   "zone": 51,
    "grants": "key:15",
-   "notes": "The ghost (create-object trap template at L5 (53,3), in the tomb) carries it; the notes put the summoning trigger in the vestibule."
+   "notes": "The ghost carries it (create-object trap template at L5 (53,3), in the tomb); the notes say the summoning trigger is in the vestibule, so the key is counted there."
   },
   {
    "zone": 2,
@@ -2160,9 +2160,55 @@
    "notes": "Sword blade area."
   },
   {
-   "zone": 25,
+   "zone": 2,
    "grants": "talisman:sword",
-   "notes": "Counts the Sword of Justice here for the solver: the blade (zone 25) and the hilt (L5 tombs, zone 2) are reforged at an anvil in zone 2."
+   "requires": "item:broken_blade & item:broken_hilt",
+   "notes": "Shak (L2, conversation slot 0x02) reforges the Sword of Justice (do_inv_create 0x0A) from the blade and the hilt."
+  },
+  {
+   "zone": 2,
+   "grants": "item:key_of_love",
+   "requires": "item:picture_tom",
+   "notes": "Judy (L5, slot 0x17) creates the key of Love (do_inv_create 0xE2) for Tom's picture."
+  },
+  {
+   "zone": 2,
+   "grants": "item:key_of_truth",
+   "requires": "flag:gurstang_phrase",
+   "notes": "Illomo (L6, slot 0xBB) and the Gurstang phrase (quest 9); exact dialogue not checked."
+  },
+  {
+   "zone": 2,
+   "grants": "item:tripartite_key",
+   "requires": "item:key_of_truth & item:key_of_love & item:key_of_courage",
+   "notes": "The three keys joined."
+  },
+  {
+   "zone": 2,
+   "grants": "item:lava_boots",
+   "requires": "npc:marrowsuck",
+   "notes": "Marrowsuck the ghoul (L5 (34,23), slot 0x06) creates the dragon skin boots (do_inv_create 47 = 0x2F). What he wants for them is in his dialogue, not checked."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:marrowsuck",
+   "notes": "Marrowsuck, L5 (34,23)."
+  },
+  {
+   "zone": 2,
+   "grants": "flag:talismans_quest",
+   "requires": "npc:garamon",
+   "notes": "Garamon appears at his grave on L5 (54,53) (create-object trap); quest 5 is set when he asks for the talismans. Needs the incense/figurine ritual (USEITEMS.C), not modelled."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:garamon",
+   "notes": "Garamon's ghost, trap template at L5 (54,53)."
+  },
+  {
+   "zone": 2,
+   "grants": "flag:fought_guards",
+   "notes": "Fighting through the L7 guard posts is always possible; option-like, kept as a free placement here."
   },
   {
    "zone": 2,
@@ -2269,13 +2315,9 @@
   "flag:deco_morono": "Where is the password learned? Not in the notes.",
   "flag:lizard_friend": "Quest 6: set by the game when the creature with whoami 0x18 ('prisoner', Murgo) dies; Sseetharee's conversation reads it. Alternative routes to Murgo's prison are not in the notes.",
   "flag:crux_writ": "Knights' quest (quest byte 32 reaching 3/4): find the writ of Lorne; Dorna opens the armoury.",
-  "flag:fought_guards": "Fighting through the L7 guard posts instead of showing the medallion.",
   "flag:bullfrog_solved": "Solving the bullfrog puzzle (wand 555 resets it).",
   "flag:maze_memorised": "Walking the damaging maze from memory.",
   "flag:kneenibble_code": "Kneenibble's code for the zanium mine (notes say the corridor is otherwise free).",
-  "flag:talismans_quest": "Quest 5: Garamon, at his grave with the incense/figurine, asks for the talismans.",
-  "item:tripartite_key": "Keys of Truth (Illomo, after Gurstang's phrase), Love (Judy, after Tom's picture) and Courage (zone 68).",
-  "item:lava_boots": "Dragon skin boots: where found? Not in the notes.",
   "talismans:8": "sword (blade from zone 25 + hilt from L5 tombs, reforged at the anvil), shield, ring, taper, cup, wine, book, standard (Dorna). The sword counts only once reforged."
  },
  "tiles": {
