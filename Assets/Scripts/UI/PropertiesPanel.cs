@@ -548,8 +548,21 @@ public class PropertiesPanel : MonoBehaviour {
 			}
 			if (uw2 && so.IsTrap() && !UltimateEditor.Games.Uw2Traps.SharedWithUw1(so.ObjectID))
 			{
-				createSliderProperty("Quality", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
-				createSliderProperty("Owner", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+				// The fields UW2's traps read, with what they come to at their present values
+				Text decoded = null;
+				Action refresh = () =>
+				{
+					if (decoded) decoded.text = "Now: " + (Uw2TrapNow(so) ?? "(no decoding for this trap)");
+				};
+				decoded = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "", 11, new Color(1f, 0.92f, 0.6f));
+				decoded.horizontalOverflow = HorizontalWrapMode.Wrap;
+				refresh();
+				createSliderProperty("Quality", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => { changeObjectQuality(so, (int)f); refresh(); });
+				createSliderProperty("Owner", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => { changeObjectOwner(so, (int)f); refresh(); });
+				createSliderProperty("Z (height)", BasicPanel.transform, so.ZPos, 0, 127.0f, (f) => { changeObjectZPos(so, (int)f); refresh(); });
+				createSliderProperty("Heading", BasicPanel.transform, so.Direction, 0, 7.0f, (f) => { changeObjectDir(so, (int)f); refresh(); });
+				createSliderProperty("Fine X", BasicPanel.transform, so.XPos, 0, 7.0f, (f) => { changeObjectX(so, (int)f); refresh(); });
+				createSliderProperty("Fine Y", BasicPanel.transform, so.YPos, 0, 7.0f, (f) => { changeObjectY(so, (int)f); refresh(); });
 			}
 			else if (so.ObjectID == 384)   //Damage trap
 			{
@@ -849,6 +862,20 @@ public class PropertiesPanel : MonoBehaviour {
 		MapCreator.RemoveObject(target, true);
 		SetBasicPanel(parent);
 	}
+	/// <summary>A UW2 trap's fields decoded (Uw2Traps.Decode), with block 9 for the text string trap.</summary>
+	static string Uw2TrapNow(StaticObject so)
+	{
+		Func<int, string> text = (n) =>
+		{
+			var sd = MapCreator.StringData;
+			if (sd == null || sd.Blocks == null) return null;
+			foreach (var b in sd.Blocks)
+				if (b.BlockNumber == 9) return n >= 0 && n < b.Strings.Count ? b.Strings[n] : null;
+			return null;
+		};
+		return UltimateEditor.Games.Uw2Traps.Decode(so.ObjectID, so.Quality, so.Owner, so.ZPos, so.Direction, so.XPos, so.YPos, so.IsQuantity, so.Special, text);
+	}
+
 	private void changeObjectIsDoorOpen(StaticObject so, bool val)
 	{
 		so.IsDoorOpen = val;
