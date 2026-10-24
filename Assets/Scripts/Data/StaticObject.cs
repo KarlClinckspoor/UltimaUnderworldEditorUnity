@@ -2276,15 +2276,18 @@ public class ContainerData
 
 public class ProjectileData
 {
+	//OBJECTS.DAT struct MissileInfo (include/object.h in underworld-exhumed)
 	public int Damage;
-	public int Unk1;
-	public int Unk2;
+	public int Unk1;    //byte 1: missile type
+	public int Unk2;    //byte 2: signed; for ammunition, minus its damage type (0x40 missile, 0x0B magic + fire...)
 }
 
 public class RangedData
 {
-	public int Ammo;
-	public int Unk1;
+	//OBJECTS.DAT struct MissileInfo for launchers (items 0x18-0x1F)
+	public int Unk1;    //byte 0: damage
+	public int Type;    //byte 1: missile type
+	public int Ammo;    //byte 2: ammunition item - 0x10 (0 sling stone, 1 bolt, 2 arrow)
 }
 
 public class LightData

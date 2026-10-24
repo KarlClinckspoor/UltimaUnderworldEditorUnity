@@ -1536,19 +1536,15 @@ public static class DataWriter {
 	}
 	public static void SaveProjectileData(ProjectileData pd, FileStream fs)
 	{
-		byte b2 = (byte)((pd.Damage << 1) + ((pd.Unk1 & 0x100) >> 8));
-		byte b1 = (byte)(pd.Unk1 & 0xFF);
-		fs.WriteByte(b1);
-		fs.WriteByte(b2);
+		fs.WriteByte((byte)pd.Damage);
+		fs.WriteByte((byte)pd.Unk1);
 		fs.WriteByte((byte)pd.Unk2);
 	}
 	public static void SaveRangedData(RangedData rd, FileStream fs)
 	{
-		byte b1 = (byte)(rd.Ammo & 0xFF);
-		byte b2 = (byte)((rd.Ammo & 0xFF00) >> 8);
-		fs.WriteByte(b1);
-		fs.WriteByte(b2);
 		fs.WriteByte((byte)rd.Unk1);
+		fs.WriteByte((byte)rd.Type);
+		fs.WriteByte((byte)rd.Ammo);
 	}
 	public static void SaveArmourData(ArmourData ad, FileStream fs)
 	{

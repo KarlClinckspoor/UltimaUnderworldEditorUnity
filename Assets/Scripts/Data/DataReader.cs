@@ -1635,9 +1635,11 @@ public static class DataReader {
 		int b = fs.ReadByte();
 		int c = fs.ReadByte();
 
-		int dam = a + b * 256;
-		pd.Damage = (dam >> 9) & 0x7F;
-		pd.Unk1 = dam & 0x1FF;
+		// include/object.h struct MissileInfo: damage, type, signed ammo (here: the damage
+		// type, as minus its value). It was read as a word with the damage in bits 9-15,
+		// which showed the type's upper bits as the damage.
+		pd.Damage = a;
+		pd.Unk1 = b;
 		pd.Unk2 = c;
 		return pd;
 	}
@@ -1655,8 +1657,11 @@ public static class DataReader {
 		int b = fs.ReadByte();
 		int c = fs.ReadByte();
 
-		rd.Ammo = a + b * 256;
-		rd.Unk1 = c;
+		// struct MissileInfo again: damage, type, then the ammunition (item - 0x10,
+		// COMBAT.C:555). It was read as Ammo = the first word, Unk1 = the ammunition byte.
+		rd.Unk1 = a;
+		rd.Type = b;
+		rd.Ammo = c;
 		return rd;
 	}
 	public static ArmourData[] ReadArmourDatas(FileStream fs)
