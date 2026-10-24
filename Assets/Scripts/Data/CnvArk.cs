@@ -43,7 +43,10 @@ public static class CnvArk
 		return img;
 	}
 
-	/// <summary>Blocks the last save wrote.</summary>
+	/// <summary>Slots the editor read a conversation from (DataReader.LoadConversations).</summary>
+	public static readonly HashSet<int> Loaded = new HashSet<int>();
+
+	/// <summary>Blocks the last save wrote or removed.</summary>
 	public static readonly List<int> LastWritten = new List<int>();
 
 	/// <summary>
@@ -61,7 +64,14 @@ public static class CnvArk
 			var now = written.Read(b);
 			var old = archive.Read(b);
 			if (now == null && old == null) continue;
-			if (now == null) continue;   // the editor never deletes a conversation slot; keep the old one
+			if (now == null)
+			{
+				// Deleted or cleared in the editor (UIManager's delete list, ClearConversations):
+				// remove the block, as the old writer did. A slot the editor could not read
+				// (absent from Loaded) is kept.
+				if (old != null && Loaded.Contains(b)) { archive.Delete(b); LastWritten.Add(b); }
+				continue;
+			}
 			if (old != null && Same(old, now)) continue;
 			archive.Write(b, now);
 			LastWritten.Add(b);

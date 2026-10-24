@@ -1428,6 +1428,9 @@ public static class DataReader {
 			convs[i] = conv;
 		}
 
+		// CnvArk.Merge removes a loaded slot's block when the editor nulls the slot
+		CnvArk.Loaded.Clear();
+		for (int i = 0; i < convs.Length; i++) if (convs[i] != null) CnvArk.Loaded.Add(i);
 		return convs;
 	}
 

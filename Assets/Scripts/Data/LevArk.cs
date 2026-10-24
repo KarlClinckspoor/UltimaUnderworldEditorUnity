@@ -194,7 +194,17 @@ public static class LevArk
 		if (Game.Kind == GameKind.UW2)
 		{
 			WriteUw2Overlays(ld, block, source);
-			if (source == null || !Same(block, source)) new LevelBlock(block, GameKind.UW2).CrunchFreeRecords();
+			WriteUw2Timers(ld, block, source);
+			if (source == null || !Same(block, source))
+			{
+				// ObjCrunch zeroes the free records only after the object lists pass the check
+				// (MAP.C Map_Save); a failing level is saved with its free records as they were
+				bool ok;
+				var lb = new LevelBlock(block, GameKind.UW2);
+				string report = lb.Check(out ok);
+				if (ok) lb.CrunchFreeRecords();
+				else UnityEngine.Debug.LogWarning("Level " + l + ": the object lists fail the game's check (" + report + "); free records left as they were. The game will ask before saving this level.");
+			}
 		}
 		return block;
 	}
@@ -264,6 +274,45 @@ public static class LevArk
 		var live = LiveOverlays(ld);
 		if (source != null && SameSet(live, LiveOverlaysIn(source, LevelBlock.Uw2OverlaysAt))) return;
 		PutOverlays(block, LevelBlock.Uw2OverlaysAt, live, true);
+	}
+
+	static bool IsTimerTrigger(StaticObject o) { return o != null && (o.ObjectID == 0x1A9 || o.ObjectID == 0x1B9); }
+
+	/// <summary>
+	/// UW2's 64 timer words (object indexes of the timer triggers, EFFECT.C timerlist). The game
+	/// never adds to the list (add_timer_obj has no caller), so the editor keeps it: entries
+	/// whose object is still a timer trigger stay in their order, timer triggers not listed
+	/// are added, the rest is zeroed. An unchanged list leaves the bytes alone.
+	/// </summary>
+	static void WriteUw2Timers(LevelData ld, byte[] block, byte[] source)
+	{
+		int at = LevelBlock.Uw2TimersAt;
+		var old = new List<int>();
+		if (source != null && source.Length >= at + 128)
+			for (int i = 0; i < 64; i++)
+			{
+				int v = source[at + 2 * i] | source[at + 2 * i + 1] << 8;
+				if (v == 0) break;
+				old.Add(v);
+			}
+		var list = new List<int>();
+		foreach (int v in old)
+			if (v < ld.Objects.Length && IsTimerTrigger(ld.Objects[v]) && !list.Contains(v)) list.Add(v);
+		for (int i = 0; i < ld.Objects.Length; i++)
+			if (IsTimerTrigger(ld.Objects[i]) && !list.Contains(i)) list.Add(i);
+		if (list.Count > 64)
+		{
+			UnityEngine.Debug.LogWarning("Level " + ld.Level + ": " + list.Count + " timer triggers; the game keeps 64, the rest will not fire.");
+			list.RemoveRange(64, list.Count - 64);
+		}
+		bool same = list.Count == old.Count;
+		for (int i = 0; same && i < list.Count; i++) same = list[i] == old[i];
+		if (same && source != null) return;
+		for (int i = 0; i < 64; i++)
+		{
+			int v = i < list.Count ? list[i] : 0;
+			block[at + 2 * i] = (byte)v; block[at + 2 * i + 1] = (byte)(v >> 8);
+		}
 	}
 
 	/// <summary>

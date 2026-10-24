@@ -578,11 +578,24 @@ public class MapCreator : MonoBehaviour {
 	{
 		LevelData[level - 1].FloorTextures[levelFloorIndex] = loadedFloorIndex;
 		UpdateAllFloorTextures(levelFloorIndex, level);
+		// UW2: one table of 64; the floor list is its first 16 entries, so keep the two in step
+		var ld = LevelData[level - 1];
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && levelFloorIndex < ld.WallTextures.Length && ld.WallTextures[levelFloorIndex] != loadedFloorIndex)
+		{
+			ld.WallTextures[levelFloorIndex] = loadedFloorIndex;
+			UpdateAllWallTextures(levelFloorIndex, level);
+		}
 	}
 	public static void SwapWallTexture(int level, int levelWallIndex, int loadedWallIndex)
 	{
 		LevelData[level - 1].WallTextures[levelWallIndex] = loadedWallIndex;
 		UpdateAllWallTextures(levelWallIndex, level);
+		var ld = LevelData[level - 1];
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && levelWallIndex < ld.FloorTextures.Length && ld.FloorTextures[levelWallIndex] != loadedWallIndex)
+		{
+			ld.FloorTextures[levelWallIndex] = loadedWallIndex;
+			UpdateAllFloorTextures(levelWallIndex, level);
+		}
 	}
 	public static void SwapDoorTexture(int level, int levelDoorIndex, int loadedDoorIndex)
 	{
@@ -1397,7 +1410,10 @@ public class MapCreator : MonoBehaviour {
 			return false;
 		// event/TRIGGER.C: a change terrain trap's fine X/Y are the size of the area it
 		// changes (x..x+fineX); its create menu has already set them, so keep them.
-		if (trigger.ObjectID != 0x185)
+		// UW2's traps read fine X/Y as data (set and check variable, teleport facing, pit
+		// height, inventory "worn", oscillator, proximity), so they keep theirs.
+		bool uw2Trap = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && (trigger.IsTrap() || trigger.IsDoorTrap());
+		if (trigger.ObjectID != 0x185 && !uw2Trap)
 		{
 			trigger.XPos = 3;
 			trigger.YPos = 3;

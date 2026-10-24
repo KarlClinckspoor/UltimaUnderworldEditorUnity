@@ -100,8 +100,10 @@ namespace UltimateEditor.Games
 			if (id == 0x36) return ObjectType.SpecialBauble;            // strange artifact
 			if (id <= 0x3A) return ObjectType.Baubles;                  // rings
 			if (id <= 0x3F) return ObjectType.Shield;
-			if (id <= 0x7E) return names[id] != null ? ObjectType.Monster : ObjectType.Unknown;
-			if (id == 0x7F) return ObjectType.Unknown;                  // the adventurer
+			// Every creature id is a mobile object, named or not: the shipped levels hold 0x7C and
+			// 0x7D in mobile slots, and 0x7F (the adventurer) is the create object trap's
+			// template for a random monster.
+			if (id <= 0x7F) return ObjectType.Monster;
 			if (id <= 0x8F) return ObjectType.Container;
 			if (id <= 0x97) return ObjectType.Light;
 			if (id <= 0x9B) return ObjectType.Wand;

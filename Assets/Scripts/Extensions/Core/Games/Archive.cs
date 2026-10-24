@@ -19,6 +19,8 @@ namespace UltimateEditor.Games
 		public abstract byte[] Read(int block);
 		/// <summary>Writes a block's data as the game would (compressing per its flags for UW2).</summary>
 		public abstract void Write(int block, byte[] data);
+		/// <summary>Removes a block: its bytes leave the file, later blocks move down, its offset becomes 0.</summary>
+		public abstract void Delete(int block);
 
 		public byte[] ToArray() { return (byte[])file.Clone(); }
 		public void Save(string path) { File.WriteAllBytes(path, file); }
@@ -93,6 +95,21 @@ namespace UltimateEditor.Games
 			uint at = (uint)list.Count;
 			list.AddRange(data);
 			PutAt(list, 2 + 4 * b, at);
+			file = list.ToArray();
+		}
+
+		public override void Delete(int b)
+		{
+			if (!Has(b)) return;
+			uint off = Offset(b);
+			int len = Length(b);
+			var olds = new uint[Count];
+			for (int i = 0; i < Count; i++) olds[i] = Offset(i);
+			var list = new List<byte>(file);
+			list.RemoveRange((int)off, len);
+			for (int i = 0; i < Count; i++)
+				if (olds[i] > off) PutAt(list, 2 + 4 * i, olds[i] - (uint)len);
+			PutAt(list, 2 + 4 * b, 0);
 			file = list.ToArray();
 		}
 
@@ -199,6 +216,27 @@ namespace UltimateEditor.Games
 			}
 			PutU32(nf, 6 + 4 * b, writePos);
 			PutU32(nf, 6 + 12 * n + 4 * b, size + pad2);
+			file = nf;
+		}
+
+		/// <summary>Removes a block and its room; later offsets move down; offset, length and room become 0 (flags stay).</summary>
+		public override void Delete(int b)
+		{
+			if (!Has(b)) return;
+			uint off = Offset(b), room = Math.Max(Room(b), StoredLength(b));
+			if (off + room > file.Length) room = (uint)file.Length - off;
+			var nf = new byte[file.Length - room];
+			Array.Copy(file, 0, nf, 0, off);
+			Array.Copy(file, off + room, nf, off, file.Length - off - room);
+			int n = Count;
+			for (int i = 0; i < n; i++)
+			{
+				uint o = U32(nf, 6 + 4 * i);
+				if (o > off) PutU32(nf, 6 + 4 * i, o - room);
+			}
+			PutU32(nf, 6 + 4 * b, 0);
+			PutU32(nf, 6 + 8 * n + 4 * b, 0);
+			PutU32(nf, 6 + 12 * n + 4 * b, 0);
 			file = nf;
 		}
 

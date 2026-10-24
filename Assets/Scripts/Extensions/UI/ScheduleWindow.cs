@@ -41,25 +41,15 @@ namespace UltimateEditor.Uw1.UI
 				Fill(w, blocks);
 				w.Status.text = "Row added at the end. Rows run in order of time; keep them sorted.";
 			}, 80, 22);
-			UiKit.Button(tools, "Sort by time", () =>
-			{
-				var blk = blocks[shownBlock];
-				// Stable, so a test row keeps the disabled rows that follow it when they share its time
-				var sorted = new List<ScdRow>(blk.Rows);
-				var keyed = new List<KeyValuePair<int, ScdRow>>();
-				for (int i = 0; i < sorted.Count; i++) keyed.Add(new KeyValuePair<int, ScdRow>(i, sorted[i]));
-				keyed.Sort((a, b) => a.Value.Time != b.Value.Time ? a.Value.Time.CompareTo(b.Value.Time) : a.Key.CompareTo(b.Key));
-				blk.Rows.Clear();
-				foreach (var k in keyed) blk.Rows.Add(k.Value);
-				Fill(w, blocks);
-			}, 90, 22);
+			UiKit.Button(tools, "Sort by time", () => { SortStable(blocks[shownBlock]); Fill(w, blocks); }, 90, 22);
 			UiKit.Button(tools, "Save SCD.ARK", () =>
 			{
 				var problems = Check(blocks);
+				if (problems.Length > 0) { w.Status.text = "Not saved:" + problems + " Use Sort by time."; return; }
 				var written = ScdArk.Write(arc, blocks);
-				if (written.Count == 0) { w.Status.text = "Nothing changed." + problems; return; }
+				if (written.Count == 0) { w.Status.text = "Nothing changed."; return; }
 				ExtensionsMenu.WriteDataFile(Path.GetFileName(path), arc.ToArray());
-				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + "." + problems;
+				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + ".";
 			}, 110, 22, UiKit.AccentColor);
 			UiKit.Button(tools, "Reload", () => { w.Close(); Show(); }, 70, 22);
 			UiKit.Paragraph(w.Toolbar,
@@ -105,7 +95,16 @@ namespace UltimateEditor.Uw1.UI
 			Text desc = null;
 			Action refresh = () => { if (desc) desc.text = ScdRow.LevelText(r.Level) + ": " + r.Describe(NpcName); };
 			UiKit.Label(row, i.ToString(), 10, FontStyle.Normal, UiKit.DimTextColor, 28);
-			UiKit.Input(row, r.Time.ToString(), s => { int v; if (int.TryParse(s, out v) && v >= 0 && v <= 0xFFFF) r.Time = v; refresh(); }, 50);
+			UiKit.Input(row, r.Time.ToString(), s =>
+			{
+				int v;
+				if (!int.TryParse(s, out v) || v < 0 || v > 0xFFFF || v == r.Time) { refresh(); return; }
+				r.Time = v;
+				// SCHEDULE.C stops at the first row past the clock, so the rows must stay in time order
+				SortStable(blk);
+				Fill(w, blocks);
+				w.Status.text = "Row moved to its place by time (rows of the same time keep their order).";
+			}, 50);
 			UiKit.Input(row, r.Level.ToString(), s => { int v; if (int.TryParse(s, out v) && v >= 0 && v <= 255) r.Level = v; refresh(); }, 44);
 			UiKit.Check(row, "once", r.Once, b => { r.Once = b; refresh(); }, 64);
 			UiKit.Input(row, r.Event.ToString(), s => { int v; if (int.TryParse(s, out v) && v >= -128 && v <= 127) r.Event = v; refresh(); }, 44);
@@ -118,10 +117,30 @@ namespace UltimateEditor.Uw1.UI
 			}, 230, false);
 			desc = UiKit.Label(row, "", 10, FontStyle.Normal, null, -1);
 			refresh();
-			UiKit.Button(row, "^", () => { if (i > 0) { blk.Rows.RemoveAt(i); blk.Rows.Insert(i - 1, r); Fill(w, blocks); } }, 20);
-			UiKit.Button(row, "v", () => { if (i < blk.Rows.Count - 1) { blk.Rows.RemoveAt(i); blk.Rows.Insert(i + 1, r); Fill(w, blocks); } }, 20);
+			UiKit.Button(row, "^", () => Move(w, blocks, blk, i, -1), 20);
+			UiKit.Button(row, "v", () => Move(w, blocks, blk, i, 1), 20);
 			UiKit.Button(row, "+", () => { blk.Rows.Insert(i + 1, r.Clone()); Fill(w, blocks); }, 20);
 			UiKit.Button(row, "x", () => { blk.Rows.RemoveAt(i); Fill(w, blocks); }, 20, 20, UiKit.WarnColor);
+		}
+
+		/// <summary>Swaps a row with its neighbour when both have the same time; order across
+		/// times is set by the time itself.</summary>
+		static void Move(Window w, List<ScdBlock> blocks, ScdBlock blk, int i, int d)
+		{
+			int j = i + d;
+			if (j < 0 || j >= blk.Rows.Count) return;
+			if (blk.Rows[j].Time != blk.Rows[i].Time) { w.Status.text = "Rows run in order of time; change the time to move a row past rows of another time."; return; }
+			var r = blk.Rows[i]; blk.Rows[i] = blk.Rows[j]; blk.Rows[j] = r;
+			Fill(w, blocks);
+		}
+
+		static void SortStable(ScdBlock blk)
+		{
+			var keyed = new List<KeyValuePair<int, ScdRow>>();
+			for (int i = 0; i < blk.Rows.Count; i++) keyed.Add(new KeyValuePair<int, ScdRow>(i, blk.Rows[i]));
+			keyed.Sort((a, b) => a.Value.Time != b.Value.Time ? a.Value.Time.CompareTo(b.Value.Time) : a.Key.CompareTo(b.Key));
+			blk.Rows.Clear();
+			foreach (var k in keyed) blk.Rows.Add(k.Value);
 		}
 
 		static string NpcName(int whoami)
