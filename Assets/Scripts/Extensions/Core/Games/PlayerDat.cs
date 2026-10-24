@@ -139,7 +139,7 @@ namespace UltimateEditor.Games
 		/// <summary>Experience in tenths, as stored.</summary>
 		public long ExperienceTenths
 		{
-			get { return Record[0x4E] | Record[0x4F] << 8 | Record[0x50] << 16 | (long)Record[0x51] << 24; }
+			get { return (long)(uint)(Record[0x4E] | Record[0x4F] << 8 | Record[0x50] << 16 | Record[0x51] << 24); }
 			set { Record[0x4E] = (byte)value; Record[0x4F] = (byte)(value >> 8); Record[0x50] = (byte)(value >> 16); Record[0x51] = (byte)(value >> 24); }
 		}
 		public int SkillPoints { get { return Record[0x52]; } set { Record[0x52] = B(value); } }
