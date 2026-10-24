@@ -51,6 +51,7 @@ namespace UltimateEditor.Uw1
 	{
 		public static ItemCategory Of(int item)
 		{
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2) return OfUw2(item);
 			if (item < 0x10) return ItemCategory.MeleeWeapon;
 			if (item < 0x18) return ItemCategory.Ammunition;
 			if (item < 0x20) return ItemCategory.Launcher;
@@ -75,6 +76,44 @@ namespace UltimateEditor.Uw1
 			if (item < 0x130) return item == 0x120 ? ItemCategory.SpellObject : ItemCategory.MagicItem;   // class 0x12: the spell object, then tools (bedroll, mandolin, spike...)
 			if (item < 0x138) return ItemCategory.Book;
 			if (item < 0x140) return ItemCategory.Scroll;
+			if (item < 0x150) return ItemCategory.Door;
+			if (item < 0x160) return ItemCategory.Furniture;
+			if (item < 0x170) return ItemCategory.Decal;
+			if (item < 0x180) return ItemCategory.Switch;
+			if (item < 0x1A0) return ItemCategory.Trap;
+			if (item < 0x1C0) return ItemCategory.Trigger;
+			return ItemCategory.Animated;
+		}
+
+		/// <summary>UW2's classes (uw2 include/items.h; see Games/Uw2Items.cs for the types).</summary>
+		public static ItemCategory OfUw2(int item)
+		{
+			if (item < 0x10) return ItemCategory.MeleeWeapon;
+			if (item < 0x18) return ItemCategory.Ammunition;   // stones, bolts, arrows, then the special missiles
+			if (item < 0x1B || item == 0x1F) return ItemCategory.Launcher;
+			if (item < 0x20) return ItemCategory.Ammunition;   // homing dart, snowball, fireball, satellite
+			if (item < 0x30 || item == 0x33) return ItemCategory.Armour;
+			if (item < 0x33 || item == 0x34) return ItemCategory.Crown;   // crowns, the fraznium circlet
+			if (item == 0x36) return ItemCategory.Quest;      // strange artifact
+			if (item < 0x3B) return ItemCategory.Ring;        // Guardian signet ring and the rings
+			if (item < 0x40) return ItemCategory.Shield;
+			if (item < 0x80) return ItemCategory.Creature;
+			if (item < 0x90) return ItemCategory.Container;
+			if (item < 0x98) return ItemCategory.Light;
+			if (item < 0xA0) return ItemCategory.Wand;
+			if (item < 0xB0) return ItemCategory.Treasure;
+			if (item < 0xC0) return ItemCategory.Food;
+			if (item < 0xE0) return ItemCategory.Scenery;
+			if (item >= 0xE1 && item <= 0xE7) return ItemCategory.Potion;
+			if (item < 0x100) return ItemCategory.Runestone;
+			if (item < 0x102) return ItemCategory.MagicItem;  // curious implement, lockpick
+			if (item == 0x10F) return ItemCategory.Lock;
+			if (item < 0x110) return ItemCategory.Key;
+			if (item < 0x120) return ItemCategory.Quest;
+			if (item < 0x130) return item == 0x120 ? ItemCategory.SpellObject : ItemCategory.MagicItem;
+			if (item < 0x134 || item == 0x138) return ItemCategory.Book;
+			if (item < 0x13B) return ItemCategory.Scroll;     // scrolls and maps
+			if (item < 0x140) return ItemCategory.Scenery;
 			if (item < 0x150) return ItemCategory.Door;
 			if (item < 0x160) return ItemCategory.Furniture;
 			if (item < 0x170) return ItemCategory.Decal;

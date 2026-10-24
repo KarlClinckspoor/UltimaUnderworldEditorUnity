@@ -24,6 +24,14 @@ namespace UltimateEditor.Uw1
 		public static List<Role> For(int item, bool isQuantity)
 		{
 			var roles = new List<Role>();
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+			{
+				// The roles below are UW1's. For UW2 only the traps and triggers are described
+				// (uw2 event/TRIGGER.C); other items' fields are not mapped yet.
+				var d = UltimateEditor.Games.Uw2Traps.Describe(item);
+				if (d != null) roles.Add(R("Fields", d, "uw2 event/TRIGGER.C"));
+				return roles;
+			}
 			int cls = item >> 4;
 			if (item >= 0x180 && item < 0x1C0)
 			{

@@ -143,7 +143,7 @@ namespace UltimateEditor.Uw1.UI
 		/// <summary>Writes a DATA file, keeping a one-time .BKP copy of the original as the editor does.</summary>
 		public static void WriteDataFile(string fileName, byte[] data)
 		{
-			string path = Path.Combine(DataFolder, fileName);
+			string path = UltimateEditor.Games.GameFiles.Resolve(Path.Combine(DataFolder, fileName));
 			string backup = path + ".BKP";
 			if (File.Exists(path) && !File.Exists(backup))
 				File.Copy(path, backup);
