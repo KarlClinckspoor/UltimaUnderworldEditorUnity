@@ -449,13 +449,13 @@ public class PropertiesPanel : MonoBehaviour {
 		}
 		else if(so.IsDoorTrap())
 		{
-			string[] doorTrapTypes = new string[] { "Open", "Close", "Both" };
+			string[] doorTrapTypes = new string[] { "Open", "Close", "Toggle" };   //quality 1, 2, 3 (TRIGGER.C TRAP_DOOR)
 			Action<int> changeDoorTrapTypeAct = (i) =>
 			{
 				so.Quality = i + 1;
 				Quality.text = so.Quality.ToString();
 			};
-			createDropdownProperty("Action type", BasicPanel.transform, doorTrapTypes[so.Quality - 1], doorTrapTypes, changeDoorTrapTypeAct);
+			createDropdownProperty("Action type", BasicPanel.transform, doorTrapTypes[Mathf.Clamp(so.Quality - 1, 0, 2)], doorTrapTypes, changeDoorTrapTypeAct);
 			StaticObject lockObj = so.GetLock();
 			if (lockObj)
 				createLinkProperty(so, lockObj, "Door lock", "Select", "Destroy", (next) => destroyContainedObject(so, next));
@@ -527,12 +527,19 @@ public class PropertiesPanel : MonoBehaviour {
 		}
 		else if (so.IsTrigger() || so.IsTrap() || so.ObjectID == 387)
 		{
+			// Trap and trigger semantics from underworld-exhumed, uw1/src/event/TRIGGER.C
+			// (UseTrigger, UseTrap, do_trap_hack); see Extensions/Core/Uw1Traps.cs.
 			createLinkingProperties(so);
+			if (so.IsTrigger())
+				createTriggerProperties(so);
+			else
+				createTrapReferenceProperty(so);
 			if (so.ObjectID == 384)   //Damage trap
 			{
-				string[] damTypes = new string[] { "Health", "Poison" };
-				createDropdownProperty("Damage type", BasicPanel.transform, damTypes[so.Owner], damTypes, (i) => changeObjectOwner(so, i));
-				createSliderProperty("Damage value", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
+				// Quality is the damage; a non-zero owner makes it heal instead (it was shown
+				// as a "health/poison" damage type).
+				createSliderProperty("Damage (or healing)", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
+				createToggleProperty("Heals instead of hurting", BasicPanel.transform, so.Owner != 0, (b) => changeObjectOwner(so, b ? 1 : 0));
 			}
 			else if (so.ObjectID == 385)    //Teleport
 			{
@@ -575,29 +582,49 @@ public class PropertiesPanel : MonoBehaviour {
 				changeProjectileType.onClick.AddListener(() => spawnItemPicker());
 				createDirectionDropdown(so);
 			}
-			else if (so.ObjectID == 387)    //Do trap
+			else if (so.ObjectID == 387)    //Do (special) trap
 			{
-				if (so.Quality == 2)        //Camera
+				// do_trap_hack: the quality picks a special case of the game. The old labels
+				// (camera, platform, attitude) were UW2's.
+				var hacks = UltimateEditor.Uw1.Uw1Traps.HackTraps;
+				string[] names = new string[hacks.Length + 1];
+				int current = hacks.Length;
+				for (int i = 0; i < hacks.Length; i++)
 				{
-					createHeightSlider(so);
-					createDirectionDropdown(so);
+					names[i] = string.Format("0x{0:X2} {1}", hacks[i].Key, hacks[i].Value);
+					if (hacks[i].Key == so.Quality) current = i;
 				}
-				else if (so.Quality == 3)   //Platform
+				names[hacks.Length] = string.Format("0x{0:X2} (no effect in UW1)", so.Quality);
+				createDropdownProperty("Special trap", BasicPanel.transform, names[current], names, (i) =>
 				{
-					createSliderProperty("Target height", BasicPanel.transform, so.ZPos, 0, 8.0f, (f) => changeObjectZPos(so, (int)f), (f) => f * 16);
-				}
-				else if (so.Quality == 5)   //Attitude
+					if (i < hacks.Length)
+						changeObjectQuality(so, hacks[i].Key);
+					SetBasicPanel(so);
+				});
+				if (so.Quality == 5)
 				{
 					string[] races = MapCreator.StringData.GetRaces();
-					createDropdownProperty("Angered monster", BasicPanel.transform, races[so.Owner], races, (i) => changeObjectOwner(so, i));
+					createDropdownProperty("Race wronged (owner)", BasicPanel.transform, races[Mathf.Clamp(so.Owner, 0, races.Length - 1)], races, (i) => changeObjectOwner(so, i));
 				}
+				else if (so.Quality >= 0x3C && so.Quality <= 0x3E)
+					createSliderProperty("Earthquake strength (owner)", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+				else if (so.Quality == 0x3F)
+					createSliderProperty("End game mode - 1 (owner)", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+				else
+					createSliderProperty("Parameter (owner)", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+			}
+			else if (so.ObjectID == 388 || so.ObjectID == 399)	//Pit, combination
+			{
+				createButtonProperty("No effect in UW1 (UseTrap has no case for it); it only passes on to its link.", BasicPanel.transform);
 			}
 			else if (so.ObjectID == 389)	//Terrain trap
 			{
 				createSliderProperty("Size X", BasicPanel.transform, so.XPos, 0, 7.0f, (f) => changeObjectX(so, (int)f));
 				createSliderProperty("Size Y", BasicPanel.transform, so.YPos, 0, 7.0f, (f) => changeObjectY(so, (int)f));
-				bool useTriggerHeight = so.ZPos == 120;
-				GameObject heightSlider = createSliderProperty("Target height", BasicPanel.transform, so.ZPos / 16, 0, 7.0f, (f) => changeObjectZPos(so, (int)f * 16));
+				// event/WORLDEV.C change_terrain: the new height is Z >> 3 (0-13); above 13 keeps
+				// the tile's height. It was shown as Z / 16, which only reached even heights.
+				bool useTriggerHeight = (so.ZPos >> 3) > 13;
+				GameObject heightSlider = createSliderProperty("New floor height", BasicPanel.transform, Math.Min(13, so.ZPos >> 3), 0, 13.0f, (f) => changeObjectZPos(so, (int)f << 3));
 				if (useTriggerHeight)
 				{
 					//Debug.Log($"{heightSlider.transform.parent.gameObject.name}");
@@ -611,18 +638,23 @@ public class PropertiesPanel : MonoBehaviour {
 						changeObjectZPos(so, 0);
 					heightSlider.SetActive(!b);
 				};
-				createToggleProperty("Use trigger height instead", BasicPanel.transform, useTriggerHeight, useTriggerHeightAct);
-				string[] tileTypes = new string[] { "Solid", "Open" };
+				createToggleProperty("Keep the tile's height", BasicPanel.transform, useTriggerHeight, useTriggerHeightAct);
+				// The new tile type is heading * 2 + (quality & 1): 0-9, 10 or more keeps it
+				// (15 becomes 10). It was read from the owner's low bit (the wall texture).
+				string[] tileTypes = new string[] { "Solid", "Open", "Diagonal SE", "Diagonal SW", "Diagonal NE", "Diagonal NW", "Slope N", "Slope S", "Slope E", "Slope W", "Keep the tile's type" };
+				int curTileType = Math.Min(10, (so.Direction << 1) + (so.Quality & 1));
 				Action<int> changeTypeAct = (i) =>
 				{
-					so.Quality = (so.Quality & 0x3E) + i;
+					so.Direction = i >> 1;
+					so.Quality = (so.Quality & 0x3E) + (i & 1);
 					Quality.text = so.Quality.ToString();
+					Direction.text = so.Direction.ToString();
 				};
 
 				int floorIndex = (so.Quality & 0x3E) >> 1;
-				bool useCurrentFloor = floorIndex >= 10 ? true : false;
+				bool useCurrentFloor = floorIndex >= 11 ? true : false;   // the game applies 0-10 (0xB and up keep)
 				bool useCurrentWall = so.Owner >= 48 ? true : false;
-				createDropdownProperty("Tile type", BasicPanel.transform, tileTypes[so.Owner & 0x01], tileTypes, changeTypeAct);
+				createDropdownProperty("New tile type", BasicPanel.transform, tileTypes[curTileType], tileTypes, changeTypeAct);
 				Texture2D curFloorTex = useCurrentFloor ? MapCreator.GetFloorTextureFromIndex(so.Tile.FloorTexture, so.CurrentLevel) : MapCreator.GetFloorTextureFromIndex(floorIndex, so.CurrentLevel);
 				Texture2D curWallTex = useCurrentWall ? MapCreator.GetWallTextureFromIndex(so.Tile.WallTexture, so.CurrentLevel) : MapCreator.GetWallTextureFromIndex(so.Owner, so.CurrentLevel);
 				Button changeFloorTex = createImageButtonProperty("Floor texture", BasicPanel.transform, Sprite.Create(curFloorTex, new Rect(0, 0, 32.0f, 32.0f), Vector2.zero));
@@ -700,9 +732,21 @@ public class PropertiesPanel : MonoBehaviour {
 				else				
 					createAddNextInvProperty(so, StaticObject.GetAll(), "", "Add template");
 			}
+			else if (so.ObjectID == 393 || so.ObjectID == 394)	//Ward and tell traps
+			{
+				// Hits the critter that set it off when its item & 0xF equals the quality,
+				// or any critter for 0x3F: 3 + rand(Casting) damage.
+				string[] classes = new string[17];
+				for (int i = 0; i < 16; i++) classes[i] = string.Format("Critters with item & 0xF = {0} (e.g. {1})", i, StaticObject.GetMonsterName(i));
+				classes[16] = "Any critter (0x3F)";
+				int cur = so.Quality == 0x3F ? 16 : Mathf.Clamp(so.Quality, 0, 15);
+				createDropdownProperty("Hits", BasicPanel.transform, classes[cur], classes, (i) => changeObjectQuality(so, i == 16 ? 0x3F : i));
+			}
 			else if (so.ObjectID == 395)	//Delete object
 			{
-				//Nothing, it just links to another object
+				// Deletes its linked object from the square (quality, owner).
+				createSliderProperty("Square X (quality)", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
+				createSliderProperty("Square Y (owner)", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
 			}
 			else if (so.ObjectID == 396)	//Inventory trap
 			{
@@ -716,17 +760,23 @@ public class PropertiesPanel : MonoBehaviour {
 				};
 				Action spawnItemPicker = () => uiManager.CreateSpecifiedItemList(selInvCheckAct, StaticObject.GetAll(), "", "Select object for trap to search for.");
 				selInvCheck.onClick.AddListener(() => spawnItemPicker());
+				// With a non-zero Z the stack must hold at least that many.
+				createSliderProperty("At least this many (Z, 0 any)", BasicPanel.transform, so.ZPos, 0, 127.0f, (f) => changeObjectZPos(so, (int)f));
 			}
 			else if (so.ObjectID == 397)	//Var
 			{
+				// Z 0: quest bit; 1-63: game variable (the player record has 64).
 				bool isSetQuest = so.ZPos == 0 ? true : false;
-				GameObject varIndexGO = createSliderProperty("Variable index", BasicPanel.transform, so.ZPos, 1.0f, 127.0f, (f) => changeObjectZPos(so, (int)f));
+				GameObject varIndexGO = createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, 63.0f, (f) => changeObjectZPos(so, (int)f));
 				if (isSetQuest)
 					varIndexGO.SetActive(false);
 				Action<bool> setQuestAct = (b) =>
 				{
 					if(!b)
+					{
 						varIndexGO.SetActive(true);
+						changeObjectZPos(so, 1);
+					}
 					else
 					{
 						varIndexGO.SetActive(false);
@@ -734,14 +784,17 @@ public class PropertiesPanel : MonoBehaviour {
 					}
 				};
 				createToggleProperty("Set quest variables", BasicPanel.transform, isSetQuest, setQuestAct);
-				createInputProperty("Value / quest index", BasicPanel.transform, so.GetVarTrapValue(), (str) => { so.SetVarTrapValue(int.Parse(str)); resetAdvancedPanel(so); });
-				//createSliderProperty("Value / quest index", BasicPanel.transform, so.GetVarTrapValue(), 0, 63.0f, (f) => { so.SetVarTrapValue((int)f); resetAdvancedPanel(so); });
+				createInputProperty("Value / quest index", BasicPanel.transform, so.GetVarTrapValue(), (str) => { int v; if (int.TryParse(str, out v)) { so.SetVarTrapValue(v); resetAdvancedPanel(so); } });
 				string[] opTypes = new string[] { "Add", "Substract", "Set", "And", "Or", "XOR", "Shift left" };
-				createDropdownProperty("Operation type", BasicPanel.transform, opTypes[so.Direction], opTypes, (i) => changeObjectDir(so, i));
+				if (isSetQuest)
+					opTypes = new string[] { "Set bit", "Clear bit", "Set bit", "Set bit", "Set bit", "Toggle bit", "Set bit", "Set bit" };
+				createDropdownProperty("Operation type", BasicPanel.transform, opTypes[Mathf.Clamp(so.Direction, 0, opTypes.Length - 1)], opTypes, (i) => changeObjectDir(so, i));
+				if (!isSetQuest)
+					createButtonProperty("The result is kept to 6 bits (0-63).", BasicPanel.transform);
 			}
 			else if (so.ObjectID == 398) //Check var trap
 			{
-				createSliderProperty("Variable index", BasicPanel.transform, so.ZPos, 1.0f, 127.0f, (f) => changeObjectZPos(so, (int)f));
+				createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, 63.0f, (f) => changeObjectZPos(so, (int)f));
 				bool shiftInstead = so.XPos == 0 ? true : false;
 				createSliderProperty("Check range", BasicPanel.transform, (int)so.Direction, 0, 7.0f, (f) => changeObjectDir(so, (int)f));
 				Action<bool> shiftInsteadAct = (b) =>
@@ -751,14 +804,13 @@ public class PropertiesPanel : MonoBehaviour {
 					else
 						changeObjectX(so, 1);
 				};
-				createToggleProperty("Shift instead of adding", BasicPanel.transform, shiftInstead, shiftInsteadAct);
-				createInputProperty("Value checked for", BasicPanel.transform, so.GetVarTrapValue(), (str) => { so.SetVarTrapValue(int.Parse(str)); resetAdvancedPanel(so); });
-				//createSliderProperty("Value checked for", BasicPanel.transform, so.GetVarTrapValue(), 0, 63.0f, (f) => { so.SetVarTrapValue((int)f); resetAdvancedPanel(so); });
+				createToggleProperty("Pack 3 bits of each instead of adding", BasicPanel.transform, shiftInstead, shiftInsteadAct);
+				createInputProperty("Value checked for", BasicPanel.transform, so.GetVarTrapValue(), (str) => { int v; if (int.TryParse(str, out v)) { so.SetVarTrapValue(v); resetAdvancedPanel(so); } });
 				int count = so.GetContainedObjectsCount();
 				if (count == 1)
 					createAddNextInvProperty(so, StaticObject.GetIDsByType(StaticObject.GetTrapValidChildren(so.ObjectID)), "Traps & triggers", "Add next trap / trigger");
 			}
-			else if (so.ObjectID == 400)	//Text trap
+				else if (so.ObjectID == 400)	//Text trap
 			{
 				createLargeInputProperty("Text", BasicPanel.transform, MapCreator.StringData.GetTextTrapString(so), (str) => MapCreator.StringData.SetTextTrapString(so, str));
 			}
@@ -909,6 +961,53 @@ public class PropertiesPanel : MonoBehaviour {
 		drop.onValueChanged.AddListener((i) => changeEnchantment(i));
 		return dropGO;
 	}
+	// Trigger options (event/TRIGGER.C UseTrigger): the target square where the trap chain
+	// runs, who may set it off and whether it stays after use.
+	private void createTriggerProperties(StaticObject so)
+	{
+		createSliderProperty("Target square X (quality)", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
+		createSliderProperty("Target square Y (owner)", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+		// Flags holds id bits 9-11: bit 10 is Flags & 2, bit 11 is Flags & 4.
+		createToggleProperty("The player can set it off", BasicPanel.transform, (so.Flags & 4) != 0, (b) => changeObjectFlags(so, b ? so.Flags | 4 : so.Flags & ~4));
+		createToggleProperty("Creatures can set it off", BasicPanel.transform, so.IsEnchanted, (b) => { so.IsEnchanted = b; Enchantable.isOn = b; });
+		createToggleProperty("Reusable (keep the traps after use)", BasicPanel.transform, (so.Flags & 2) != 0, (b) => changeObjectFlags(so, b ? so.Flags | 2 : so.Flags & ~2));
+		if (so.ObjectID == UltimateEditor.Uw1.Uw1Traps.FirstTrigger + (int)UltimateEditor.Uw1.Uw1Traps.TriggerType.Look)
+			createSliderProperty("Search difficulty (Z; 0 always noticed)", BasicPanel.transform, so.ZPos, 0, 127.0f, (f) => changeObjectZPos(so, (int)f));
+		createButtonProperty("Use target = this tile", BasicPanel.transform, () =>
+		{
+			StaticObject top = so.GetFirstContainer();
+			MapTile tile = top != null && top.Tile != null ? top.Tile : so.Tile;
+			if (tile == null)
+				return;
+			changeObjectQuality(so, tile.Position.x);
+			changeObjectOwner(so, tile.Position.y);
+			SetBasicPanel(so);
+		});
+	}
+
+	// A trap's flags count the triggers that point at it; delete_trap (TRIGGER.C) relies on
+	// the count to remove them when the trap is deleted. Show it and offer to recount.
+	private void createTrapReferenceProperty(StaticObject so)
+	{
+		int count = countTriggersTo(so);
+		string text = string.Format("Triggers pointing here: {0} (flags say {1})", count, so.Flags);
+		createButtonProperty(text + (count != so.Flags ? " - click to fix" : ""), BasicPanel.transform, () =>
+		{
+			changeObjectFlags(so, Math.Min(7, countTriggersTo(so)));
+			SetBasicPanel(so);
+		});
+	}
+
+	private static int countTriggersTo(StaticObject trap)
+	{
+		int count = 0;
+		StaticObject[] objects = MapCreator.LevelData[trap.CurrentLevel - 1].Objects;
+		foreach (StaticObject other in objects)
+			if (other != null && other.IsTrigger() && !other.IsQuantity && other.Special == trap.CurrentAdress)
+				count++;
+		return count;
+	}
+
 	private void createLinkingProperties(StaticObject so)
 	{
 		if (so.Special > 0)   //Has a link to something (either inside (IsQuantity = false) or outside (IsQuantity = true)

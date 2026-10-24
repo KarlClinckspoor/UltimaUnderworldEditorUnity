@@ -1360,7 +1360,28 @@ public class MapCreator : MonoBehaviour {
 			return false;
 		trigger.XPos = 3;
 		trigger.YPos = 3;
-		//FIXME : add qual & ownr for target X & Y?
+		// event/TRIGGER.C: a change terrain trap's fine X/Y are the size of the area it
+		// changes (x..x+fineX), so the centre position would change 4x4 tiles.
+		if (trigger.ObjectID == 0x185)
+		{
+			trigger.XPos = 0;
+			trigger.YPos = 0;
+		}
+		// A trigger runs its traps at the square (quality, owner); default to the tile the
+		// object is on.
+		if (trigger.IsTrigger() && !so.IsTrigger())
+		{
+			StaticObject top = so.GetFirstContainer();
+			MapTile tile = top != null && top.Tile != null ? top.Tile : so.Tile;
+			if (tile != null)
+			{
+				trigger.Quality = tile.Position.x;
+				trigger.Owner = tile.Position.y;
+			}
+		}
+		// A trap's flags count the triggers pointing at it (delete_trap uses the count).
+		if (so.IsTrigger() && trigger.IsTrap())
+			trigger.Flags = Math.Min(7, trigger.Flags + 1);
 		return true;
 	}
 
