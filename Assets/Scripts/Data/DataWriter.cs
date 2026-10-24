@@ -1641,14 +1641,8 @@ public static class DataWriter {
 		fs.WriteByte(inv_unk1_b);
 		fs.WriteByte(inv_unk1_c);
 		fs.WriteByte(inv_unk1_d);
-		if (md.InventoryInfo[0] > 0)
-			fs.WriteByte((byte)((md.Inventory[0] << 1) + 1));		
-		else
-			fs.WriteByte(0);
-		if (md.InventoryInfo[1] > 0)
-			fs.WriteByte((byte)((md.Inventory[1] << 1) + 1));
-		else
-			fs.WriteByte(0);
+		fs.WriteByte((byte)((md.Inventory[0] << 1) | (md.InventoryInfo[0] > 0 ? 1 : 0)));
+		fs.WriteByte((byte)((md.Inventory[1] << 1) | (md.InventoryInfo[1] > 0 ? 1 : 0)));
 		if(md.Inventory[2] > 0)
 		{			
 			byte i2_a = (byte)(((md.Inventory[2] & 0x0F) << 4) + md.InventoryInfo[2]);

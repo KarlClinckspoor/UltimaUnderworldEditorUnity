@@ -1228,6 +1228,7 @@ public static class DataReader {
 			nodes[i] = new HuffmanNode(_char, i, parent, left, right);
 			//Debug.LogFormat("Node {0} : {1}", i, nodes[i]);
 		}
+		HuffmanNode.SetTree(nodes);
 		Tuple<HuffmanNode[], long> pair = new Tuple<HuffmanNode[], long>(nodes, fs.Position);
 		return pair;
 	}
@@ -1836,16 +1837,13 @@ public static class DataReader {
 		int inv4 = fs.ReadByte() + fs.ReadByte() * 256; //38
 		md.Inventory = new int[4];
 		md.InventoryInfo = new int[4];
-		if ((inv1 & 0x01) == 1)
-		{
-			md.Inventory[0] = inv1 >> 1;
-			md.InventoryInfo[0] = 1;
-		}
-		if ((inv2 & 0x01) == 1)
-		{
-			md.Inventory[1] = inv2 >> 1;
-			md.InventoryInfo[1] = 1;
-		}
+		// Bit 0 present, bits 1-7 the item (uw2 critter.h arms[]). The item is kept when the
+		// bit is clear: UW2 reads arms[0].item as the missile a critter fires either way, and
+		// two of its creatures have an item without the bit.
+		md.Inventory[0] = inv1 >> 1;
+		md.InventoryInfo[0] = inv1 & 1;
+		md.Inventory[1] = inv2 >> 1;
+		md.InventoryInfo[1] = inv2 & 1;
 		if (inv3 != 0)
 		{
 			md.Inventory[2] = inv3 >> 4;

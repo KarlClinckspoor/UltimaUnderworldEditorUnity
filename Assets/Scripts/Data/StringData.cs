@@ -352,8 +352,26 @@ public class HuffmanNode  {
 
 
 
+	/// <summary>Leaf node by character, from the tree STRINGS.PAK was read with. UW2's tree
+	/// has other characters (and another leaf order) than UW1's, which the table below lists.</summary>
+	static System.Collections.Generic.Dictionary<char, int> leaves;
+
+	public static void SetTree(HuffmanNode[] nodes)
+	{
+		leaves = new System.Collections.Generic.Dictionary<char, int>();
+		if (nodes == null) return;
+		for (int i = 0; i < nodes.Length; i++)
+			if (nodes[i] != null && (nodes[i].Left == 255 || nodes[i].Right == 255) && !leaves.ContainsKey((char)nodes[i].Char))
+				leaves[(char)nodes[i].Char] = i;
+	}
+
 	public static int GetNumber(char c)
 	{
+		if (leaves != null && leaves.Count > 0)
+		{
+			int n;
+			return leaves.TryGetValue(c, out n) ? n : -1;
+		}
 		switch (c)
 		{
 			case '\a': return 0;
