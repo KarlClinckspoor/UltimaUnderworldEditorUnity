@@ -13,7 +13,18 @@ namespace UltimateEditor.Uw1.UI
 	{
 		UIManager ui;
 		GameObject popup;
-		public static StaticObject Selected { get; private set; }
+		/// <summary>The object shown in the properties panel. Map clicks and inventory lists
+		/// select through PropertiesPanel without raising UIManager.OnSelectObject, so read it there.</summary>
+		public static StaticObject Selected
+		{
+			get
+			{
+				var ui = UiKit.FindUIManager();
+				if (!ui || !ui.ObjectProperties) return null;
+				var pp = ui.ObjectProperties.GetComponent<PropertiesPanel>();
+				return pp ? pp.SelectedObject : null;
+			}
+		}
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 		static void Install()
@@ -26,12 +37,6 @@ namespace UltimateEditor.Uw1.UI
 		void Start()
 		{
 			ui = GetComponent<UIManager>();
-			ui.OnSelectObject += go =>
-			{
-				if (!go) { Selected = null; return; }
-				var sos = go.GetComponentInParent<StaticObjectScript>();
-				Selected = sos ? sos.StaticObject : null;
-			};
 			CreateTopBarButton();
 		}
 

@@ -2280,6 +2280,7 @@ public class UIManager : MonoBehaviour {
 			foreach (var old in oldList)
 				MapCreator.RemoveObject(old);
 		}
+		StaticObject oldTarget = start.IsQuantity && start.Special > 0 ? MapCreator.LevelData[start.CurrentLevel - 1].Objects[start.Special] : null;
 		start.Special = end.CurrentAdress;
 		if (start.IsTrigger() || start.ObjectID == 395)	//Delete object trap
 		{
@@ -2287,6 +2288,14 @@ public class UIManager : MonoBehaviour {
 			start.Owner = end.Tile.Position.y;
 		}
 		start.IsQuantity = true;
+		// A trap's flags count the triggers pointing at it (event/TRIGGER.C delete_trap).
+		if (start.IsTrigger())
+		{
+			if (end.IsTrap())
+				end.Flags = Math.Min(7, MapCreator.CountTriggersTo(end));
+			if (oldTarget != null && oldTarget != end && oldTarget.IsTrap())
+				oldTarget.Flags = Math.Min(7, MapCreator.CountTriggersTo(oldTarget));
+		}
 	}
 
 	public void StopLinking() => linkingObject = null;

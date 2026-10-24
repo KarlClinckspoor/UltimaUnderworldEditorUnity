@@ -61,6 +61,17 @@ namespace UltimateEditor.Uw1.UI
 			if (width >= 0) { le.preferredWidth = width; le.minWidth = width; }
 			if (height >= 0) { le.preferredHeight = height; le.minHeight = height; }
 			if (flexibleWidth >= 0) le.flexibleWidth = flexibleWidth;
+			// Also size the rect itself: some of the editor's prefab layout groups (the list
+			// menus' OptionsPanel) don't control child size, so the LayoutElement alone is ignored
+			// there and a new RectTransform would stay 100x100.
+			var rt = go.GetComponent<RectTransform>();
+			if (rt)
+			{
+				var s = rt.sizeDelta;
+				if (width >= 0) s.x = width;
+				if (height >= 0) s.y = height;
+				rt.sizeDelta = s;
+			}
 			return le;
 		}
 

@@ -33,7 +33,9 @@ namespace UltimateEditor.Uw1.UI
 			int first = models.Models.FindIndex(m => m.Faces.Count > 0);
 			state.Index = Math.Max(0, first);
 
-			var picture = UiKit.Rect("Picture", w.Content);
+			// In a row: the content's layout force-expands widths, which would stretch the square.
+			var pictureRow = UiKit.Row(w.Content, Size);
+			var picture = UiKit.Rect("Picture", pictureRow);
 			UiKit.Size(picture.gameObject, Size, Size);
 			var raw = picture.gameObject.AddComponent<RawImage>();
 			state.Texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };

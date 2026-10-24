@@ -1358,14 +1358,12 @@ public class MapCreator : MonoBehaviour {
 		bool added = AddToContainer(trigger, so);
 		if (!added)
 			return false;
-		trigger.XPos = 3;
-		trigger.YPos = 3;
 		// event/TRIGGER.C: a change terrain trap's fine X/Y are the size of the area it
-		// changes (x..x+fineX), so the centre position would change 4x4 tiles.
-		if (trigger.ObjectID == 0x185)
+		// changes (x..x+fineX); its create menu has already set them, so keep them.
+		if (trigger.ObjectID != 0x185)
 		{
-			trigger.XPos = 0;
-			trigger.YPos = 0;
+			trigger.XPos = 3;
+			trigger.YPos = 3;
 		}
 		// A trigger runs its traps at the square (quality, owner); default to the tile the
 		// object is on.
@@ -1380,9 +1378,24 @@ public class MapCreator : MonoBehaviour {
 			}
 		}
 		// A trap's flags count the triggers pointing at it (delete_trap uses the count).
+		// The create menus already set 1, so recount instead of adding.
 		if (so.IsTrigger() && trigger.IsTrap())
-			trigger.Flags = Math.Min(7, trigger.Flags + 1);
+			trigger.Flags = Math.Min(7, Math.Max(1, CountTriggersTo(trigger)));
 		return true;
+	}
+
+	/// <summary>
+	/// Number of triggers on the trap's level whose link is the trap. UseTrigger follows the
+	/// link whatever the quantity bit says, so count every trigger.
+	/// </summary>
+	public static int CountTriggersTo(StaticObject trap)
+	{
+		int count = 0;
+		StaticObject[] objects = LevelData[trap.CurrentLevel - 1].Objects;
+		foreach (StaticObject other in objects)
+			if (other != null && other.IsTrigger() && other.Special == trap.CurrentAdress)
+				count++;
+		return count;
 	}
 
 	public static void ActivateMob(MobileObject mo, int level)

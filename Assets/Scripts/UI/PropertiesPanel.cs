@@ -655,7 +655,9 @@ public class PropertiesPanel : MonoBehaviour {
 				bool useCurrentFloor = floorIndex >= 11 ? true : false;   // the game applies 0-10 (0xB and up keep)
 				bool useCurrentWall = so.Owner >= 48 ? true : false;
 				createDropdownProperty("New tile type", BasicPanel.transform, tileTypes[curTileType], tileTypes, changeTypeAct);
-				Texture2D curFloorTex = useCurrentFloor ? MapCreator.GetFloorTextureFromIndex(so.Tile.FloorTexture, so.CurrentLevel) : MapCreator.GetFloorTextureFromIndex(floorIndex, so.CurrentLevel);
+				// The level's floor list has 10 entries (0-9); index 10 is applied by the game but
+				// has no texture here to show, so show the tile's own for it.
+				Texture2D curFloorTex = useCurrentFloor || floorIndex >= 10 ? MapCreator.GetFloorTextureFromIndex(so.Tile.FloorTexture, so.CurrentLevel) : MapCreator.GetFloorTextureFromIndex(floorIndex, so.CurrentLevel);
 				Texture2D curWallTex = useCurrentWall ? MapCreator.GetWallTextureFromIndex(so.Tile.WallTexture, so.CurrentLevel) : MapCreator.GetWallTextureFromIndex(so.Owner, so.CurrentLevel);
 				Button changeFloorTex = createImageButtonProperty("Floor texture", BasicPanel.transform, Sprite.Create(curFloorTex, new Rect(0, 0, 32.0f, 32.0f), Vector2.zero));
 				if(useCurrentFloor)
@@ -998,15 +1000,7 @@ public class PropertiesPanel : MonoBehaviour {
 		});
 	}
 
-	private static int countTriggersTo(StaticObject trap)
-	{
-		int count = 0;
-		StaticObject[] objects = MapCreator.LevelData[trap.CurrentLevel - 1].Objects;
-		foreach (StaticObject other in objects)
-			if (other != null && other.IsTrigger() && !other.IsQuantity && other.Special == trap.CurrentAdress)
-				count++;
-		return count;
-	}
+	private static int countTriggersTo(StaticObject trap) => MapCreator.CountTriggersTo(trap);
 
 	private void createLinkingProperties(StaticObject so)
 	{

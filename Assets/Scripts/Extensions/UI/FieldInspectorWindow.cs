@@ -38,7 +38,7 @@ namespace UltimateEditor.Uw1.UI
 			w.Title.text = string.Format("Object fields: {0} (item 0x{1:X3}, index {2}, level {3})", so.Name, so.ObjectID, so.CurrentAdress, so.CurrentLevel);
 
 			var head = UiKit.Row(w.Toolbar, 20);
-			UiKit.Label(head, "Raw: " + BitConverter.ToString(bytes).Replace("-", " "), 11, FontStyle.Normal, UiKit.DimTextColor);
+			var rawLabel = UiKit.Label(head, "Raw: " + BitConverter.ToString(bytes).Replace("-", " "), 11, FontStyle.Normal, UiKit.DimTextColor);
 			UiKit.Button(head, "Refresh", () => Build(w, so), 70);
 
 			var roles = Uw1ObjectRoles.For(so.ObjectID, so.IsQuantity);
@@ -64,25 +64,33 @@ namespace UltimateEditor.Uw1.UI
 				int value = f.Get(bytes);
 				bool locked = ObjectBytes.IsStructural(f, so) || (f.Name == "Is quantity" && so.Special != 0);
 				var field = f;
-				var input = UiKit.Input(row, value.ToString(CultureInfo.InvariantCulture), s =>
+				Text hex = null;
+				InputField input = null;
+				input = UiKit.Input(row, value.ToString(CultureInfo.InvariantCulture), s =>
 				{
+					// onEndEdit also fires when the field just loses focus. Update in place rather
+					// than rebuilding, so the field clicked next is not destroyed under the cursor.
+					var b = ObjectBytes.From(so);
+					int cur = field.Get(b);
 					int v;
 					if (!TryParse(s, out v) || v < field.Min || v > field.Max)
 					{
 						w.Status.text = string.Format("{0}: enter {1}..{2}", field.Name, field.Min, field.Max);
-						Build(w, so);
+						input.text = cur.ToString(CultureInfo.InvariantCulture);
 						return;
 					}
-					var b = ObjectBytes.From(so);
+					if (v == cur) return;
 					field.Set(b, v);
 					ObjectBytes.To(so, b);
-					w.Status.text = string.Format("{0} set to {1}", field.Name, v);
+					input.text = v.ToString(CultureInfo.InvariantCulture);
+					if (hex) hex.text = string.Format("0x{0:X}", v);
+					if (rawLabel) rawLabel.text = "Raw: " + BitConverter.ToString(ObjectBytes.From(so)).Replace("-", " ");
+					w.Status.text = string.Format("{0} set to {1}. Refresh to update the meanings above.", field.Name, v);
 					var ui = UiKit.FindUIManager();
 					if (ui) ui.SetObjectProperties(so);
-					Build(w, so);
 				}, 70);
 				input.interactable = !locked;
-				UiKit.Label(row, string.Format("0x{0:X}", value), 10, FontStyle.Normal, UiKit.DimTextColor, 50);
+				hex = UiKit.Label(row, string.Format("0x{0:X}", value), 10, FontStyle.Normal, UiKit.DimTextColor, 50);
 				string tip = field.Description + (field.Source != null ? "\n(" + field.Source + ")" : "") + (locked ? "\nRead-only here: it is list structure." : "");
 				UiKit.Tooltip(name.gameObject, tip);
 				name.raycastTarget = true;
