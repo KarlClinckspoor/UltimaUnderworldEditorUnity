@@ -1837,6 +1837,15 @@ public class StaticObject {
 	{
 		if (id >= 512)
 			id -= 512;
+		// UW2's spell names (STRINGS.PAK block 6) differ from UW1's from about 200 on, e.g.
+		// 211 Basilisk Oil, 256 Create Food; the table below is UW1's
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && MapCreator.StringData != null && MapCreator.StringData.Blocks != null)
+			foreach (var b in MapCreator.StringData.Blocks)
+				if (b.BlockNumber == 6)
+				{
+					if (id >= 0 && id < b.Strings.Count && !string.IsNullOrEmpty(b.Strings[id])) return b.Strings[id];
+					return "Spell " + id;
+				}
 
 		switch (id)
 		{
