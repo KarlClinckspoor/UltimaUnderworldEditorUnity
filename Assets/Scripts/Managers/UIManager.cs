@@ -3369,6 +3369,12 @@ public class UIManager : MonoBehaviour {
 		Dictionary<string, int> dict = StaticObject.GetWeaponEnchants();
 		Dropdown enchDrop = addDropdownToCreateMenu("Enchantment", mainPanelGO.transform, dict, 0, 80.0f);
 		enchDrop.interactable = false;
+		// UW2 swaps the weapon enchantments' names (Games/EnchantmentEffects.cs)
+		enchDrop.onValueChanged.AddListener(i =>
+		{
+			string real = UltimateEditor.Games.EnchantmentEffects.Describe(LevArk.Game.Kind, dict[enchDrop.options[i].text] + 256, StaticObject.GetObjectType(id) == ObjectType.Shield || StaticObject.GetObjectType(id) == ObjectType.Baubles);
+			if (real != null) SpawnPopupMessage("In the game: " + real);
+		});
 		Action<bool> isEnchAct = (b) => enchDrop.interactable = b;
 		isEnchanted.onValueChanged.AddListener((b) => isEnchAct(b));
 		Action create = () =>
@@ -3391,6 +3397,12 @@ public class UIManager : MonoBehaviour {
 		Dictionary<string, int> dict = StaticObject.GetWearableEnchants();
 		Dropdown enchDrop = addDropdownToCreateMenu("Enchantment", mainPanelGO.transform, dict, 0, 80.0f);
 		enchDrop.interactable = false;
+		// UW2 swaps the weapon enchantments' names (Games/EnchantmentEffects.cs)
+		enchDrop.onValueChanged.AddListener(i =>
+		{
+			string real = UltimateEditor.Games.EnchantmentEffects.Describe(LevArk.Game.Kind, dict[enchDrop.options[i].text] + 272, StaticObject.GetObjectType(id) == ObjectType.Shield || StaticObject.GetObjectType(id) == ObjectType.Baubles);
+			if (real != null) SpawnPopupMessage("In the game: " + real);
+		});
 		Action<bool> isEnchAct = (b) => enchDrop.interactable = b;
 		isEnchanted.onValueChanged.AddListener((b) => isEnchAct(b));
 		Action create = () =>

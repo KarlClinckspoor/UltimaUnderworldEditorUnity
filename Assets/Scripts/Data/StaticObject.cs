@@ -513,8 +513,11 @@ public class StaticObject {
 			dict[GetEnchantmentName(i)] = i;
 		dict[GetEnchantmentName(190)] = 190;
 		dict[GetEnchantmentName(191)] = 191;
+		// Protection and toughness are class 12 like the weapon ones: e = 192 + effect, named
+		// 0x1D0 + effect (LOOK.C do_of; the shipped armour has 192-207). This used to write
+		// 224 + effect, which the game reads as class 14, not as protection or toughness.
 		for (int i = 464; i < 480; i++)
-			dict[GetEnchantmentName(i)] = i - 240;
+			dict[GetEnchantmentName(i)] = i - 272;
 		return dict;
 	}
 	public static Dictionary<string, int> GetWeaponEnchants()

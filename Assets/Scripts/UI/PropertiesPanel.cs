@@ -991,6 +991,22 @@ public class PropertiesPanel : MonoBehaviour {
 			}
 		};
 		isEnchanted.onValueChanged.AddListener((b) => isEnchAct(b));
+
+		// What the enchantment really does (Games/EnchantmentEffects.cs): UW2's weapon names are
+		// swapped (Accuracy adds damage and Damage adds to hit), and toughness on shields and
+		// rings lands twice on the torso.
+		var game = LevArk.Game.Kind;
+		bool shieldOrRing = so.IsShield() || so.IsBauble();
+		var note = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "", 10, new Color(1f, 0.85f, 0.55f));
+		note.horizontalOverflow = HorizontalWrapMode.Wrap;
+		Action refreshNote = () =>
+		{
+			string real = so.IsEnchanted ? UltimateEditor.Games.EnchantmentEffects.Describe(game, so.GetEnchantment(), shieldOrRing) : null;
+			note.text = (real != null ? "In the game: " + real + "\n" : "") + UltimateEditor.Games.EnchantmentEffects.Summary(game);
+		};
+		refreshNote();
+		enchDrop.onValueChanged.AddListener((i) => refreshNote());
+		isEnchanted.onValueChanged.AddListener((b) => refreshNote());
 	}
 	private GameObject createEnchantmentProperty(StaticObject so, Dictionary<string, int> dict, bool addCharges, string text)
 	{
