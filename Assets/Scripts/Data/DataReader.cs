@@ -1,4 +1,5 @@
 ﻿using System;
+using UltimateEditor.Games;
 using System.IO;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -630,7 +631,7 @@ public static class DataReader {
 		TextureData texData = null;
 		LoadTexturesFromResources();
 
-		string filePath = FileExplorer.GetUpperPath(FilePath) + "/pals.dat";
+		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/pals.dat");
 		FileStream fs = new FileStream(filePath, FileMode.Open);
 		List<Color[]> pals = new List<Color[]>();
 		for (int i = 0; i < 7; i++)
@@ -729,7 +730,7 @@ public static class DataReader {
 
 		int iCount = 0, iFirst = 0;
 		int[] itemOffsets = ReadGraphicOffsets("OBJECTS.GR", ref iCount, ref iFirst);
-		fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.GR", FileMode.Open);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.GR"), FileMode.Open);
 		List<Texture2D> itemsTex = new List<Texture2D>();
 		List<int[]> rawTexs = new List<int[]>();
 		List<int> objAuxPals = new List<int>();
@@ -768,7 +769,7 @@ public static class DataReader {
 		items.AuxPalettes = objAuxPals;
 
 		fs.Close();
-		fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT", FileMode.Open);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open);
 		int[] wallDat = new int[256];
 		int[] florDat;
 		for (int i = 0; i < 256; i++)		
@@ -802,7 +803,7 @@ public static class DataReader {
 	public static int[] ReadPallette(Stream fs, int index)
 	{
 		int[] pal = new int[256 * 3];
-		//string filePath = FileExplorer.GetUpperPath(FilePath) + "/pals.dat";
+		//string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/pals.dat");
 		//FileStream fs = new FileStream(filePath, FileMode.Open);
 		for (int i = 0; i < 256 * 3; i++)
 		{
@@ -814,7 +815,7 @@ public static class DataReader {
 
 	public static List<int[]> ReadAuxPalettes()
 	{
-		string filePath = FileExplorer.GetUpperPath(FilePath) + "/ALLPALS.dat";
+		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/ALLPALS.dat");
 		FileStream fs = new FileStream(filePath, FileMode.Open);
 
 		List<int[]> auxpals = new List<int[]>();
@@ -864,7 +865,7 @@ public static class DataReader {
 
 	public static int[] ReadGraphicOffsets(string fileName, ref int count, ref int first)
 	{
-		string filePath = FileExplorer.GetUpperPath(FilePath) + "/" + fileName;
+		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName);
 		FileStream fs = new FileStream(filePath, FileMode.Open);
 		int start = fs.ReadByte();
 		int size = 0;
@@ -1018,7 +1019,7 @@ public static class DataReader {
 			return null;
 		int count = offsets.Length;
 		List<int[]> textures = new List<int[]>();
-		string filePath = FileExplorer.GetUpperPath(FilePath) + "/" + fileName;
+		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName);
 		FileStream fs = new FileStream(filePath, FileMode.Open);
 		for (int i = 0; i < count; i++)
 		{
@@ -1193,7 +1194,7 @@ public static class DataReader {
 
 	public static StringData LoadStrings()
 	{
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/STRINGS.PAK", FileMode.Open);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/STRINGS.PAK"), FileMode.Open);
 		Tuple<HuffmanNode[], long> pair = ReadHuffmanNodes(fs);
 		Tuple<List<StringBlock>, Dictionary<int, int>> blockPair = ReadStringBlocks(fs, pair.Item2);
 		for (int i = 0; i < blockPair.Item1.Count; i++)
@@ -1373,7 +1374,7 @@ public static class DataReader {
 	public static ConversationData LoadConversations()
 	{
 		// Data/CnvArk.cs gives UW1's archive layout for either game (UW2's blocks decompressed).
-		var image = CnvArk.LoadAsUw1Image(FileExplorer.GetUpperPath(FilePath) + "/CNV.ARK");
+		var image = CnvArk.LoadAsUw1Image(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/CNV.ARK"));
 		Stream fs = new MemoryStream(image, false);
 		Conversation[] convs = LoadConversations(fs);
 		ConversationData convData = new ConversationData(convs, ReadPrivateVariables());
@@ -1522,7 +1523,7 @@ public static class DataReader {
 
 	public static Dictionary<int, int> ReadPrivateVariables()
 	{
-		FileInfo fi = new FileInfo(FileExplorer.GetUpperPath(FilePath) + "/BABGLOBS.DAT");
+		FileInfo fi = new FileInfo(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/BABGLOBS.DAT"));
 		FileStream fs = new FileStream(fi.FullName, FileMode.Open);
 		Dictionary<int, int> privVars = new Dictionary<int, int>();
 
@@ -1565,7 +1566,7 @@ public static class DataReader {
 
 	public static void LoadCommonData(ObjectData objDat)
 	{
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/COMOBJ.DAT", FileMode.Open);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/COMOBJ.DAT"), FileMode.Open);
 		int val_a = fs.ReadByte();
 		int val_b = fs.ReadByte();
 		objDat.CommonStart = val_a + val_b * 256;
@@ -1625,7 +1626,7 @@ public static class DataReader {
 	{
 		ObjectData od = new ObjectData();
 		LoadCommonData(od);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.DAT", FileMode.Open);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.DAT"), FileMode.Open);
 		int val_a = fs.ReadByte();
 		int val_b = fs.ReadByte();
 		od.StartValue = val_a + val_b * 256;
@@ -1644,7 +1645,7 @@ public static class DataReader {
 		{
 			// UW2: CRIT\AS.AN, 64 entries of (page, palette); the art file of page p is CRpp.xx with
 			// pp in octal (uw2 critter/CRPAGES.C). No names are stored, so the files' names stand in.
-			string asan = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/AS.AN";
+			string asan = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/AS.AN");
 			byte[] b = File.ReadAllBytes(asan);
 			od.MonsterSpriteNames = new string[32];
 			for (int i = 0; i < 32; i++) od.MonsterSpriteNames[i] = "CR" + Convert.ToString(i, 8).PadLeft(2, '0');
@@ -1655,7 +1656,7 @@ public static class DataReader {
 			}
 			return od;
 		}
-		fs = new FileStream(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/ASSOC.ANM", FileMode.Open);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/ASSOC.ANM"), FileMode.Open);
 		od.MonsterSpriteNames = new string[32];
 		for (int i = 0; i < 32; i++)
 		{

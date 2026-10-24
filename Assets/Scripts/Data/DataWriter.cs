@@ -1,4 +1,5 @@
 ﻿using System;
+using UltimateEditor.Games;
 using System.IO;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -149,7 +150,7 @@ public static class DataWriter {
 			for (int i = 0; i < block.StringCount; i++)
 				if (ConvertString(block.Strings[i], strings.Nodes) == null)
 					throw new InvalidDataException(string.Format("String {0} of block {1} has a character STRINGS.PAK cannot encode:\n{2}", i, block.BlockNumber, block.Strings[i]));
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		long tableStart = SaveHuffmanNodes(fs, strings.Nodes);
 		SaveStringBlocks(fs, strings.Blocks, strings.Nodes, tableStart);
 		fs.Close();
@@ -172,13 +173,13 @@ public static class DataWriter {
 		// the game's own archive format (UW2: compressed) and leaves the others as they were.
 		var image = new MemoryStream();
 		SaveConversations(image, convs);
-		File.WriteAllBytes(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, CnvArk.Merge(image.ToArray()));
+		File.WriteAllBytes(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), CnvArk.Merge(image.ToArray()));
 		Stream fs;
 		file = "BABGLOBS.DAT";
 		BackupData(file);
 		if (File.Exists(file))
 			File.Delete(file);
-		fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		SaveBabglobs(fs, convs);
 		fs.Close();
 	}
@@ -192,7 +193,7 @@ public static class DataWriter {
 
 	public static void BackupData(string toBackup)
 	{
-		string originalFile = FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + toBackup;
+		string originalFile = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + toBackup);
 		string backupFile = originalFile + ".BKP";
 		if (File.Exists(backupFile))
 			return;
@@ -488,7 +489,7 @@ public static class DataWriter {
 		if (texCon.Offset == -1)
 			return null;
 
-		//string path = FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + fileName;
+		//string path = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + fileName);
 		//FileStream fs = new FileStream(path, FileMode.Open);
 		//Debug.LogFormat("SaveTextureOffsets, fakeTex : {0}, count : {1}", fakeTextures, texCon.Count);
 		int firstOffset = texCon.FirstOffset + (texCon.Count + fakeTextures + 1) * 4;
@@ -522,7 +523,7 @@ public static class DataWriter {
 	public static void SaveTextures(string file, TextureContainer textures, Color[] palette, int type, int scaleFactor = 0, int fakeTextures = 0, bool reverse = false)
 	{
 		BackupData(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		//fs.Position = textures.FirstOffset - 2;
 		//fs.WriteByte((byte)textures.Count);
 		fs.WriteByte((byte)type);
@@ -552,7 +553,7 @@ public static class DataWriter {
 
 		//FIXME : this does not save offsets ! maybe it's not necessary?
 		int[] oOffsets = DataReader.ReadGraphicOffsets(file, ref oCount, ref oFirst);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Open);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Open);
 		for (int i = 0; i < other.Count; i++)
 		{
 			int[] raw = ConvertToRawTexture(other.Textures[i], palette, false);
@@ -574,7 +575,7 @@ public static class DataWriter {
 			Debug.LogWarningFormat("Trying to save null texture, type : {0}, offset : {1}", fileName, offset);
 			return;
 		}
-		//string path = FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + fileName;
+		//string path = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + fileName);
 		//FileStream fs = new FileStream(path, FileMode.Open);
 		fs.Position = offset;
 		if(ati.Write)
@@ -595,7 +596,7 @@ public static class DataWriter {
 		string file = "OBJECTS.GR";
 		BackupData(file);
 
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		fs.WriteByte(1);
 		int count = 464;
 		byte count_a = (byte)(count & 0xFF);
@@ -1147,7 +1148,7 @@ public static class DataWriter {
 	{
 		string file = "TERRAIN.DAT";
 		BackupData(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 
 		for (int i = 0; i < 256; i++)
 		{
@@ -1487,7 +1488,7 @@ public static class DataWriter {
 	{
 		string file = "COMOBJ.DAT";
 		BackupData(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		byte start_b_a = (byte)(objDat.CommonStart & 0xFF);
 		byte start_b_b = (byte)((objDat.CommonStart & 0xFF00) >> 8);
 		fs.WriteByte(start_b_a);
@@ -1522,7 +1523,7 @@ public static class DataWriter {
 	{
 		string file = "OBJECTS.DAT";
 		BackupData(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 
 		byte start_b_a = (byte)(objDat.StartValue & 0xFF);
 		byte start_b_b = (byte)((objDat.StartValue & 0xFF00) >> 8);
@@ -1682,7 +1683,7 @@ public static class DataWriter {
 		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
 			// UW2: CRIT\AS.AN, 64 entries of (page, palette), nothing else in the file
-			string asan = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/AS.AN";
+			string asan = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/AS.AN");
 			if (!File.Exists(asan + ".BKP")) File.Copy(asan, asan + ".BKP");
 			byte[] b = File.ReadAllBytes(asan);
 			for (int i = 0; i < 64 && 2 * i + 1 < b.Length; i++)
@@ -1693,7 +1694,7 @@ public static class DataWriter {
 			File.WriteAllBytes(asan, b);
 			return;
 		}
-		string file = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/ASSOC.ANM";
+		string file = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/ASSOC.ANM");
 		string backupFile = file + ".BKP";
 		if (!File.Exists(backupFile))
 			File.Copy(file, backupFile);

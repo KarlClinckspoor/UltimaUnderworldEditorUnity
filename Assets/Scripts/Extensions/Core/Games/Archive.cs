@@ -47,7 +47,7 @@ namespace UltimateEditor.Games
 		public Uw1Archive(byte[] data) { file = (byte[])data.Clone(); }
 
 		public override int Count { get { return U16(file, 0); } }
-		uint Offset(int b) { return U32(file, 2 + 4 * b); }
+		public uint Offset(int b) { return U32(file, 2 + 4 * b); }
 		public override bool Has(int b) { return b >= 0 && b < Count && Offset(b) != 0; }
 
 		int Length(int b)

@@ -33,6 +33,17 @@ public static class LevArk
 		int slots = Game.Kind == GameKind.UW1 ? Math.Max(1, Archive.Count / 15) : Game.LevelSlots;
 		var levels = new List<LevelData>(slots);
 		for (int l = 1; l <= slots; l++) levels.Add(ReadLevel(l));
+		// Where each level block starts in the file, for the objects' "file index". UW2's
+		// blocks are usually compressed, so there the index is the offset inside the block.
+		DataReader.LevelOffsets = new int[slots];
+		for (int l = 1; l <= slots; l++)
+		{
+			int b = Game.LevelBlock(l);
+			var a1 = Archive as Uw1Archive;
+			var a2 = Archive as Uw2Archive;
+			if (a1 != null && a1.Has(b)) DataReader.LevelOffsets[l - 1] = (int)a1.Offset(b);
+			else if (a2 != null && a2.Has(b) && !a2.Compressed(b)) DataReader.LevelOffsets[l - 1] = (int)a2.Offset(b);
+		}
 		return levels;
 	}
 
