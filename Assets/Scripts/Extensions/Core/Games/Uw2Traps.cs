@@ -13,6 +13,17 @@ namespace UltimateEditor.Games
 			return id == 0x180 || id == 0x181 || id == 0x188 || id == 0x18B;
 		}
 
+		/// <summary>
+		/// Ids whose UW1 create menu sets the same fields UW2 reads: the shared traps and the
+		/// move, pick up, use and look triggers (0x1A0-0x1A3: target square in quality and
+		/// owner, then the linked trap). UW1's 0x1A4-0x1A6 are step on, open and unlock; UW2's
+		/// are pressure, pressure release and enter.
+		/// </summary>
+		public static bool HasUw1CreateMenu(int id)
+		{
+			return SharedWithUw1(id) || (id >= 0x1A0 && id <= 0x1A3);
+		}
+
 		public static string Describe(int id)
 		{
 			switch (id)

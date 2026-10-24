@@ -44,7 +44,12 @@ public class MapCreator : MonoBehaviour {
 	public static GameData GameData { get; private set; }
 	public static GameObject StartObject { get; private set; }
 
-	public static Vector2Int GameStart = new Vector2Int(32, 2);
+	/// <summary>Where a new game puts the player on level 1: UW1 (32, 2); UW2 (0x13, 0x30), from
+	/// MAINMENU.C's player_setup call after character creation.</summary>
+	public static Vector2Int GameStart
+	{
+		get { return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? new Vector2Int(0x13, 0x30) : new Vector2Int(32, 2); }
+	}
 
 	public bool IsInitialized { get; private set; }
 
@@ -77,7 +82,6 @@ public class MapCreator : MonoBehaviour {
 		StaticObjectPrefabSt = StaticObjectPrefab;
 		tileMaterial = TileMaterial;
 		spriteMaterial = SpriteMaterial;
-		GameStart = new Vector2Int(32, 2);
 		Sprites = Resources.LoadAll<Sprite>("ItemSheet");
 		IsInitialized = true;
 	}
@@ -119,8 +123,10 @@ public class MapCreator : MonoBehaviour {
 			}
 		}
 		StaticObject[] newLevelObjects = new StaticObject[1024];
-		int[] newLevelFloors = new int[10];
-		int[] newLevelWalls = new int[48];
+		// UW2's texture block is one table of 64 (the floor list is a view of its first 16)
+		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+		int[] newLevelFloors = new int[uw2 ? 16 : 10];
+		int[] newLevelWalls = new int[uw2 ? 64 : 48];
 		int[] newLevelDoors = new int[6];
 		int[] newLevelMemory = new int[1022];
 		for (int i = 0; i < newLevelMemory.Length; i++)
@@ -149,8 +155,15 @@ public class MapCreator : MonoBehaviour {
 
 	public void ClearLevels()
 	{
+		// UW2's 80 slots are fixed (the slot is the world and level); slots that held no level
+		// stay absent, so clearing does not add 38 levels to the archive.
+		var present = new List<bool>();
+		foreach (var l in LevelData) present.Add(l.Present);
+		int count = System.Math.Max(LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? LevArk.Game.LevelSlots : 9, 1);
 		LevelData.Clear();
-		CreateEmptyLevels(9);
+		CreateEmptyLevels(count);
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+			for (int i = 0; i < LevelData.Count && i < present.Count; i++) LevelData[i].Present = present[i];
 	}
 	public void ClearConversations()
 	{

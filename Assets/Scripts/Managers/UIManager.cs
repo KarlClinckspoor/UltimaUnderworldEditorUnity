@@ -1975,7 +1975,8 @@ public class UIManager : MonoBehaviour {
 		UltimateEditor.Uw1.UI.ObjectListFilter.Attach(list, false);
 		addSearch(list);
 
-		for (int i = 0; i < 459; i++)
+		int listed = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? StaticObject.ListedIdLimit : 459;
+		for (int i = 0; i < listed; i++)
 		{
 			int new_i = i;
 			GameObject itemGO = createItemButton(new_i, list.Content.transform, getItemButtonTooltip(new_i));
@@ -3071,6 +3072,13 @@ public class UIManager : MonoBehaviour {
 			createPillar(id, level, tilePos, tile, afterCreatingAct);
 		else if (type == ObjectType.Model)
 			createModel(id, level, tilePos, tile, afterCreatingAct);
+		else if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && id >= 384 && !UltimateEditor.Games.Uw2Traps.HasUw1CreateMenu(id))
+		{
+			// UW2 traps and triggers whose fields differ from UW1's: created plain, then set
+			// up in the properties panel, which describes the UW2 meaning
+			StaticObject so = MapCreator.AddObject(tile, tilePos, level, id);
+			afterCreatingAct?.Invoke(so);
+		}
 		else if (id == 384)
 			createDamageTrap(id, level, tilePos, tile, afterCreatingAct);
 		else if (id == 385)

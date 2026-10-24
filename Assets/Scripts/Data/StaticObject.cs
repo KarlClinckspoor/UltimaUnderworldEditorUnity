@@ -324,9 +324,21 @@ public class StaticObject {
 	public bool IsAnimated() => GetObjectType(ObjectID) == ObjectType.Animated;
 
 	[Obsolete("Use GetByID")]
+	static bool IsUw2 { get { return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2; } }
+
+	/// <summary>The ids the editor's object lists offer: UW1 up to its preset hack traps
+	/// (465-469 stand for trap 387 with a quality); UW2's real ids end at 0x1CF.</summary>
+	public static int ListedIdLimit { get { return IsUw2 ? 0x1D0 : 470; } }
+
 	public static List<int> GetTraps()
 	{
 		List<int> ids = new List<int>();
+		if (IsUw2)
+		{
+			for (int i = 0x180; i <= 0x198; i++) ids.Add(i);
+			ids.Add(0x19E); ids.Add(0x19F);
+			return ids;
+		}
 		for (int i = 384; i < 401; i++)
 			ids.Add(i);
 		return ids;
@@ -335,7 +347,8 @@ public class StaticObject {
 	public static List<int> GetTriggers()
 	{
 		List<int> ids = new List<int>();
-		for (int i = 417; i < 423; i++)
+		int first = 417, end = IsUw2 ? 0x1BD : 423;
+		for (int i = first; i < end; i++)
 		{
 			if(GetObjectType(i) == ObjectType.Trigger)
 				ids.Add(i);
@@ -346,7 +359,7 @@ public class StaticObject {
 	public static List<int> GetIDsByType(params ObjectType[] types)
 	{
 		List<int> ids = new List<int>();
-		for (int i = 0; i < 470; i++)
+		for (int i = 0; i < ListedIdLimit; i++)
 		{
 			for (int j = 0; j < types.Length; j++)
 			{
@@ -378,7 +391,13 @@ public class StaticObject {
 
 	public static ObjectType[] GetTrapValidChildren(int trapID)
 	{
-		
+		// UW2: every trap and trigger links on to a trap or trigger (the condition traps'
+		// second link is the alternative chain)
+		if (IsUw2)
+		{
+			var t = GetObjectType(trapID);
+			return t == ObjectType.Trap || t == ObjectType.Trigger || t == ObjectType.DoorTrap ? new ObjectType[] { ObjectType.Trigger, ObjectType.Trap } : null;
+		}
 		switch (trapID)
 		{
 			case 384: return new ObjectType[] { ObjectType.Trigger, ObjectType.Trap };	//Damage
