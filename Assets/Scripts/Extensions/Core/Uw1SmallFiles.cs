@@ -193,11 +193,28 @@ namespace UltimateEditor.Uw1
 	/// <summary>
 	/// DATA\SHADES.DAT: 8 rows (light level 0 darkest to 7) of six int16 (map/LIGHTING.C):
 	/// smooth_div, smooth_base, smooth_lowpass, curvrad (view radius 3-7), distpoly, dist8.
-	/// Parsed here for the planned editor; nothing in the editor writes it yet.
+	/// The same 96 bytes in both games. Edited by Tools > Light levels (SHADES.DAT).
 	/// </summary>
 	public sealed class ShadesDat
 	{
 		public static readonly string[] Columns = { "smooth_div", "smooth_base", "smooth_lowpass", "curvrad", "distpoly", "dist8" };
+		public static readonly string[] ColumnHelp =
+		{
+			"Slope: how fast it gets darker with distance (distance * 8 * sqrt 2 * this / 64). 1 or less is read as 1.",
+			"Added to every shade: how dark even the nearest square is (0 full light, 14 darkest).",
+			"Added before the base and may be negative: shifts where the darkening starts (the sum is clamped at 0 first).",
+			"View radius in squares: squares farther away are not drawn at all (shade 15). The game uses 3-7; UW-Formats reports crashes above about 9 in busy areas.",
+			"Shade from which floors and walls are drawn flat, in their average colour, instead of textured.",
+			"Shade from which the renderer switches to the smaller copy of a texture (UW1; GRIDDB.C).",
+		};
+		/// <summary>What gives each light level: the light spells 0-7 of block 6 by number, and the lit
+		/// lights' brightness in OBJECTS.DAT (candle 1, torch 2, taper 3, lantern 4; UW2's 0x97 is 6).
+		/// Level 5 swaps in MONO.DAT's grey maps; the wizard eye uses 6 (PLAYDATA.C).</summary>
+		public static readonly string[] LevelNames =
+		{
+			"0 darkness (Darkness)", "1 candle (Burning Match)", "2 torch (Candlelight)", "3 taper (Light)",
+			"4 lantern (Magic Lantern)", "5 night vision (grey, MONO.DAT)", "6 Daylight, wizard eye", "7 Sunlight",
+		};
 		public readonly short[,] Rows = new short[8, 6];
 
 		public static ShadesDat Parse(byte[] d)
@@ -208,6 +225,58 @@ namespace UltimateEditor.Uw1
 				for (int c = 0; c < 6; c++)
 					s.Rows[r, c] = (short)(d[r * 12 + c * 2] | d[r * 12 + c * 2 + 1] << 8);
 			return s;
+		}
+
+		/// <summary>
+		/// The shade of a square at distance i (0-15) from the eye at light level row, as
+		/// preset_grid (3d/VIEW3D.C) computes it in both games: 15 beyond curvrad (not drawn),
+		/// else min(14, max(0, (isqrt(128 i^2) * smooth_div >> 6) + smooth_lowpass) + smooth_base).
+		/// </summary>
+		public int[] ShadeByDistance(int row)
+		{
+			int div = Math.Max(1, (int)Rows[row, 0]), bas = Rows[row, 1], low = Rows[row, 2], range = Rows[row, 3];
+			var shades = new int[16];
+			for (int i = 0; i < 16; i++)
+			{
+				if (i > range) { shades[i] = 15; continue; }
+				int t = (i << 8) >> 5;
+				int u = ISqrt(t * t * 2);
+				t = (u * div) >> 6;
+				t += low;
+				if (t < 0) t = 0;
+				u = t + bas;
+				if (u > 14) u = 14;
+				shades[i] = u;
+			}
+			return shades;
+		}
+
+		/// <summary>The shade of the grid cell dx squares across and dy ahead (glocs: isqrt of the distance in squares).</summary>
+		public int CellShade(int row, int dx, int dy)
+		{
+			int d = ISqrt(dx * dx + dy * dy);
+			if (d > Rows[row, 3] || d > 15) return 15;
+			return ShadeByDistance(row)[d];
+		}
+
+		public static int ISqrt(int v)
+		{
+			if (v <= 0) return 0;
+			int r = (int)Math.Sqrt(v);
+			while (r * r > v) r--;
+			while ((r + 1) * (r + 1) <= v) r++;
+			return r;
+		}
+
+		/// <summary>Warnings for a row (none means the game reads it as given).</summary>
+		public string Check(int row)
+		{
+			var sb = new System.Text.StringBuilder();
+			if (Rows[row, 0] <= 1) sb.Append("smooth_div 1 or less is read as 1. ");
+			if (Rows[row, 3] < 1) sb.Append("A view radius under 1 shows almost nothing. ");
+			if (Rows[row, 3] > 7) sb.Append("A view radius above 7 is untested; UW-Formats reports crashes above about 9. ");
+			if (Rows[row, 3] > 15) sb.Append("Above 15 the grid is not rebuilt at all (preset_grid needs range < 16). ");
+			return sb.ToString();
 		}
 
 		public byte[] ToBytes()

@@ -96,6 +96,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true);
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
+			Entry(root, "Light levels (SHADES.DAT)...", () => ShadesWindow.Show(), true);
 			Entry(root, "Saved games (slots, names, conversation variables)...", () => SaveSlotsWindow.Show(), false);
 			Entry(root, "Character in a save (PLAYER.DAT, position)...", () => PlayerWindow.Show(), false);
 			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
