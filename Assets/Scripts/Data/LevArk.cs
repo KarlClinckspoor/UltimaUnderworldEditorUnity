@@ -136,6 +136,7 @@ public static class LevArk
 	public static void Save(List<LevelData> levels)
 	{
 		if (Archive == null) throw new InvalidOperationException("LEV.ARK was not loaded through LevArk.");
+		if (BeforeSave != null) BeforeSave();   // open tool windows put their pending blocks in
 		LastWritten.Clear();
 		for (int i = 0; i < levels.Count; i++)
 		{
@@ -156,6 +157,48 @@ public static class LevArk
 			WriteIfChanged(Game.TextureBlock(l), tex);
 			ld.SourceTextureBlock = tex;
 		}
+		Archive.Save(Path);
+	}
+
+	/// <summary>Runs at the start of Save, so a tool window can put pending changes into the archive.</summary>
+	public static event Action BeforeSave;
+
+	// ---- automap and map notes (AutomapWindow): kept in the archive, written with it ----
+
+	public static byte[] ReadAutomap(int level) { return ReadAux(Game.AutomapBlock(level)); }
+	public static byte[] ReadNotes(int level) { return ReadAux(Game.NotesBlock(level)); }
+
+	static byte[] ReadAux(int block)
+	{
+		if (Archive == null || block < 0 || block >= Archive.Count || !Archive.Has(block)) return null;
+		return Archive.Read(block);
+	}
+
+	/// <summary>Puts an automap (0x1000 bytes) into the archive in memory if it differs; null removes the block. True if changed.</summary>
+	public static bool WriteAutomap(int level, byte[] map) { return WriteAux(Game.AutomapBlock(level), map); }
+	/// <summary>Puts a notes block (0x36 bytes a note) into the archive in memory if it differs. True if changed.</summary>
+	public static bool WriteNotes(int level, byte[] notes) { return WriteAux(Game.NotesBlock(level), notes); }
+
+	static bool WriteAux(int block, byte[] data)
+	{
+		if (Archive == null) throw new InvalidOperationException("LEV.ARK was not loaded through LevArk.");
+		var old = ReadAux(block);
+		if (data == null)
+		{
+			if (old == null) return false;
+			Archive.Delete(block);
+			return true;
+		}
+		if (old != null && Same(old, data)) return false;
+		Archive.Write(block, data);
+		return true;
+	}
+
+	/// <summary>Writes the archive as it is in memory (levels as last saved, plus automap and note
+	/// changes), keeping the editor's one-time .BKP.</summary>
+	public static void SaveArchiveNow()
+	{
+		DataWriter.BackupData(System.IO.Path.GetFileName(Path));
 		Archive.Save(Path);
 	}
 

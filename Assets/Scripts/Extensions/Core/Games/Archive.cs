@@ -235,6 +235,7 @@ namespace UltimateEditor.Games
 				if (o > off) PutU32(nf, 6 + 4 * i, o - room);
 			}
 			PutU32(nf, 6 + 4 * b, 0);
+			PutU32(nf, 6 + 4 * n + 4 * b, U32(nf, 6 + 4 * n + 4 * b) & ~2u);   // nothing stored, so not compressed
 			PutU32(nf, 6 + 8 * n + 4 * b, 0);
 			PutU32(nf, 6 + 12 * n + 4 * b, 0);
 			file = nf;

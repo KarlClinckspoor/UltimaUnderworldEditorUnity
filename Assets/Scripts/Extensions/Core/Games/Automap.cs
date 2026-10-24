@@ -111,6 +111,10 @@ namespace UltimateEditor.Games
 
 		public string Text = "";
 		public int X, Y;
+		/// <summary>The record as read: the game copies whole records, so the bytes after a
+		/// note's ending 0 hold leftovers of longer texts. They are kept while the text is unchanged.</summary>
+		public byte[] Raw;
+		string rawText;
 
 		/// <summary>The tile under the note's position (the map is drawn at px = 3x + 10, py = 3y + 7).</summary>
 		public int TileX { get { return (X - 10) / 3; } set { X = value * 3 + 10; } }
@@ -126,7 +130,9 @@ namespace UltimateEditor.Games
 				int o = i * RecordSize;
 				var sb = new StringBuilder();
 				for (int k = 0; k < TextSize && data[o + k] != 0; k++) sb.Append((char)data[o + k]);
-				list.Add(new MapNote { Text = sb.ToString(), X = (short)(data[o + 0x32] | data[o + 0x33] << 8), Y = (short)(data[o + 0x34] | data[o + 0x35] << 8) });
+				var raw = new byte[RecordSize];
+				Array.Copy(data, o, raw, 0, RecordSize);
+				list.Add(new MapNote { Text = sb.ToString(), rawText = sb.ToString(), Raw = raw, X = (short)(data[o + 0x32] | data[o + 0x33] << 8), Y = (short)(data[o + 0x34] | data[o + 0x35] << 8) });
 			}
 			return list;
 		}
@@ -142,7 +148,10 @@ namespace UltimateEditor.Games
 			{
 				int o = i * RecordSize;
 				string t = keep[i].Text ?? "";
-				for (int k = 0; k < TextSize - 1 && k < t.Length; k++) b[o + k] = t[k] < 256 ? (byte)t[k] : (byte)'?';
+				if (keep[i].Raw != null && keep[i].rawText == t)
+					Array.Copy(keep[i].Raw, 0, b, o, TextSize);
+				else
+					for (int k = 0; k < TextSize - 1 && k < t.Length; k++) b[o + k] = t[k] < 256 ? (byte)t[k] : (byte)'?';
 				b[o + 0x32] = (byte)keep[i].X; b[o + 0x33] = (byte)(keep[i].X >> 8);
 				b[o + 0x34] = (byte)keep[i].Y; b[o + 0x35] = (byte)(keep[i].Y >> 8);
 			}

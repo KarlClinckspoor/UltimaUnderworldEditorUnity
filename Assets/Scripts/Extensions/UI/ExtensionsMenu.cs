@@ -99,6 +99,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
+			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
 			Entry(root, "Zones (randomizer logic)...", () => ZoneWindow.Show(), true);
 			Entry(root, "Zone graph...", () => ZoneGraphWindow.Show(), true);
 			root.SetAsLastSibling();
