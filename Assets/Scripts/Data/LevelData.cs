@@ -16,6 +16,18 @@ public class LevelData {
 	public int ActiveMobs;
 	public AnimationOverlay[] AnimationOverlays;
 
+	// Where the level came from (UW1/UW2 support, Extensions/Core/Games). The original blocks
+	// are kept so a save patches them instead of rebuilding: whatever the editor does not
+	// model (UW2's timers, stale bytes, the order of the overlay list) stays as it was.
+	/// <summary>False for an empty UW2 slot: shown as solid rock and never written.</summary>
+	public bool Present = true;
+	/// <summary>The level map block as read (decompressed), or null for a new level.</summary>
+	public byte[] SourceBlock;
+	/// <summary>The texture block as read (0x7A UW1, 0x86 UW2), or null.</summary>
+	public byte[] SourceTextureBlock;
+	/// <summary>UW1's overlay block as read (0x180), or null; UW2 keeps its overlays inside SourceBlock.</summary>
+	public byte[] SourceOverlayBlock;
+
 	//Randomizer stuff
 	public List<Sector> Sectors;
 	public event Action<Sector, int> OnSectorAdded;

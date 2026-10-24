@@ -48,6 +48,13 @@ public static class DataWriter {
 	public static void SaveLevelData(List<LevelData> levels)
 	{
 		BackupData("LEV.ARK");
+		// Data/LevArk.cs: patches each level's original block and writes only the blocks that changed.
+		LevArk.Save(levels);
+	}
+
+	/// <summary>The editor's original UW1-only writer (rebuilds the whole file), kept for comparison.</summary>
+	public static void SaveLevelDataUw1Direct(List<LevelData> levels)
+	{
 		FileStream fs = new FileStream(DataReader.FilePath, FileMode.Create);
 		int blockCount = levels.Count * 15;
 		byte b1 = (byte)(blockCount & 0xFF);
@@ -95,7 +102,7 @@ public static class DataWriter {
 		}
 		fs.Close();
 	}
-	private static void SaveLevelOffset(FileStream fs, long offset)
+	private static void SaveLevelOffset(Stream fs, long offset)
 	{
 		byte b1 = (byte)(offset & 0xFF);
 		byte b2 = (byte)((offset & 0xFF00) >> 8);
@@ -155,11 +162,12 @@ public static class DataWriter {
 	{
 		string file = "CNV.ARK";
 		BackupData(file);
-		if (File.Exists(file))
-			File.Delete(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
-		SaveConversations(fs, convs);
-		fs.Close();
+		// The writer produces UW1's layout in memory; CnvArk writes the changed blocks through
+		// the game's own archive format (UW2: compressed) and leaves the others as they were.
+		var image = new MemoryStream();
+		SaveConversations(image, convs);
+		File.WriteAllBytes(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, CnvArk.Merge(image.ToArray()));
+		Stream fs;
 		file = "BABGLOBS.DAT";
 		BackupData(file);
 		if (File.Exists(file))
@@ -189,7 +197,7 @@ public static class DataWriter {
 
 	#region Level
 
-	public static void SaveTiles(MapTile[,] tiles, int level, long offset, FileStream fs)
+	public static void SaveTiles(MapTile[,] tiles, int level, long offset, Stream fs)
 	{
 		//int levelIndex = DataReader.GetLevelIndex(level, fs);
 		for (int y = 0; y < 64; y++)
@@ -203,7 +211,9 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveObjects(StaticObject[] objects, int level, long offset, FileStream fs)
+	/// <param name="keepFree">Leave the records of slots without an object as they are (UW1's
+	/// game keeps their stale bytes) instead of zeroing them (UW2's ObjCrunch zeroes them).</param>
+	public static void SaveObjects(StaticObject[] objects, int level, long offset, Stream fs, bool keepFree = false)
 	{
 		//int levelIndex = DataReader.GetLevelIndex(level, fs);
 		for (int i = 2; i < 256 + 768; i++)
@@ -213,7 +223,9 @@ public static class DataWriter {
 				//fs.Position = levelIndex + 16384 + i * 27;
 				fs.Position = offset + 16384 + i * 27;
 				if (objects[i] == null)
-					ClearMobileObject(i, fs);
+				{
+					if (!keepFree) ClearMobileObject(i, fs);
+				}
 				else
 					SaveMobileObject((MobileObject)objects[i], fs);
 			}
@@ -222,26 +234,28 @@ public static class DataWriter {
 				//fs.Position = levelIndex + 23296 + (i - 256) * 8;
 				fs.Position = offset + 23296 + (i - 256) * 8;
 				if (objects[i] == null)
-					ClearStaticObject(i, fs);
+				{
+					if (!keepFree) ClearStaticObject(i, fs);
+				}
 				else
 					SaveStaticObject(objects[i], fs);
 			}
 		}
 	}
 
-	public static void ClearStaticObject(int index, FileStream fs)
+	public static void ClearStaticObject(int index, Stream fs)
 	{
 		for (int i = 0; i < 8; i++)
 			fs.WriteByte(0);
 	}
 
-	public static void ClearMobileObject(int index, FileStream fs)
+	public static void ClearMobileObject(int index, Stream fs)
 	{
 		for (int i = 0; i < 27; i++)
 			fs.WriteByte(0);
 	}
 
-	public static void SaveTile(MapTile tile, FileStream fs)
+	public static void SaveTile(MapTile tile, Stream fs)
 	{
 		//FileStream fs = new FileStream(Application.dataPath + "/write.txt", FileMode.OpenOrCreate);
 		//Debug.Log("Save tile");
@@ -260,7 +274,7 @@ public static class DataWriter {
 		//fs.Close();
 	}
 
-	private static void SaveStaticObject(StaticObject so, FileStream fs)
+	private static void SaveStaticObject(StaticObject so, Stream fs)
 	{
 		byte a = (byte)(so.ObjectID & 0xFF);
 		byte b = (byte)(((so.ObjectID & 0x100) >> 8) + (so.Flags << 1) + ((so.IsEnchanted == true ? 1 : 0) << 4) + ((so.IsDoorOpen == true ? 1 : 0) << 5) + ((so.IsInvisible == true ? 1 : 0) << 6) + ((so.IsQuantity == true ? 1 : 0) << 7));
@@ -286,7 +300,7 @@ public static class DataWriter {
 		fs.WriteByte(h);
 	}
 
-	public static void SaveMobileObject(MobileObject mo, FileStream fs)
+	public static void SaveMobileObject(MobileObject mo, Stream fs)
 	{
 		//FileStream fs = new FileStream(Application.dataPath + "/write.txt", FileMode.OpenOrCreate);
 		SaveStaticObject(mo, fs);
@@ -334,7 +348,7 @@ public static class DataWriter {
 	}
 
 
-	public static void SaveFreeObjectIndexes(int[] freeList, int level, long offset, FileStream fs)
+	public static void SaveFreeObjectIndexes(int[] freeList, int level, long offset, Stream fs)
 	{
 		//int index = DataReader.GetLevelIndex(level, fs) + 29440;
 		long index = offset + 29440;
@@ -351,7 +365,7 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveActiveMobs(int[] mobList, int level, long offset, FileStream fs)
+	public static void SaveActiveMobs(int[] mobList, int level, long offset, Stream fs)
 	{
 		//int index = DataReader.GetLevelIndex(level, fs) + 31484;
 		long index = offset + 31484;
@@ -364,7 +378,7 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveFreeListStart(int level, long offset, int moba, int mob, int stat, FileStream fs)
+	public static void SaveFreeListStart(int level, long offset, int moba, int mob, int stat, Stream fs)
 	{
 		//int index = 31744 + DataReader.GetLevelIndex(level, fs);
 		long index = offset + 31744;
@@ -386,7 +400,7 @@ public static class DataWriter {
 		fs.WriteByte(d);
 	}
 
-	public static void SaveFloorTextureMappings(int level, long offset, FileStream fs, int[] floormap)
+	public static void SaveFloorTextureMappings(int level, long offset, Stream fs, int[] floormap)
 	{
 		//int index = 289766 + (level - 1) * 122 + 48 * 2;
 		long index = offset + 48 * 2;
@@ -400,7 +414,7 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveWallTextureMappings(int level, long offset, FileStream fs, int[] wallmap)
+	public static void SaveWallTextureMappings(int level, long offset, Stream fs, int[] wallmap)
 	{
 		//int index = 289766 + (level - 1) * 122;
 		long index = offset;
@@ -414,7 +428,7 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveDoorTextureMappings(int level, long offset, FileStream fs, int[] doormap)
+	public static void SaveDoorTextureMappings(int level, long offset, Stream fs, int[] doormap)
 	{
 		//int index = 289766 + (level - 1) * 122 + 58 * 2;
 		long index = offset + 58 * 2;
@@ -425,7 +439,7 @@ public static class DataWriter {
 		}
 	}
 
-	public static void SaveAnimationOverlays(long offset, LevelData levelData, FileStream fs)
+	public static void SaveAnimationOverlays(long offset, LevelData levelData, Stream fs)
 	{
 		fs.Position = offset;
 		int count = 0;
@@ -442,7 +456,7 @@ public static class DataWriter {
 		fs.Position = offset + 384;
 	}
 
-	public static void SaveAnimationOverlay(AnimationOverlay anim, FileStream fs)
+	public static void SaveAnimationOverlay(AnimationOverlay anim, Stream fs)
 	{
 		// struct Anim.link: object index in bits 6-15 (reference object.h, FORMATS.md);
 		// the reader takes (word >> 6) & 0x3FF, so shift back. Bits 0-5 are 0 in the shipped file.
@@ -463,7 +477,7 @@ public static class DataWriter {
 
 	#region Textures
 
-	public static int[] SaveTextureOffsets(FileStream fs, string fileName, TextureContainer texCon, int scaleFactor = 0, int fakeTextures = 0)
+	public static int[] SaveTextureOffsets(Stream fs, string fileName, TextureContainer texCon, int scaleFactor = 0, int fakeTextures = 0)
 	{
 		if (texCon.Offset == -1)
 			return null;
@@ -547,7 +561,7 @@ public static class DataWriter {
 		fs.Close();
 	}
 
-	public static void SaveTexture(FileStream fs, string fileName, int offset, int[] rawTex, AdditionalTextureInfo ati)
+	public static void SaveTexture(Stream fs, string fileName, int offset, int[] rawTex, AdditionalTextureInfo ati)
 	{
 		if (rawTex == null)
 		{
@@ -653,7 +667,7 @@ public static class DataWriter {
 		fs.Close();
 	}
 
-	public static void SaveNibbles(FileStream fs, long offset, List<int> nibbles)
+	public static void SaveNibbles(Stream fs, long offset, List<int> nibbles)
 	{
 		fs.Position = offset;
 		for (int i = 0; i < nibbles.Count; i+=2)
@@ -1225,7 +1239,7 @@ public static class DataWriter {
 	/// <summary>
 	/// Returns string block size
 	/// </summary>
-	public static int SaveStringBlock(FileStream fs, StringBlock block, int blockPos, HuffmanNode[] nodes)
+	public static int SaveStringBlock(Stream fs, StringBlock block, int blockPos, HuffmanNode[] nodes)
 	{
 		fs.Position = blockPos;
 		//First, write string count (int16)
@@ -1263,7 +1277,7 @@ public static class DataWriter {
 		return offset;
 	}
 
-	public static void SaveStringBlocks(FileStream fs, List<StringBlock> blocks, HuffmanNode[] nodes, long tableStart)
+	public static void SaveStringBlocks(Stream fs, List<StringBlock> blocks, HuffmanNode[] nodes, long tableStart)
 	{
 		// The block table follows the node table (GAMESTRN.C): 2 + 4 * node count. It was
 		// hard-coded as 726, right only for the shipped tree of 181 nodes.
@@ -1299,7 +1313,7 @@ public static class DataWriter {
 			
 		}
 	}
-	public static long SaveHuffmanNodes(FileStream fs, HuffmanNode[] nodes)
+	public static long SaveHuffmanNodes(Stream fs, HuffmanNode[] nodes)
 	{
 		fs.Position = 0;
 		byte len_a = (byte)(nodes.Length & 0xFF);
@@ -1318,7 +1332,7 @@ public static class DataWriter {
 	#endregion
 
 	#region Conversations
-	public static void SaveConversations(FileStream fs, ConversationData convs)
+	public static void SaveConversations(Stream fs, ConversationData convs)
 	{
 		fs.Position = 0;
 		int total = 256 + 64;
@@ -1347,7 +1361,7 @@ public static class DataWriter {
 			
 		}
 	}
-	public static long SaveConversation(FileStream fs, long offset, Conversation conv)
+	public static long SaveConversation(Stream fs, long offset, Conversation conv)
 	{
 		fs.Position = offset;
 
@@ -1426,7 +1440,7 @@ public static class DataWriter {
 		return fs.Position;
 	}
 
-	public static void SaveBabglobs(FileStream fs, ConversationData convs)
+	public static void SaveBabglobs(Stream fs, ConversationData convs)
 	{
 		fs.Position = 0;
 		for (int i = 0; i < convs.Conversations.Length; i++)
@@ -1526,7 +1540,7 @@ public static class DataWriter {
 			fs.WriteByte((byte)objDat.UnknownData[i]);		
 		fs.Close();
 	}
-	public static void SaveWeaponData(WeaponData wd, FileStream fs)
+	public static void SaveWeaponData(WeaponData wd, Stream fs)
 	{
 		fs.WriteByte((byte)wd.Slash);
 		fs.WriteByte((byte)wd.Bash);
@@ -1537,37 +1551,37 @@ public static class DataWriter {
 		fs.WriteByte((byte)wd.Skill);
 		fs.WriteByte((byte)wd.Durability);
 	}
-	public static void SaveProjectileData(ProjectileData pd, FileStream fs)
+	public static void SaveProjectileData(ProjectileData pd, Stream fs)
 	{
 		fs.WriteByte((byte)pd.Damage);
 		fs.WriteByte((byte)pd.Unk1);
 		fs.WriteByte((byte)pd.Unk2);
 	}
-	public static void SaveRangedData(RangedData rd, FileStream fs)
+	public static void SaveRangedData(RangedData rd, Stream fs)
 	{
 		fs.WriteByte((byte)rd.Unk1);
 		fs.WriteByte((byte)rd.Type);
 		fs.WriteByte((byte)rd.Ammo);
 	}
-	public static void SaveArmourData(ArmourData ad, FileStream fs)
+	public static void SaveArmourData(ArmourData ad, Stream fs)
 	{
 		fs.WriteByte((byte)ad.Protection);
 		fs.WriteByte((byte)ad.Durability);
 		fs.WriteByte((byte)ad.Unk1);
 		fs.WriteByte((byte)ad.Type);
 	}
-	public static void SaveContainerData(ContainerData cd, FileStream fs)
+	public static void SaveContainerData(ContainerData cd, Stream fs)
 	{
 		fs.WriteByte((byte)cd.Capacity);
 		fs.WriteByte((byte)cd.Type);
 		fs.WriteByte((byte)cd.Slots);
 	}
-	public static void SaveLightData(LightData ld, FileStream fs)
+	public static void SaveLightData(LightData ld, Stream fs)
 	{
 		fs.WriteByte((byte)ld.Duration);
 		fs.WriteByte((byte)ld.Brightness);
 	}
-	public static void SaveMonsterData(MonsterData md, FileStream fs)
+	public static void SaveMonsterData(MonsterData md, Stream fs)
 	{
 		fs.WriteByte((byte)md.Level);
 		fs.WriteByte((byte)md.Unk0_1);

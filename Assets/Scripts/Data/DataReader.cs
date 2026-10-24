@@ -94,6 +94,14 @@ public static class DataReader {
 	{
 		if (!uiManager)
 			return null;
+		// Both games go through the archive layer now (Data/LevArk.cs): UW2's archive format and
+		// compression, and a byte-exact re-save of unedited levels in both.
+		return LevArk.Load(FilePath);
+	}
+
+	/// <summary>The editor's original UW1-only loader, kept for comparison.</summary>
+	public static List<LevelData> LoadLevelsUw1Direct()
+	{
 		FileStream fs = new FileStream(FilePath, FileMode.Open);
 		int blockCount = GetNumberOfBlocks(fs);
 		int levelCount = blockCount / 15;
@@ -129,7 +137,7 @@ public static class DataReader {
 		return levelData;
 	}
 
-	private static StaticObject[] ReadStaticObjects(FileStream fs, MapTile[,] mapData, int levelOffset, int level, int[] mobList, int mobCount)
+	public static StaticObject[] ReadStaticObjects(Stream fs, MapTile[,] mapData, int levelOffset, int level, int[] mobList, int mobCount)
 	{
 		StaticObject[] staticObjects = new StaticObject[1024];
 		for (int y = 0; y < 64; y++)
@@ -167,7 +175,7 @@ public static class DataReader {
 		return staticObjects;
 	}
 
-	private static StaticObject ReadObject(FileStream fs, int index, int offset, StaticObject so, StaticObject[] staticObjects, MapTile tile, int x, int y, int level, int[] mobList, int mobCount)
+	private static StaticObject ReadObject(Stream fs, int index, int offset, StaticObject so, StaticObject[] staticObjects, MapTile tile, int x, int y, int level, int[] mobList, int mobCount)
 	{
 		if (index < 256)
 		{
@@ -193,7 +201,7 @@ public static class DataReader {
 		return so;
 	}
 
-	private static void ReadContainer(FileStream fs, int offset, StaticObject container, StaticObject[] staticObjects, MapTile tile, int x, int y, int level, int[] mobList, int mobCount)
+	private static void ReadContainer(Stream fs, int offset, StaticObject container, StaticObject[] staticObjects, MapTile tile, int x, int y, int level, int[] mobList, int mobCount)
 	{
 		int invIndex = 0;
 		StaticObject inventory = null;
@@ -210,12 +218,12 @@ public static class DataReader {
 		}
 	}
 
-	public static int GetNumberOfBlocks(FileStream fs)
+	public static int GetNumberOfBlocks(Stream fs)
 	{
 		return fs.ReadByte() + fs.ReadByte() * 256;
 	}
 
-	public static int[] GetLevelOffsets(FileStream fs, int levelCount)
+	public static int[] GetLevelOffsets(Stream fs, int levelCount)
 	{
 		int[] offsets = new int[levelCount * 3];
 		for (int i = 0; i < levelCount * 3; i++)
@@ -233,7 +241,7 @@ public static class DataReader {
 
 
 
-	public static int GetLevelIndex(int level, FileStream fs)
+	public static int GetLevelIndex(int level, Stream fs)
 	{
 		int start = (level - 1) * 4 + 2;
 		fs.Position = start;
@@ -247,7 +255,7 @@ public static class DataReader {
 	}
 
 
-	public static MapTile[,] ReadMapData(int level, int offset, FileStream fs)
+	public static MapTile[,] ReadMapData(int level, int offset, Stream fs)
 	{
 		//int index = GetLevelIndex(level, fs);
 
@@ -289,7 +297,7 @@ public static class DataReader {
 		return tiles;
 	}
 
-	public static StaticObject ReadStaticObjectFromIndex(int level, int index, int offset, FileStream fs, bool log = false)
+	public static StaticObject ReadStaticObjectFromIndex(int level, int index, int offset, Stream fs, bool log = false)
 	{
 		index -= 256;
 		//int start = GetLevelIndex(level, fs) + 23296;
@@ -305,7 +313,7 @@ public static class DataReader {
 		return obj;
 	}
 
-	public static MobileObject ReadMobileObjectFromIndex(int level, int index, int offset, FileStream fs)
+	public static MobileObject ReadMobileObjectFromIndex(int level, int index, int offset, Stream fs)
 	{
 		//int start = GetLevelIndex(level, fs) + 16384;
 		int start = offset + 16384;
@@ -320,7 +328,7 @@ public static class DataReader {
 		return obj;
 	}
 
-	private static void ReadStaticObject(FileStream fs, StaticObject obj, bool log = false)
+	private static void ReadStaticObject(Stream fs, StaticObject obj, bool log = false)
 	{
 		int b0 = fs.ReadByte();
 		int b1 = fs.ReadByte();
@@ -357,7 +365,7 @@ public static class DataReader {
 		if (log)
 			Debug.LogFormat("[{0}][{1}][{2}][{3}][{4}][{5}][{6}][{7}]", ToHex(b0), ToHex(b1), ToHex(b2), ToHex(b3), ToHex(b4), ToHex(b5), ToHex(b6), ToHex(b7));
 	}
-	private static void ReadMobileObject(FileStream fs, MobileObject obj)
+	private static void ReadMobileObject(Stream fs, MobileObject obj)
 	{
 		int b8 = fs.ReadByte();
 		int b9 = fs.ReadByte();
@@ -412,7 +420,7 @@ public static class DataReader {
 		obj.B1A = b1A;
 	}
 
-	public static int[] ReadFreeObjectIndexes(int level, int offset, FileStream fs)
+	public static int[] ReadFreeObjectIndexes(int level, int offset, Stream fs)
 	{
 		//int index = GetLevelIndex(level, fs) + 29440;
 		int start = offset + 29440;
@@ -434,7 +442,7 @@ public static class DataReader {
 		return free;
 	}
 
-	public static int[] ReadActiveMobs(int level, int offset, FileStream fs)
+	public static int[] ReadActiveMobs(int level, int offset, Stream fs)
 	{
 		//int index = GetLevelIndex(level, fs) + 31484;
 		int start = offset + 31484;
@@ -455,7 +463,7 @@ public static class DataReader {
 		Static = 4
 	}
 
-	public static int ReadFreeListStart(int level, int offset, ListType whichList, FileStream fs)
+	public static int ReadFreeListStart(int level, int offset, ListType whichList, Stream fs)
 	{
 		//int index = 31744 + GetLevelIndex(level, fs) + (int)whichList;
 		int start = offset + 31744 + (int)whichList;
@@ -469,7 +477,7 @@ public static class DataReader {
 	}
 
 
-	public static int[] ReadFloorTextureMappings(int level, int offset, FileStream fs)
+	public static int[] ReadFloorTextureMappings(int level, int offset, Stream fs)
 	{
 		//int index = 289766 + (level - 1) * 122 + 48 * 2;
 		int index = offset + 48 * 2;
@@ -484,7 +492,7 @@ public static class DataReader {
 		return texmap;
 	}
 
-	public static int[] ReadWallTextureMappings(int level, int offset, FileStream fs)
+	public static int[] ReadWallTextureMappings(int level, int offset, Stream fs)
 	{
 		//int index = 289766 + (level - 1) * 122;
 		int index = offset;
@@ -499,7 +507,7 @@ public static class DataReader {
 		return texmap;
 	}
 
-	public static int[] ReadDoorTextureMappings(int level, int offset, FileStream fs)
+	public static int[] ReadDoorTextureMappings(int level, int offset, Stream fs)
 	{
 		int index = offset + 58 * 2;
 		fs.Position = index;
@@ -511,7 +519,7 @@ public static class DataReader {
 		return texmap;
 	}
 
-	public static AnimationOverlay[] ReadAnimationOverlays(int level, int offset, FileStream fs)
+	public static AnimationOverlay[] ReadAnimationOverlays(int level, int offset, Stream fs)
 	{
 		AnimationOverlay[] anims = new AnimationOverlay[64];
 		fs.Position = offset;
@@ -637,13 +645,36 @@ public static class DataReader {
 		for (int i = 0; i < auxPalsRaw.Count; i++)
 			auxPals.Add(CreateAuxPalette(auxPalsRaw[i], pals[0]));
 		
+		// The game decides the texture files (Extensions/Core/Games/GameProfile.cs).
+		var game = UltimateEditor.Games.GameProfile.For(LevArk.DetectFor(FilePath));
+		LevArk.Game = game;
+		TextureContainer floors, walls;
+		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			// UW2: one list, T64.TR (64x64), for walls and floors. The floor copies are scaled
+			// to 32x32 so everything that shows floors at UW1's size keeps working.
+			int tCount = 0, tFirst = 0;
+			int[] t64o = ReadGraphicOffsets("T64.TR", ref tCount, ref tFirst);
+			List<int[]> t64raw = ReadRawTextures("T64.TR", t64o, 64, 64);
+			List<Texture2D> t64tex = new List<Texture2D>();
+			List<Texture2D> t32tex = new List<Texture2D>();
+			for (int i = 0; i < t64raw.Count; i++)
+			{
+				t64tex.Add(ConvertToTexture("Tex64_" + i, t64raw[i], 64, 64, pals[0], true));
+				t32tex.Add(ConvertToTexture("Floor32_" + i, Downscale(t64raw[i], 64, 64), 32, 32, pals[0], true));
+			}
+			floors = new TextureContainer(t32tex, tFirst, 0, new AdditionalTextureInfo(false, 32, 32, -1, -1));
+			walls = new TextureContainer(t64tex, tFirst, 0, new AdditionalTextureInfo(false, 64, 64, -1, -1));
+		}
+		else
+		{
 		int fCount = 0, fFirst = 0;
 		int[] f32o = ReadGraphicOffsets("F32.TR", ref fCount, ref fFirst);
 		List<int[]> f32raw = ReadRawTextures("F32.TR", f32o, 32, 32);
 		List<Texture2D> f32tex = new List<Texture2D>();
 		for (int i = 0; i < fCount; i++)
 			f32tex.Add(ConvertToTexture("Floor32_" + i, f32raw[i], 32, 32, pals[0], true));
-		TextureContainer floors = new TextureContainer(f32tex, fFirst, 0, new AdditionalTextureInfo(false, 32, 32, -1, -1));
+		floors = new TextureContainer(f32tex, fFirst, 0, new AdditionalTextureInfo(false, 32, 32, -1, -1));
 
 		int wCount = 0, wFirst = 0;
 		int[] w64o = ReadGraphicOffsets("W64.TR", ref wCount, ref wFirst);
@@ -651,8 +682,8 @@ public static class DataReader {
 		List<Texture2D> w64tex = new List<Texture2D>();
 		for (int i = 0; i < wCount; i++)
 			w64tex.Add(ConvertToTexture("Wall64_" + i, w64raw[i], 64, 64, pals[0], true));
-		TextureContainer walls = new TextureContainer(w64tex, wFirst, 0, new AdditionalTextureInfo(false, 64, 64, -1, -1));
-
+		walls = new TextureContainer(w64tex, wFirst, 0, new AdditionalTextureInfo(false, 64, 64, -1, -1));
+		}
 		int dCount = 0, dFirst = 0;
 		int[] dooro = ReadGraphicOffsets("DOORS.GR", ref dCount, ref dFirst);
 		List<int[]> doorraw = ReadRawTextures("DOORS.GR", dooro, 32, 64, 5);
@@ -687,11 +718,13 @@ public static class DataReader {
 		TextureContainer genheads = new TextureContainer(portrTex, pFirst, 5, new AdditionalTextureInfo(true, 34, 34, 132, 4));
 		
 		int[] npcOffsets = ReadGraphicOffsets("CHARHEAD.GR", ref pCount, ref pFirst);
-		List<int[]> npcRaw = ReadRawTextures("CHARHEAD.GR", npcOffsets, 34, 34, 5);
+		// UW1's heads are 34x34, UW2's 64x70: take each picture's size from its header
+		var npcSizes = new Dictionary<int, Vector2Int>();
+		List<int[]> npcRaw = ReadRawTextures("CHARHEAD.GR", npcOffsets, 0, 0, 5, true, npcSizes);
 		//Debug.LogFormat("npcOffset count : {0}, pCount : {1}, npcRaw.Len : {2}", npcOffsets.Length, pCount, npcRaw.Count);
 		List<Texture2D> npcTex = new List<Texture2D>();
 		for (int i = 0; i < npcRaw.Count; i++)
-			npcTex.Add(ConvertToTexture("NPC_Head_" + i, npcRaw[i], 34, 34, pals[0], true));
+			npcTex.Add(ConvertToTexture("NPC_Head_" + i, npcRaw[i], npcSizes[i].x, npcSizes[i].y, pals[0], true));
 		TextureContainer npcheads = new TextureContainer(npcTex, pFirst, 5, new AdditionalTextureInfo(true, 34, 34, 132, 4));
 
 		int iCount = 0, iFirst = 0;
@@ -736,12 +769,18 @@ public static class DataReader {
 
 		fs.Close();
 		fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT", FileMode.Open);
-		int[] wallDat = new int[256];
-		int[] florDat = new int[256];
+		int[] wallDat = new int[game.Kind == UltimateEditor.Games.GameKind.UW2 ? 512 : 256];
+		int[] florDat;
 		for (int i = 0; i < 256; i++)		
 			wallDat[i] = fs.ReadByte() + fs.ReadByte() * 256;
-		for (int i = 0; i < 256; i++)
-			florDat[i] = fs.ReadByte() + fs.ReadByte() * 256;
+		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
+			florDat = wallDat;   // UW2: one word per T64.TR texture, walls and floors alike (TEXTMAPS.C Load_Terrains)
+		else
+		{
+			florDat = new int[256];
+			for (int i = 0; i < 256; i++)
+				florDat[i] = fs.ReadByte() + fs.ReadByte() * 256;
+		}
 		
 		fs.Close();
 
@@ -749,7 +788,18 @@ public static class DataReader {
 		return texData;
 	}
 
-	public static int[] ReadPallette(FileStream fs, int index)
+	/// <summary>Nearest-neighbour halving of a raw (palette index) picture.</summary>
+	public static int[] Downscale(int[] raw, int width, int height)
+	{
+		int w = width / 2, h = height / 2;
+		var r = new int[w * h];
+		for (int y = 0; y < h; y++)
+			for (int x = 0; x < w; x++)
+				r[y * w + x] = raw[(y * 2) * width + x * 2];
+		return r;
+	}
+
+	public static int[] ReadPallette(Stream fs, int index)
 	{
 		int[] pal = new int[256 * 3];
 		//string filePath = FileExplorer.GetUpperPath(FilePath) + "/pals.dat";
@@ -802,7 +852,7 @@ public static class DataReader {
 		return newPal;
 	}
 
-	public static int ReadPaletteMapping(FileStream fs, int r, int g, int b)
+	public static int ReadPaletteMapping(Stream fs, int r, int g, int b)
 	{
 		fs.Position = r * 256 * 256 + g * 256 + b;
 		return fs.ReadByte();
@@ -839,7 +889,7 @@ public static class DataReader {
 		return offsets;
 	}
 
-	public static int[] Read4BitGraphic(FileStream fs, long offset, int startingOffset, int index, AdditionalTextureInfo ati)
+	public static int[] Read4BitGraphic(Stream fs, long offset, int startingOffset, int index, AdditionalTextureInfo ati)
 	{
 		fs.Position = offset + 1;
 		ati.Width = fs.ReadByte();
@@ -853,7 +903,7 @@ public static class DataReader {
 		return Read4BitGraphic(fs, fs.Position, ati.Width, ati.Height, size);
 	}
 
-	public static int[] Read4BitGraphic(FileStream fs, long offset, int width, int height, int count)
+	public static int[] Read4BitGraphic(Stream fs, long offset, int width, int height, int count)
 	{
 		int i = 0;
 		int[] rawGr = new int[count];
@@ -1152,7 +1202,7 @@ public static class DataReader {
 		return strData;
 	}
 
-	public static Tuple<HuffmanNode[], long> ReadHuffmanNodes(FileStream fs)
+	public static Tuple<HuffmanNode[], long> ReadHuffmanNodes(Stream fs)
 	{
 		fs.Position = 0;
 
@@ -1176,7 +1226,7 @@ public static class DataReader {
 		return pair;
 	}
 
-	public static Tuple<List<StringBlock>, Dictionary<int, int>> ReadStringBlocks(FileStream fs, long startOffset)
+	public static Tuple<List<StringBlock>, Dictionary<int, int>> ReadStringBlocks(Stream fs, long startOffset)
 	{
 		fs.Position = startOffset;
 
@@ -1226,7 +1276,7 @@ public static class DataReader {
 		return new Tuple<List<StringBlock>, Dictionary<int, int>>(blocks, blockDict);
 	}
 
-	public static List<string> ReadStrings(FileStream fs, StringBlock block, HuffmanNode[] nodes, bool debug = false)
+	public static List<string> ReadStrings(Stream fs, StringBlock block, HuffmanNode[] nodes, bool debug = false)
 	{
 		if (block == null)
 			return null;
@@ -1268,7 +1318,7 @@ public static class DataReader {
 		return block.Strings;
 	}
 
-	public static char GetChar(FileStream fs, HuffmanNode[] nodes, ref int raw, ref int bit, bool debug = false)
+	public static char GetChar(Stream fs, HuffmanNode[] nodes, ref int raw, ref int bit, bool debug = false)
 	{
 		HuffmanNode curNode = nodes[nodes.Length - 1];
 		//Debug.Log("nodes.Length - 1 " + (nodes.Length - 1));
@@ -1318,7 +1368,9 @@ public static class DataReader {
 
 	public static ConversationData LoadConversations()
 	{
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/CNV.ARK", FileMode.Open);
+		// Data/CnvArk.cs gives UW1's archive layout for either game (UW2's blocks decompressed).
+		var image = CnvArk.LoadAsUw1Image(FileExplorer.GetUpperPath(FilePath) + "/CNV.ARK");
+		Stream fs = new MemoryStream(image, false);
 		Conversation[] convs = LoadConversations(fs);
 		ConversationData convData = new ConversationData(convs, ReadPrivateVariables());
 		if (!Directory.Exists(Application.dataPath + "/Conversations"))
@@ -1327,7 +1379,7 @@ public static class DataReader {
 		return convData;
 	}
 
-	public static Conversation[] LoadConversations(FileStream fs)
+	public static Conversation[] LoadConversations(Stream fs)
 	{
 		int cc_a = fs.ReadByte();
 		int cc_b = fs.ReadByte();
@@ -1372,7 +1424,7 @@ public static class DataReader {
 		return convs;
 	}
 
-	public static Conversation LoadConversation(FileStream fs, int offset, ConversationState state)
+	public static Conversation LoadConversation(Stream fs, int offset, ConversationState state)
 	{
 		fs.Position = offset;
 
@@ -1604,7 +1656,7 @@ public static class DataReader {
 		return od;
 	}
 
-	public static WeaponData[] ReadWeaponDatas(FileStream fs)
+	public static WeaponData[] ReadWeaponDatas(Stream fs)
 	{
 		WeaponData[] wds = new WeaponData[16];
 		for (int i = 0; i < 16; i++)
@@ -1612,7 +1664,7 @@ public static class DataReader {
 		return wds;
 	}
 
-	public static WeaponData ReadWeaponData(FileStream fs, int i)
+	public static WeaponData ReadWeaponData(Stream fs, int i)
 	{
 		WeaponData wd = new WeaponData();
 		wd.Slash = fs.ReadByte();
@@ -1626,14 +1678,14 @@ public static class DataReader {
 		wd.ObjectID = i;
 		return wd;
 	}
-	public static ProjectileData[] ReadProjectileDatas(FileStream fs)
+	public static ProjectileData[] ReadProjectileDatas(Stream fs)
 	{
 		ProjectileData[] pds = new ProjectileData[8];
 		for (int i = 0; i < 8; i++)
 			pds[i] = ReadProjectileData(fs, i);
 		return pds;
 	}
-	public static ProjectileData ReadProjectileData(FileStream fs, int i)
+	public static ProjectileData ReadProjectileData(Stream fs, int i)
 	{
 		ProjectileData pd = new ProjectileData();
 		int a = fs.ReadByte();
@@ -1648,14 +1700,14 @@ public static class DataReader {
 		pd.Unk2 = c;
 		return pd;
 	}
-	public static RangedData[] ReadRangedDatas(FileStream fs)
+	public static RangedData[] ReadRangedDatas(Stream fs)
 	{
 		RangedData[] rds = new RangedData[8];
 		for (int i = 0; i < 8; i++)
 			rds[i] = ReadRangedData(fs, i);
 		return rds;
 	}
-	public static RangedData ReadRangedData(FileStream fs, int i)
+	public static RangedData ReadRangedData(Stream fs, int i)
 	{
 		RangedData rd = new RangedData();
 		int a = fs.ReadByte();
@@ -1669,14 +1721,14 @@ public static class DataReader {
 		rd.Ammo = c;
 		return rd;
 	}
-	public static ArmourData[] ReadArmourDatas(FileStream fs)
+	public static ArmourData[] ReadArmourDatas(Stream fs)
 	{
 		ArmourData[] ads = new ArmourData[32];
 		for (int i = 0; i < 32; i++)
 			ads[i] = ReadArmourData(fs, i);
 		return ads;
 	}
-	public static ArmourData ReadArmourData(FileStream fs, int i)
+	public static ArmourData ReadArmourData(Stream fs, int i)
 	{
 		ArmourData ad = new ArmourData();
 		ad.Protection = fs.ReadByte();
@@ -1685,14 +1737,14 @@ public static class DataReader {
 		ad.Type = fs.ReadByte();
 		return ad;
 	}
-	public static ContainerData[] ReadContainerDatas(FileStream fs)
+	public static ContainerData[] ReadContainerDatas(Stream fs)
 	{
 		ContainerData[] cds = new ContainerData[16];
 		for (int i = 0; i < 16; i++)
 			cds[i] = ReadContainerData(fs, i);
 		return cds;
 	}
-	public static ContainerData ReadContainerData(FileStream fs, int i)
+	public static ContainerData ReadContainerData(Stream fs, int i)
 	{
 		ContainerData cd = new ContainerData();
 		cd.Capacity = fs.ReadByte();
@@ -1700,28 +1752,28 @@ public static class DataReader {
 		cd.Slots = fs.ReadByte();
 		return cd;
 	}
-	public static LightData[] ReadLightDatas(FileStream fs)
+	public static LightData[] ReadLightDatas(Stream fs)
 	{
 		LightData[] lds = new LightData[8];
 		for (int i = 0; i < 8; i++)
 			lds[i] = ReadLightData(fs, i);
 		return lds;
 	}
-	public static LightData ReadLightData(FileStream fs, int i)
+	public static LightData ReadLightData(Stream fs, int i)
 	{
 		LightData ld = new LightData();
 		ld.Duration = fs.ReadByte();
 		ld.Brightness = fs.ReadByte();
 		return ld;
 	}
-	public static MonsterData[] ReadMonsterDatas(FileStream fs)
+	public static MonsterData[] ReadMonsterDatas(Stream fs)
 	{
 		MonsterData[] mds = new MonsterData[64];
 		for (int i = 0; i < 64; i++)
 			mds[i] = ReadMonsterData(fs, i);
 		return mds;
 	}
-	public static MonsterData ReadMonsterData(FileStream fs, int i)
+	public static MonsterData ReadMonsterData(Stream fs, int i)
 	{
 		MonsterData md = new MonsterData();
 		md.Level = fs.ReadByte();

@@ -1,0 +1,294 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UltimateEditor.Games;
+
+/// <summary>
+/// LEV.ARK for both games through the archive layer (Extensions/Core/Games): each level's
+/// block is read into memory and the editor's existing readers run on it at offset 0; a
+/// save patches the original block with the editor's writers and hands it back to the
+/// archive only if it changed. Unchanged levels stay byte for byte as they were, and a
+/// changed one is written the way the game's own put_arc writes it.
+/// </summary>
+public static class LevArk
+{
+	/// <summary>The game of the open data (set by Load).</summary>
+	public static GameProfile Game = GameProfile.UW1;
+	public static Archive Archive { get; private set; }
+	public static string Path { get; private set; }
+
+	/// <summary>Blocks the last save wrote (for the status message and the tests).</summary>
+	public static readonly List<int> LastWritten = new List<int>();
+
+	public static GameKind DetectFor(string levArkPath)
+	{
+		return GameProfile.Detect(System.IO.Path.GetDirectoryName(levArkPath));
+	}
+
+	public static List<LevelData> Load(string path)
+	{
+		Path = path;
+		Game = GameProfile.For(DetectFor(path));
+		Archive = Archive.Load(path, Game.Kind);
+		int slots = Game.Kind == GameKind.UW1 ? Math.Max(1, Archive.Count / 15) : Game.LevelSlots;
+		var levels = new List<LevelData>(slots);
+		for (int l = 1; l <= slots; l++) levels.Add(ReadLevel(l));
+		return levels;
+	}
+
+	static LevelData ReadLevel(int l)
+	{
+		byte[] block = Archive.Read(Game.LevelBlock(l));
+		bool present = block != null && block.Length >= LevelBlock.MagicAt + 2;
+		byte[] data = present ? block : EmptyBlock(Game);
+		var ms = new MemoryStream(data, false);
+		MapTile[,] tiles = DataReader.ReadMapData(l, 0, ms);
+		int mobCount = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.MobActive, ms);
+		int freeMob = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.Mobile, ms);
+		int freeStat = DataReader.ReadFreeListStart(l, 0, DataReader.ListType.Static, ms);
+		int[] free = DataReader.ReadFreeObjectIndexes(l, 0, ms);
+		int[] mobList = DataReader.ReadActiveMobs(l, 0, ms);
+		StaticObject[] objects = DataReader.ReadStaticObjects(ms, tiles, 0, l, mobList, mobCount);
+
+		AnimationOverlay[] anims;
+		byte[] overlayBlock = null;
+		if (Game.Kind == GameKind.UW2)
+			anims = data.Length >= LevelBlock.Uw2OverlaysAt + 0x180 ? DataReader.ReadAnimationOverlays(l, LevelBlock.Uw2OverlaysAt, ms) : new AnimationOverlay[64];
+		else
+		{
+			overlayBlock = Archive.Read(Game.OverlayBlock(l));
+			// Anim_Load: a block of another length loads as no overlays
+			anims = overlayBlock != null && overlayBlock.Length == 0x180 ? DataReader.ReadAnimationOverlays(l, 0, new MemoryStream(overlayBlock, false)) : new AnimationOverlay[64];
+		}
+
+		byte[] tex = Archive.Read(Game.TextureBlock(l));
+		int[] floors, walls, doors;
+		ReadTextureBlock(tex, out floors, out walls, out doors);
+
+		var ld = new LevelData(l, tiles, objects, floors, walls, doors, free, mobList, freeMob, freeStat, mobCount, anims);
+		ld.Present = present;
+		ld.SourceBlock = present ? block : null;
+		ld.SourceTextureBlock = tex;
+		ld.SourceOverlayBlock = overlayBlock;
+		return ld;
+	}
+
+	/// <summary>UW1: 48 walls, 10 floors, 6 door bytes (0x7A). UW2: 64 textures for both, 6 door bytes (0x86).</summary>
+	static void ReadTextureBlock(byte[] tex, out int[] floors, out int[] walls, out int[] doors)
+	{
+		if (Game.Kind == GameKind.UW2)
+		{
+			walls = new int[64];
+			floors = new int[16];
+			doors = new int[6];
+			for (int i = 0; i < 64; i++) walls[i] = tex != null && tex.Length >= 2 * i + 2 ? tex[2 * i] | tex[2 * i + 1] << 8 : i;   // init_txtlib: TxmID[i] = i
+			for (int i = 0; i < 16; i++) floors[i] = walls[i];   // a tile's 4-bit floor indexes the same list (map.h)
+			for (int i = 0; i < 6; i++) doors[i] = tex != null && tex.Length > 0x80 + i ? tex[0x80 + i] : i;
+			return;
+		}
+		if (tex == null || tex.Length < 0x7A)
+		{
+			walls = new int[48]; floors = new int[10]; doors = new int[6];
+			for (int i = 0; i < 48; i++) walls[i] = i;
+			for (int i = 0; i < 10; i++) floors[i] = i;
+			for (int i = 0; i < 6; i++) doors[i] = i;
+			return;
+		}
+		var ms = new MemoryStream(tex, false);
+		floors = DataReader.ReadFloorTextureMappings(0, 0, ms);
+		walls = DataReader.ReadWallTextureMappings(0, 0, ms);
+		doors = DataReader.ReadDoorTextureMappings(0, 0, ms);
+	}
+
+	/// <summary>
+	/// A level with nothing in it, as the game sets one up (obj/OBJECTS.C Obj_Init): every
+	/// tile solid, every object free (mobile 2-255, static 256-1023, tops 253 and 767), magic set.
+	/// </summary>
+	public static byte[] EmptyBlock(GameProfile game)
+	{
+		var b = new byte[game.LevelBlockSize];
+		for (int i = 2; i < 0x400; i++)
+		{
+			int at = LevelBlock.MobFreeAt + (i - 2) * 2;
+			b[at] = (byte)i; b[at + 1] = (byte)(i >> 8);
+		}
+		b[LevelBlock.MobTopAt] = 253; b[LevelBlock.MobTopAt + 1] = 0;
+		b[LevelBlock.StaticTopAt] = 0xFF; b[LevelBlock.StaticTopAt + 1] = 2;   // 767
+		b[LevelBlock.MagicAt] = 0x77; b[LevelBlock.MagicAt + 1] = 0x75;
+		return b;
+	}
+
+	// ---------------------------------------------------------------- saving
+
+	public static void Save(List<LevelData> levels)
+	{
+		if (Archive == null) throw new InvalidOperationException("LEV.ARK was not loaded through LevArk.");
+		LastWritten.Clear();
+		for (int i = 0; i < levels.Count; i++)
+		{
+			var ld = levels[i];
+			if (ld == null || !ld.Present) continue;
+			int l = i + 1;
+
+			byte[] block = BuildLevelBlock(ld, l);
+			WriteIfChanged(Game.LevelBlock(l), block);
+			ld.SourceBlock = block;
+
+			if (Game.Kind == GameKind.UW1)
+			{
+				byte[] ov = BuildUw1OverlayBlock(ld);
+				if (ov != null) { WriteIfChanged(Game.OverlayBlock(l), ov); ld.SourceOverlayBlock = ov; }
+			}
+			byte[] tex = BuildTextureBlock(ld);
+			WriteIfChanged(Game.TextureBlock(l), tex);
+			ld.SourceTextureBlock = tex;
+		}
+		Archive.Save(Path);
+	}
+
+	static void WriteIfChanged(int block, byte[] data)
+	{
+		var old = Archive.Read(block);
+		if (old != null && Same(old, data)) return;
+		Archive.Write(block, data);
+		LastWritten.Add(block);
+	}
+
+	static bool Same(byte[] a, byte[] b)
+	{
+		if (a.Length != b.Length) return false;
+		for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+		return true;
+	}
+
+	public static byte[] BuildLevelBlock(LevelData ld, int l)
+	{
+		byte[] block = (byte[])(ld.SourceBlock ?? EmptyBlock(Game)).Clone();
+		byte[] source = ld.SourceBlock;
+		var ms = new MemoryStream(block, true);
+		DataWriter.SaveTiles(ld.MapTiles, l, 0, ms);
+		// Free records keep their bytes here; UW2's Map_Save zeroes them (ObjCrunch), which is
+		// done below only if the level changed, so an unedited level stays as shipped.
+		DataWriter.SaveObjects(ld.Objects, l, 0, ms, source != null);
+		DataWriter.SaveFreeObjectIndexes(ld.FreeObjects, l, 0, ms);
+		DataWriter.SaveActiveMobs(ld.MobList, l, 0, ms);
+		DataWriter.SaveFreeListStart(l, 0, ld.ActiveMobs, ld.MobileListStart, ld.StaticListStart, ms);
+		block[LevelBlock.MagicAt] = 0x77; block[LevelBlock.MagicAt + 1] = 0x75;
+		// the tile light bits (word 0 bits 8-9) are not in the editor's model: keep them
+		if (source != null)
+			for (int t = 0; t < 4096; t++)
+				block[t * 4 + 1] = (byte)((block[t * 4 + 1] & 0xFC) | (source[t * 4 + 1] & 0x03));
+		if (Game.Kind == GameKind.UW2)
+		{
+			WriteUw2Overlays(ld, block, source);
+			if (source == null || !Same(block, source)) new LevelBlock(block, GameKind.UW2).CrunchFreeRecords();
+		}
+		return block;
+	}
+
+	/// <summary>The live overlay entries the editor has, as (link word, frames, x, y), in object order.</summary>
+	static List<int[]> LiveOverlays(LevelData ld)
+	{
+		var list = new List<int[]>();
+		foreach (var obj in ld.Objects)
+			if (obj && obj.Animation)
+				list.Add(new[] { (obj.Animation.Adress & 0x3FF) << 6, obj.Animation.Duration & 0xFFFF, obj.Animation.X & 0xFF, obj.Animation.Y & 0xFF });
+		if (list.Count > 64) list.RemoveRange(64, list.Count - 64);
+		return list;
+	}
+
+	static List<int[]> LiveOverlaysIn(byte[] b, int at)
+	{
+		var list = new List<int[]>();
+		for (int i = 0; i < 64; i++)
+		{
+			int o = at + i * 6;
+			int link = b[o] | b[o + 1] << 8;
+			if ((link >> 6) == 0) break;
+			list.Add(new[] { link, b[o + 2] | b[o + 3] << 8, b[o + 4], b[o + 5] });
+		}
+		return list;
+	}
+
+	/// <summary>Same entries regardless of order.</summary>
+	static bool SameSet(List<int[]> a, List<int[]> b)
+	{
+		if (a.Count != b.Count) return false;
+		var keys = new List<string>();
+		foreach (var e in a) keys.Add(string.Join(",", Array.ConvertAll(e, x => x.ToString())));
+		foreach (var e in b)
+		{
+			string k = string.Join(",", Array.ConvertAll(e, x => x.ToString()));
+			if (!keys.Remove(k)) return false;
+		}
+		return true;
+	}
+
+	static void PutOverlays(byte[] b, int at, List<int[]> entries, bool zeroRest)
+	{
+		for (int i = 0; i < 64; i++)
+		{
+			int o = at + i * 6;
+			if (i < entries.Count)
+			{
+				var e = entries[i];
+				b[o] = (byte)e[0]; b[o + 1] = (byte)(e[0] >> 8);
+				b[o + 2] = (byte)e[1]; b[o + 3] = (byte)(e[1] >> 8);
+				b[o + 4] = (byte)e[2]; b[o + 5] = (byte)e[3];
+			}
+			else if (zeroRest || i == entries.Count)
+				for (int k = 0; k < 6; k++) b[o + k] = 0;
+		}
+	}
+
+	/// <summary>
+	/// UW2 keeps 64 overlays inside the level block. If the editor's live set equals the
+	/// file's, the bytes stay as they were; otherwise the list is written in object order and
+	/// the rest zeroed, as UW2's Anim_Save does.
+	/// </summary>
+	static void WriteUw2Overlays(LevelData ld, byte[] block, byte[] source)
+	{
+		var live = LiveOverlays(ld);
+		if (source != null && SameSet(live, LiveOverlaysIn(source, LevelBlock.Uw2OverlaysAt))) return;
+		PutOverlays(block, LevelBlock.Uw2OverlaysAt, live, true);
+	}
+
+	/// <summary>
+	/// UW1's overlay block (0x180): unchanged set, unchanged bytes. Otherwise written in object
+	/// order, zeroing only the entry after the list, as UW1's Anim_Save does (stale entries after it stay).
+	/// </summary>
+	static byte[] BuildUw1OverlayBlock(LevelData ld)
+	{
+		var src = ld.SourceOverlayBlock;
+		var live = LiveOverlays(ld);
+		if (src != null && src.Length == 0x180 && SameSet(live, LiveOverlaysIn(src, 0))) return src;
+		var b = src != null && src.Length == 0x180 ? (byte[])src.Clone() : new byte[0x180];
+		PutOverlays(b, 0, live, false);
+		return b;
+	}
+
+	static byte[] BuildTextureBlock(LevelData ld)
+	{
+		if (Game.Kind == GameKind.UW2)
+		{
+			var b = ld.SourceTextureBlock != null && ld.SourceTextureBlock.Length == 0x86 ? (byte[])ld.SourceTextureBlock.Clone() : new byte[0x86];
+			// One table of 64: the floor list is a view of its first 16 entries. Whichever list
+			// the user changed (against the block as read) wins for those entries.
+			for (int i = 0; i < 64; i++)
+			{
+				int src = b[2 * i] | b[2 * i + 1] << 8;
+				int v = ld.WallTextures[i];
+				if (v == src && i < ld.FloorTextures.Length) v = ld.FloorTextures[i];
+				b[2 * i] = (byte)v; b[2 * i + 1] = (byte)(v >> 8);
+			}
+			for (int i = 0; i < 6; i++) b[0x80 + i] = (byte)ld.DoorTextures[i];
+			return b;
+		}
+		var t = ld.SourceTextureBlock != null && ld.SourceTextureBlock.Length == 0x7A ? (byte[])ld.SourceTextureBlock.Clone() : new byte[0x7A];
+		var ms = new MemoryStream(t, true);
+		DataWriter.SaveWallTextureMappings(ld.Level, 0, ms, ld.WallTextures);
+		DataWriter.SaveFloorTextureMappings(ld.Level, 0, ms, ld.FloorTextures);
+		DataWriter.SaveDoorTextureMappings(ld.Level, 0, ms, ld.DoorTextures);
+		return t;
+	}
+}
