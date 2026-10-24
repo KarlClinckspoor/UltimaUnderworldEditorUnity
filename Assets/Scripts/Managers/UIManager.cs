@@ -4820,9 +4820,28 @@ public class UIManager : MonoBehaviour {
 		}
 		else label = t.GetComponent<Text>();
 		var ld = MapCreator.LevelData[CurrentLevel - 1];
-		label.text = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2
-			? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved")
-			: "";
+		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+		label.text = uw2 ? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved") : "";
+		// An empty UW2 slot is not written; this button makes it a level that is
+		var bt = LevelSlider.transform.Find("UseSlot");
+		Button use = bt ? bt.GetComponent<Button>() : null;
+		if (!use)
+		{
+			use = UltimateEditor.Uw1.UI.UiKit.Button(LevelSlider.transform, "Make this slot a level", null, 160, 18);
+			use.name = "UseSlot";
+			var rt = use.GetComponent<RectTransform>();
+			rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
+			rt.pivot = new Vector2(0.5f, 1);
+			rt.anchoredPosition = new Vector2(0, -22);
+		}
+		use.onClick.RemoveAllListeners();
+		use.onClick.AddListener(() =>
+		{
+			MapCreator.LevelData[CurrentLevel - 1].Present = true;
+			SpawnPopupMessage(LevArk.Game.LevelName(CurrentLevel) + " will be saved as a level (with its texture block).");
+			ShowLevelName();
+		});
+		use.gameObject.SetActive(uw2 && !ld.Present);
 	}
 
 	public void CreateClearLevelsMenu()

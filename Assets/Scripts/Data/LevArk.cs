@@ -22,7 +22,9 @@ public static class LevArk
 
 	public static GameKind DetectFor(string levArkPath)
 	{
-		return GameProfile.Detect(System.IO.Path.GetDirectoryName(levArkPath));
+		// A relative path has an empty directory name; resolve it so the folder's files can be seen
+		string full = string.IsNullOrEmpty(levArkPath) ? levArkPath : System.IO.Path.GetFullPath(levArkPath);
+		return GameProfile.Detect(System.IO.Path.GetDirectoryName(full));
 	}
 
 	public static List<LevelData> Load(string path)
