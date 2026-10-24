@@ -1199,8 +1199,8 @@ public class StaticObject {
 			case 350: return "Nightstand";
 			case 351: return "Lotus turbo esprit";
 			case 352: return "Pillar";
-			case 353: return "Dial lever";
-			case 354: return "Dial lever";
+			case 353: return "Lever (8 positions)";
+			case 354: return "Switch (8 positions)";   //"a_switch" in the game's strings; was "Dial lever"
 			case 355: return "Unknown";
 			case 356: return "Bridge";
 			case 357: return "Grave";
@@ -1212,8 +1212,8 @@ public class StaticObject {
 			case 363: return "Unknown";
 			case 364: return "Unknown";
 			case 365: return "Unknown (force field?)";
-			case 366: return "Passable wall";
-			case 367: return "Impassable wall";
+			case 366: return "Texture map tmap_c (passable?)";   //items.h ITEM_TMAP_C; the game calls both "special tmap obj"
+			case 367: return "Texture map tmap_s (solid?)";   //items.h ITEM_TMAP_S
 			case 368: return "Button";
 			case 369: return "Button";
 			case 370: return "Button";
@@ -1312,11 +1312,13 @@ public class StaticObject {
 			case 463: return "Moving door";
 			case 464: return "Outofrange";
 
-			case 465: return "Attitude trap";//465 : attitude trap
-			case 466: return "Platform trap";//466 : platform trap
-			case 467: return "Camera trap";//467 : camera trap
-			case 468: return "Conversation trap";//468 : conv trap
-			case 469: return "End game trap";//469 : end game trap
+			// 465-469 are not game items: the editor uses them as presets that create a
+			// special trap (0x183) with a given quality (do_trap_hack in TRIGGER.C).
+			case 465: return "Crime trap (special 0x05)";//465 : attitude trap
+			case 466: return "Eight-position switch trap (special 0x03)";//466 : platform trap
+			case 467: return "Crystal ball view (special 0x02)";//467 : camera trap
+			case 468: return "Talking door trap (special 0x2A)";//468 : conv trap
+			case 469: return "End game trap (special 0x3F)";//469 : end game trap
 
 			default:	return "Invalid object";
 		}

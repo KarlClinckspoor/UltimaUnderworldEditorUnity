@@ -4265,7 +4265,7 @@ public class UIManager : MonoBehaviour {
 		createMenuGO = Instantiate(CreateObjectPrefab, transform);
 		createMenuGO.transform.Find("TopBar/Title").gameObject.GetComponent<Text>().text = "Create attitude trap";
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
-		addDescriptionToCreateMenu("Angers nearby monsters.", mainPanelGO.transform);
+		addDescriptionToCreateMenu("Special trap 0x05: a crime against the chosen race (player_did_bad), which angers it.", mainPanelGO.transform);
 		Dropdown race = addDropdownToCreateMenu("Monster type", mainPanelGO.transform, MapCreator.StringData.GetRaces(), 0);
 		Action createTrapAct = () =>
 		{
@@ -4284,7 +4284,7 @@ public class UIManager : MonoBehaviour {
 		createMenuGO = Instantiate(CreateObjectPrefab, transform);
 		createMenuGO.transform.Find("TopBar/Title").gameObject.GetComponent<Text>().text = "Create platform trap";
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
-		addDescriptionToCreateMenu("Changes floor height.", mainPanelGO.transform);
+		addDescriptionToCreateMenu("Special trap 0x03: the eight-position switch (eight_pos_switch), driven by the flags of the switch that set it off.", mainPanelGO.transform);
 		Slider height = addSliderToCreateMenu("Target height", mainPanelGO.transform, 0, 8.0f, 0, (f) => f * 16);
 		Action createTrapAct = () =>
 		{
@@ -4305,7 +4305,7 @@ public class UIManager : MonoBehaviour {
 		createMenuGO = Instantiate(CreateObjectPrefab, transform);
 		createMenuGO.transform.Find("TopBar/Title").gameObject.GetComponent<Text>().text = "Create camera trap";
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
-		addDescriptionToCreateMenu("A camera.", mainPanelGO.transform);
+		addDescriptionToCreateMenu("Special trap 0x02: the crystal ball view (crystal_ball), from this position and direction.", mainPanelGO.transform);
 		Dropdown dir = addDropdownToCreateMenu("Direction", mainPanelGO.transform, new string[] { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }, 0);
 		Slider height = addSliderToCreateMenu("Height", mainPanelGO.transform, tile.FloorHeight * 8.0f, 127.0f, tile.FloorHeight * 8.0f + 16.0f);
 		Action createTrapAct = () =>
