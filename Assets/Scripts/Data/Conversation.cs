@@ -394,7 +394,8 @@ public class ConversationManager
 				{
 					int arg1 = Stack.Pop();
 					int arg2 = Stack.Pop();
-					Stack.Push(arg2 / arg1);
+					// Reference (BABL.C BABL_DIV): division by zero gives 0x7FFF.
+					Stack.Push(arg1 != 0 ? (short)(arg2 / arg1) : 0x7FFF);
 					convDebug += string.Format("OPDIV, arg1 : {0}, arg2 : {1}\n", arg1, arg2);
 				}
 				break;
@@ -402,7 +403,8 @@ public class ConversationManager
 				{
 					int arg1 = Stack.Pop();
 					int arg2 = Stack.Pop();
-					Stack.Push(arg2 % arg1);
+					// Reference (BABL.C BablMod): remainder by zero gives 0x7FFF.
+					Stack.Push(arg1 != 0 ? (short)(arg2 % arg1) : 0x7FFF);
 					convDebug += string.Format("OPMOD, arg1 : {0}, arg2 : {1}\n", arg1, arg2);
 				}
 				break;
@@ -410,7 +412,8 @@ public class ConversationManager
 				{
 					int arg1 = Stack.Pop();
 					int arg2 = Stack.Pop();
-					Stack.Push(arg2 | arg1);
+					// Reference (BABL.C babBitOr): logical, 0 or 1, not bitwise.
+					Stack.Push((arg2 != 0 || arg1 != 0) ? 1 : 0);
 					convDebug += string.Format("OPOR, arg1 : {0}, arg2 : {1}\n", arg1, arg2);
 				}
 				break;
@@ -418,7 +421,8 @@ public class ConversationManager
 				{
 					int arg1 = Stack.Pop();
 					int arg2 = Stack.Pop();
-					Stack.Push(arg2 & arg1);
+					// Reference (BABL.C babl_and): logical, 0 or 1, not bitwise.
+					Stack.Push((arg2 != 0 && arg1 != 0) ? 1 : 0);
 					convDebug += string.Format("OPAND, arg1 : {0}, arg2 : {1}\n", arg1, arg2);
 				}
 				break;
@@ -541,7 +545,7 @@ public class ConversationManager
 			case OperationType.CALLI:
 				{
 					int arg1 = Conv.Code[++Current];
-					for (int i = 0; i <= Conv.Functions.Length; i++)
+					for (int i = 0; i < Conv.Functions.Length; i++)
 					{
 						if ((Conv.Functions[i].Id_Adress == arg1) && (Conv.Functions[i].Type == ConversationFunction.Function))
 						{
@@ -1629,10 +1633,10 @@ public class ConversationOperation
 			case OperationType.START: return 0;
 			case OperationType.SAVE_REG: return 0;
 			case OperationType.PUSH_REG: return 0;
-			case OperationType.STRCMP: return -1;
+			case OperationType.STRCMP: return 0;
 			case OperationType.EXIT_OP: return 0;
 			case OperationType.SAY_OP: return 0;
-			case OperationType.RESPOND_OP: return -1;
+			case OperationType.RESPOND_OP: return 0;
 			case OperationType.OPNEG: return 0;
 			default: return -1;
 		}

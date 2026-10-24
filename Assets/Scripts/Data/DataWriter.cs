@@ -129,10 +129,16 @@ public static class DataWriter {
 		BackupData(file);
 		if (File.Exists(file))
 			File.Delete(file);
-		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
 		strings.SortBlocks();
-		SaveHuffmanNodes(fs, strings.Nodes);
-		SaveStringBlocks(fs, strings.Blocks, strings.Nodes);
+		// Check every string before touching the file: a character the Huffman tree cannot
+		// encode used to stop the block half written, leaving garbage offsets behind it.
+		foreach (var block in strings.Blocks)
+			for (int i = 0; i < block.StringCount; i++)
+				if (ConvertString(block.Strings[i], strings.Nodes) == null)
+					throw new InvalidDataException(string.Format("String {0} of block {1} has a character STRINGS.PAK cannot encode:\n{2}", i, block.BlockNumber, block.Strings[i]));
+		FileStream fs = new FileStream(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file, FileMode.Create);
+		long tableStart = SaveHuffmanNodes(fs, strings.Nodes);
+		SaveStringBlocks(fs, strings.Blocks, strings.Nodes, tableStart);
 		fs.Close();
 		//StreamWriter sw = new StreamWriter(Application.dataPath + "/strings.txt");
 		//foreach (var block in strings.Blocks)
@@ -1254,9 +1260,11 @@ public static class DataWriter {
 		return offset;
 	}
 
-	public static void SaveStringBlocks(FileStream fs, List<StringBlock> blocks, HuffmanNode[] nodes)
+	public static void SaveStringBlocks(FileStream fs, List<StringBlock> blocks, HuffmanNode[] nodes, long tableStart)
 	{
-		int start = 726;
+		// The block table follows the node table (GAMESTRN.C): 2 + 4 * node count. It was
+		// hard-coded as 726, right only for the shipped tree of 181 nodes.
+		int start = (int)tableStart;
 		fs.Position = start;
 
 		//Write block count - int16

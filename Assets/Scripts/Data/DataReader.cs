@@ -1233,13 +1233,14 @@ public static class DataReader {
 			string curString = "";
 			char curChar = default(char);
 
-			int safe = 500;
+			// GAMESTRN.C: a string ends at '|', at a 0xFF character or after 512 characters.
+			int safe = 512;
 			int raw = 0;
 			int bit = 0;
 			while (true)
 			{
 				curChar = GetChar(fs, nodes, ref raw, ref bit, debug);
-				if (curChar == '|')
+				if (curChar == '|' || curChar == (char)0xFF)
 				{
 					block.Strings.Add(curString);
 					break;
@@ -1249,7 +1250,8 @@ public static class DataReader {
 				safe--;
 				if (safe == 0)
 				{
-					Debug.LogErrorFormat("Failed to get string, fs.Position : {0}, i : {1}, block : {2}, curChar : {43 curString : {4}", fs.Position, i, block, curChar, curString);
+					Debug.LogWarningFormat("String {0} of block {1} reached 512 characters without a terminator", i, block.BlockNumber);
+					block.Strings.Add(curString);
 					break;
 				}
 			}
