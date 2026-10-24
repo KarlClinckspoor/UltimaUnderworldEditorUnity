@@ -95,6 +95,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Find items in all levels...", () => ItemFinderWindow.Show(), true);
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
+			Entry(root, "Character in a save (PLAYER.DAT)...", () => PlayerWindow.Show(), false);
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
