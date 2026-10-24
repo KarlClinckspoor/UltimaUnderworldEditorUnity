@@ -1,0 +1,2815 @@
+{
+ "format": "uw1-zones",
+ "version": 1,
+ "game": "UW1",
+ "source": "Karl's zoning (Notes.md, 2024-12-07) and painted maps; transcribed 2026-10-24",
+ "start": {
+  "zone": 53,
+  "level": 1
+ },
+ "goal": {
+  "zone": 87
+ },
+ "requirementLanguage": [
+  "key:N          hold a key whose owner field is N (the lock's key number)",
+  "    bash           bashing a breakable door is allowed (solver option)",
+  "    pick:Z         picking a lock of difficulty Z is allowed (solver option: Pick Lock skill)",
+  "    item:NAME      hold the named item (granted by a placement: medallion, crystal, lava_boots ...)",
+  "    talismans:N    hold at least N different talismans (each talisman grants talisman:<name>)",
+  "    flag:NAME      a quest or event flag (granted by a placement, e.g. gazer_dead)",
+  "    npc:NAME       the NPC can be talked to / is at the gate (granted by a placement)",
+  "    spell:NAME     cast or drink/read the effect: levitate, fly, waterwalk, jump, reveal, gate_travel",
+  "    zone:N         zone N must be reachable (a lever or button on the other side)",
+  "    free           nothing needed"
+ ],
+ "zones": [
+  {
+   "id": 1,
+   "name": "Open, not assigned yet",
+   "levels": "",
+   "status": "unassigned",
+   "notes": "Label 1 = open tile without a zone. The editor lists these."
+  },
+  {
+   "id": 2,
+   "name": "Main areas (levels 1-6)",
+   "levels": "L1-L6",
+   "status": "unfinished",
+   "notes": "One big zone that wraps through the stairs of levels 1 to 6. Water below the shrine on L1 is a soft lock unless you do the jumping puzzle. L3: the two waterfalls and the SW lever/button door can all be walked around. L3 east door (key 9, unbreakable): can it be swum around to the south? L5: should Judy's key of Love be its own zone?"
+  },
+  {
+   "id": 3,
+   "name": "Grey goblin area",
+   "levels": "L1",
+   "status": "unfinished",
+   "notes": "Is the secret door breakable? The storage with the button: can you get stuck if the pole is missing?"
+  },
+  {
+   "id": 4,
+   "name": "Grey goblin storage",
+   "levels": "L1",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 5,
+   "name": "Little storage with mongbat",
+   "levels": "L1",
+   "status": "unfinished",
+   "notes": "Is the door breakable?"
+  },
+  {
+   "id": 6,
+   "name": "Green goblin area",
+   "levels": "L1",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 7,
+   "name": "Green goblin storage",
+   "levels": "L1",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 8,
+   "name": "Skeleton room",
+   "levels": "L1",
+   "status": "unfinished",
+   "notes": "Two doors, key 2. Breakable?"
+  },
+  {
+   "id": 9,
+   "name": "Pillar height puzzle control room and treasure",
+   "levels": "L1",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 10,
+   "name": "Bragit's area",
+   "levels": "L1",
+   "status": "done",
+   "notes": "Lever inside opens the door to zone 2."
+  },
+  {
+   "id": 11,
+   "name": "Outcasts",
+   "levels": "L1",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 12,
+   "name": "Mountainfolk",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 13,
+   "name": "Mountainfolk storage",
+   "levels": "L2",
+   "status": "done",
+   "notes": "Zone 14 (second storage) was merged into this one."
+  },
+  {
+   "id": 14,
+   "name": "Vault lower area",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 15,
+   "name": "Mountainfolk stairs",
+   "levels": "L2",
+   "status": "unfinished",
+   "notes": "Reached from L3 zone 2 with no requirement: should it be zone 2?"
+  },
+  {
+   "id": 16,
+   "name": "Royal bedroom",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 17,
+   "name": "Vault ledge",
+   "levels": "L2",
+   "status": "done",
+   "notes": "Door cannot be opened from inside; leave with the Silver Sapling or by dropping into zone 14."
+  },
+  {
+   "id": 19,
+   "name": "One-way passage, undertow",
+   "levels": "L2",
+   "status": "done",
+   "notes": "Not 18: colour 18 is nearly the background colour."
+  },
+  {
+   "id": 20,
+   "name": "Crystal ball room with skeletons",
+   "levels": "L2",
+   "status": "done",
+   "notes": "Peers into the moonstone area."
+  },
+  {
+   "id": 21,
+   "name": "Maze room with potions",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 22,
+   "name": "Area reached by flying",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 23,
+   "name": "Locked area of alcove",
+   "levels": "L2",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 24,
+   "name": "Alcove behind waterfall",
+   "levels": "L3",
+   "status": "unfinished",
+   "notes": "What opens it? Just walking in?"
+  },
+  {
+   "id": 25,
+   "name": "Sword blade area",
+   "levels": "L3",
+   "status": "done",
+   "notes": "Trigger is in zone 2 only. Holds the broken blade."
+  },
+  {
+   "id": 26,
+   "name": "Red lizardman room",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 27,
+   "name": "Lizardmen empty storage",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 28,
+   "name": "Iss'leek's room",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 29,
+   "name": "Shrine with lizardmen",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 30,
+   "name": "Storage room west",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 31,
+   "name": "Storage room east",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 32,
+   "name": "Secret bandit room",
+   "levels": "L3",
+   "status": "unfinished",
+   "notes": "Behind an unbreakable secret door: what opens it?"
+  },
+  {
+   "id": 33,
+   "name": "Corridor with skeletons",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 34,
+   "name": "Murgo's prison",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 35,
+   "name": "Lizardmen SW quarters",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 36,
+   "name": "Lizardmen SE quarters",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 37,
+   "name": "Lizardmen NE quarters",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 38,
+   "name": "Lizardmen N quarters",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 39,
+   "name": "Lizardmen NW quarters",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 40,
+   "name": "Rawstag's ankh shrine",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 41,
+   "name": "Alcove after the lever puzzle (E)",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 43,
+   "name": "Bullfrog exit SE",
+   "levels": "L4",
+   "status": "done",
+   "notes": "The NE exit leads to the tombs, which zone 2 reaches, so that corridor is zone 2 (old zone 42 removed)."
+  },
+  {
+   "id": 44,
+   "name": "Maze west, Rodrick",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 45,
+   "name": "Plate secret area",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 46,
+   "name": "Waterfall area",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 47,
+   "name": "Waterfall area, north step",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 48,
+   "name": "Knight armoury",
+   "levels": "L4",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 49,
+   "name": "Zanium mine dispatch corridor",
+   "levels": "L5",
+   "status": "done",
+   "notes": "Open unless Kneenibble's code is needed; the teleport sits behind an unbreakable portcullis."
+  },
+  {
+   "id": 50,
+   "name": "Zanium mine",
+   "levels": "L5",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 51,
+   "name": "Nolant tomb vestibule",
+   "levels": "L5",
+   "status": "done",
+   "notes": "A trigger summons a ghost carrying key 15."
+  },
+  {
+   "id": 52,
+   "name": "Nolant tomb",
+   "levels": "L5",
+   "status": "done",
+   "notes": "Painted as 50 in map4.bmp; relabelled 52 by the importer (RELABEL)."
+  },
+  {
+   "id": 53,
+   "name": "Starting area",
+   "levels": "L1",
+   "status": "done",
+   "notes": "Shrine of the Silver Sapling lock was missed at first; id shoehorned in."
+  },
+  {
+   "id": 54,
+   "name": "Lava south",
+   "levels": "L6",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 55,
+   "name": "Lava north",
+   "levels": "L6",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 56,
+   "name": "Small alcove on lava, east",
+   "levels": "L6",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 57,
+   "name": "Alcove with crown near bridge",
+   "levels": "L6",
+   "status": "unfinished",
+   "notes": "Reachable from zone 2 with a good jump? To test."
+  },
+  {
+   "id": 58,
+   "name": "Alcove with shield near crown",
+   "levels": "L6",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 59,
+   "name": "Guard room 1",
+   "levels": "L7",
+   "status": "unfinished",
+   "notes": "Can the lever reopen the way back to zone 2?"
+  },
+  {
+   "id": 60,
+   "name": "Spider maze (L7) and its L8 pockets",
+   "levels": "L7-L8",
+   "status": "done",
+   "notes": "Keys 24 and 25 are here. L8: sectioned-off mine (12,33) and the orb rock area (60,62)."
+  },
+  {
+   "id": 61,
+   "name": "Guard room 2",
+   "levels": "L7",
+   "status": "done",
+   "notes": "Key 23 on the troll. Entering gets you imprisoned."
+  },
+  {
+   "id": 62,
+   "name": "Prison foyer",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 63,
+   "name": "Prison corridor",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 64,
+   "name": "Prison cells, key 23",
+   "levels": "L7",
+   "status": "done",
+   "notes": "Fintor, Griffle, Kallistan, Dantes. Kallistan's crystal needs the password Deco Morono."
+  },
+  {
+   "id": 65,
+   "name": "Prison cells, key 27",
+   "levels": "L7",
+   "status": "done",
+   "notes": "Smonden (key 26, way up to Courage), Bolinard (Tom's picture, for Love), Gurstang (phrase for Illomo, for Truth)."
+  },
+  {
+   "id": 66,
+   "name": "Way up to the key of Courage (levels 3-7)",
+   "levels": "L3-L7",
+   "status": "done",
+   "notes": "Swamp with the key room on L3, wisps on L4, trap corridor on L5, lava corridor on L6, chasms on L7."
+  },
+  {
+   "id": 67,
+   "name": "Shadow beasts",
+   "levels": "L3",
+   "status": "done",
+   "notes": "Holds key 10."
+  },
+  {
+   "id": 68,
+   "name": "Key of Courage room",
+   "levels": "L3",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 69,
+   "name": "Entrance to the damaging maze",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 70,
+   "name": "Damaging maze",
+   "levels": "L7",
+   "status": "done",
+   "notes": "Crown of maze navigation (zone 78) makes it safe; the route can be memorised."
+  },
+  {
+   "id": 71,
+   "name": "Tyball's crib",
+   "levels": "L7",
+   "status": "unfinished",
+   "notes": "Secret wall to zone 2: opened by Reveal? Tyball has keys 23 and 27."
+  },
+  {
+   "id": 72,
+   "name": "Arial's prison",
+   "levels": "L7",
+   "status": "unpainted",
+   "notes": "Not painted in map6.bmp."
+  },
+  {
+   "id": 73,
+   "name": "Corridor to the stairs into main L8 (L7-L8)",
+   "levels": "L7-L8",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 74,
+   "name": "Guard room 3",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 75,
+   "name": "Tombs part 1",
+   "levels": "L7",
+   "status": "unfinished",
+   "notes": "Rocks fall behind you, cutting off zone 60: add an intermediate zone?"
+  },
+  {
+   "id": 76,
+   "name": "Tombs part 2",
+   "levels": "L7",
+   "status": "unfinished",
+   "notes": "Will Reveal open the secret doors?"
+  },
+  {
+   "id": 77,
+   "name": "Puke corridor",
+   "levels": "L7",
+   "status": "unfinished",
+   "notes": ""
+  },
+  {
+   "id": 78,
+   "name": "Passage to the imp (L7-L8)",
+   "levels": "L7-L8",
+   "status": "done",
+   "notes": "Crown of maze navigation."
+  },
+  {
+   "id": 79,
+   "name": "Northern lava river",
+   "levels": "L7",
+   "status": "done",
+   "notes": "Lava floor, many fire elementals."
+  },
+  {
+   "id": 80,
+   "name": "Alcoves with the imp",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 81,
+   "name": "Ring of levitation and misc steps",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 82,
+   "name": "Top of waterfall",
+   "levels": "L7",
+   "status": "done",
+   "notes": "One square."
+  },
+  {
+   "id": 83,
+   "name": "Moonorb area",
+   "levels": "L2",
+   "status": "done",
+   "notes": "Entered by moving to a specific tile; Gate Travel can also land here."
+  },
+  {
+   "id": 84,
+   "name": "Corridors to the central chamber",
+   "levels": "L8",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 85,
+   "name": "Lava and connected regions",
+   "levels": "L8",
+   "status": "done",
+   "notes": "Lava boots; many fire elementals."
+  },
+  {
+   "id": 87,
+   "name": "Final stretch (L9)",
+   "levels": "L9",
+   "status": "unpainted",
+   "notes": "No way back. map8 not painted yet."
+  },
+  {
+   "id": 88,
+   "name": "Small lava eastern section",
+   "levels": "L8",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 89,
+   "name": "Lava corridors, western section",
+   "levels": "L8",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 90,
+   "name": "Slasher chamber",
+   "levels": "L8",
+   "status": "done",
+   "notes": "Not 86: the LUT gives 86 the same colour as 2."
+  },
+  {
+   "id": 91,
+   "name": "Small room behind pull chain",
+   "levels": "L1",
+   "status": "done",
+   "notes": "Breakable locked door with no key; pull chain only on the zone 53 side."
+  },
+  {
+   "id": 92,
+   "name": "Alcove with the Gate Travel scroll",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 93,
+   "name": "Cavern of dead things",
+   "levels": "L7",
+   "status": "done",
+   "notes": ""
+  },
+  {
+   "id": 94,
+   "name": "Carasso",
+   "levels": "L8",
+   "status": "done",
+   "notes": "Key 28."
+  }
+ ],
+ "links": [
+  {
+   "id": 1,
+   "from": 53,
+   "to": 91,
+   "kind": "door",
+   "requires": "zone:53",
+   "twoWay": false,
+   "notes": "Pull chain in zone 53 opens a locked breakable door with no key; no chain on the 91 side.",
+   "confidence": "certain"
+  },
+  {
+   "id": 2,
+   "from": 91,
+   "to": 53,
+   "kind": "door",
+   "requires": "bash",
+   "twoWay": false,
+   "notes": "Back through the same door: breakable, locked, no key.",
+   "confidence": "certain"
+  },
+  {
+   "id": 3,
+   "from": 53,
+   "to": 10,
+   "kind": "door",
+   "requires": "key:1 | pick:6 | bash",
+   "twoWay": true,
+   "notes": "Door at L1 (22,5) near Bragit: key 1, pick 6, breakable (class 1). Key 1 is in the backpack near Bragit (zone 53).",
+   "confidence": "certain"
+  },
+  {
+   "id": 4,
+   "from": 91,
+   "to": 2,
+   "kind": "door",
+   "requires": "key:1 | pick:6 | bash",
+   "twoWay": true,
+   "notes": "Doors at L1 (36,8) and (37,12): key 1, pick 6, breakable (class 1).",
+   "confidence": "certain"
+  },
+  {
+   "id": 5,
+   "from": 2,
+   "to": 3,
+   "kind": "doorman",
+   "requires": "npc:eb | key:3 | pick:4",
+   "twoWay": false,
+   "notes": "Portcullis at L1 (47,51): key 3, pick 4, unbreakable; Eb opens it.",
+   "confidence": "certain"
+  },
+  {
+   "id": 6,
+   "from": 3,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Button on the wall by the portcullis.",
+   "confidence": "certain"
+  },
+  {
+   "id": 7,
+   "from": 2,
+   "to": 5,
+   "kind": "door",
+   "requires": "key:2 | pick:2 | bash",
+   "twoWay": true,
+   "notes": "Door at L1 (9,19): key 2, pick 2, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 8,
+   "from": 2,
+   "to": 6,
+   "kind": "doorman",
+   "requires": "npc:drog | key:4 | pick:5",
+   "twoWay": true,
+   "notes": "Portcullis at L1 (15,34): key 4, pick 5, unbreakable; Drog opens it.",
+   "confidence": "certain"
+  },
+  {
+   "id": 9,
+   "from": 2,
+   "to": 8,
+   "kind": "door",
+   "requires": "key:2 | pick:2 | bash",
+   "twoWay": true,
+   "notes": "Doors at L1 (52,36) and (56,36): key 2, pick 2, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 10,
+   "from": 2,
+   "to": 9,
+   "kind": "door",
+   "requires": "key:2 | pick:0 | bash",
+   "twoWay": false,
+   "notes": "Door at L1 (55,46): lock key 2, pick difficulty 0, breakable (class 2). The notes said key 3 in one place; the lock says 2.",
+   "confidence": "certain"
+  },
+  {
+   "id": 11,
+   "from": 9,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 12,
+   "from": 2,
+   "to": 10,
+   "kind": "door",
+   "requires": "bash | pick:1 | zone:10",
+   "twoWay": false,
+   "notes": "Door at L1 (9,10) near the water: no key, pick 1, breakable (class 0); opened by a lever inside zone 10.",
+   "confidence": "certain"
+  },
+  {
+   "id": 13,
+   "from": 10,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "The lever inside zone 10 opens the door; or drop from the viewing area.",
+   "confidence": "certain"
+  },
+  {
+   "id": 14,
+   "from": 2,
+   "to": 10,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Levitating up to the viewing area.",
+   "confidence": "certain"
+  },
+  {
+   "id": 15,
+   "from": 3,
+   "to": 4,
+   "kind": "door",
+   "requires": "key:3 | pick:5 | bash",
+   "twoWay": true,
+   "notes": "Door at L1 (55,59): key 3, pick 5, breakable (class 1). Bashing angers the goblins.",
+   "confidence": "certain"
+  },
+  {
+   "id": 16,
+   "from": 3,
+   "to": 2,
+   "kind": "secret",
+   "requires": "key:3 | pick:1 | bash",
+   "twoWay": false,
+   "notes": "Secret door at L1 (54,47): key 3, pick 1, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 17,
+   "from": 3,
+   "to": 2,
+   "kind": "stairs",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Stairs down to L2 (47,53), the fountain with the lurker and grey goblins: zone 2. One way.",
+   "confidence": "certain"
+  },
+  {
+   "id": 18,
+   "from": 6,
+   "to": 7,
+   "kind": "door",
+   "requires": "key:4 | pick:6 | bash",
+   "twoWay": true,
+   "notes": "Door at L1 (4,49): key 4, pick 6, breakable (class 1). Drog and Vernix each carry a key 4; bashing angers the goblins.",
+   "confidence": "certain"
+  },
+  {
+   "id": 19,
+   "from": 10,
+   "to": 11,
+   "kind": "door",
+   "requires": "key:1 | pick:1 | bash",
+   "twoWay": true,
+   "notes": "Door at L1 (21,15): key 1, pick 1, breakable (class 0).",
+   "confidence": "certain"
+  },
+  {
+   "id": 20,
+   "from": 2,
+   "to": 12,
+   "kind": "doorman",
+   "requires": "npc:brawnclan | pick:6",
+   "twoWay": false,
+   "notes": "Portcullis at L2 (13,30): its lock has no key (key 0), pick difficulty 6; Brawnclan opens it, button on the inside. The notes said key 6.",
+   "confidence": "certain"
+  },
+  {
+   "id": 21,
+   "from": 12,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Button on the wall opens the portcullis from inside.",
+   "confidence": "certain"
+  },
+  {
+   "id": 22,
+   "from": 2,
+   "to": 12,
+   "kind": "door",
+   "requires": "key:5 | pick:6",
+   "twoWay": true,
+   "notes": "Massive door at L2 (30,13): key 5, pick 6, unbreakable. An unlocked breakable door stands two tiles south at (30,15) between the same zones: check the painting there.",
+   "confidence": "todo"
+  },
+  {
+   "id": 23,
+   "from": 2,
+   "to": 19,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "One-way passage (undertow) leading to L3 (25,10).",
+   "confidence": "certain"
+  },
+  {
+   "id": 24,
+   "from": 19,
+   "to": 2,
+   "kind": "stairs",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Comes out on L3 south, in the water near the bones: zone 2.",
+   "confidence": "certain"
+  },
+  {
+   "id": 25,
+   "from": 2,
+   "to": 20,
+   "kind": "climb",
+   "requires": "spell:levitate | item:pole | pick:3",
+   "twoWay": false,
+   "notes": "Float up the viewing area, or trigger the lever with a pole (?). Portcullis at L2 (54,41): no key, pick difficulty 3.",
+   "confidence": "todo"
+  },
+  {
+   "id": 26,
+   "from": 20,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Lever opens the portcullis; or drop down the viewing area.",
+   "confidence": "certain"
+  },
+  {
+   "id": 27,
+   "from": 2,
+   "to": 21,
+   "kind": "door",
+   "requires": "key:6 | pick:14 | bash",
+   "twoWay": true,
+   "notes": "Door at L2 (15,51): key 6, pick 14 (skill 31), breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 28,
+   "from": 2,
+   "to": 22,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Flying or levitating only.",
+   "confidence": "certain"
+  },
+  {
+   "id": 29,
+   "from": 22,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down with the headlesses.",
+   "confidence": "certain"
+  },
+  {
+   "id": 30,
+   "from": 2,
+   "to": 83,
+   "kind": "teleport",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Moving onto a specific tile; Gate Travel can also land here.",
+   "confidence": "certain"
+  },
+  {
+   "id": 31,
+   "from": 12,
+   "to": 13,
+   "kind": "door",
+   "requires": "key:5 | pick:5 | bash",
+   "twoWay": true,
+   "notes": "Doors at L2 (17,26) and (23,26): key 5, pick 5, breakable (class 0); nobody gets angry.",
+   "confidence": "certain"
+  },
+  {
+   "id": 32,
+   "from": 12,
+   "to": 15,
+   "kind": "door",
+   "requires": "key:5 | pick:7 | bash",
+   "twoWay": true,
+   "notes": "Door at L2 (7,5): key 5, pick 7, breakable (class 2); nobody gets angry.",
+   "confidence": "certain"
+  },
+  {
+   "id": 33,
+   "from": 12,
+   "to": 16,
+   "kind": "door",
+   "requires": "key:5 | pick:4 | bash",
+   "twoWay": true,
+   "notes": "Door at L2 (5,10): key 5, pick 4, breakable (class 2); nobody gets angry.",
+   "confidence": "certain"
+  },
+  {
+   "id": 34,
+   "from": 12,
+   "to": 17,
+   "kind": "doorman",
+   "requires": "flag:deco_morono | pick:10",
+   "twoWay": false,
+   "notes": "Massive door at L2 (11,13): no key, pick difficulty 10, unbreakable. Password Deco Morono to Steeltoe; cannot be opened from inside.",
+   "confidence": "certain"
+  },
+  {
+   "id": 35,
+   "from": 17,
+   "to": 14,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down into the vault.",
+   "confidence": "certain"
+  },
+  {
+   "id": 36,
+   "from": 14,
+   "to": 17,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Flying or levitation.",
+   "confidence": "certain"
+  },
+  {
+   "id": 37,
+   "from": 15,
+   "to": 2,
+   "kind": "stairs",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Stairs to L3 (5,2), SW area with the poison floor: zone 2. If this is free both ways, zone 15 is zone 2.",
+   "confidence": "todo"
+  },
+  {
+   "id": 38,
+   "from": 22,
+   "to": 23,
+   "kind": "door",
+   "requires": "key:6 | pick:14 | bash",
+   "twoWay": true,
+   "notes": "Door at L2 (21,37): key 6, pick 14, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 39,
+   "from": 2,
+   "to": 24,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Alcove behind the waterfall: what is the requirement?",
+   "confidence": "todo"
+  },
+  {
+   "id": 40,
+   "from": 2,
+   "to": 25,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Remove the vines and pull the lever (trigger only in zone 2). Holds the broken blade.",
+   "confidence": "certain"
+  },
+  {
+   "id": 41,
+   "from": 2,
+   "to": 26,
+   "kind": "door",
+   "requires": "key:9 | pick:5 | bash",
+   "twoWay": true,
+   "notes": "Door at L3 (46,29): key 9, pick 5, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 42,
+   "from": 2,
+   "to": 27,
+   "kind": "door",
+   "requires": "key:9 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (45,25): key 9, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 43,
+   "from": 2,
+   "to": 28,
+   "kind": "door",
+   "requires": "key:9 | pick:5 | bash",
+   "twoWay": true,
+   "notes": "Door at L3 (42,27): key 9, pick 5, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 44,
+   "from": 2,
+   "to": 29,
+   "kind": "door",
+   "requires": "key:9 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (42,25): key 9, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 45,
+   "from": 2,
+   "to": 30,
+   "kind": "door",
+   "requires": "key:8 | pick:6 | bash",
+   "twoWay": true,
+   "notes": "Door at L3 (30,7): key 8, pick 6, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 46,
+   "from": 2,
+   "to": 31,
+   "kind": "door",
+   "requires": "key:8 | pick:4",
+   "twoWay": true,
+   "notes": "Door at L3 (34,7): key 8, pick 4, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 47,
+   "from": 31,
+   "to": 32,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door at L3 (37,10): no lock, so using it opens it from either side (UseRect/OpenDoor). Reveal does not act on doors.",
+   "confidence": "certain"
+  },
+  {
+   "id": 48,
+   "from": 2,
+   "to": 33,
+   "kind": "door",
+   "requires": "bash | pick:4",
+   "twoWay": true,
+   "notes": "Door at L3 (15,26): locked, no key, pick difficulty 4, breakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 49,
+   "from": 2,
+   "to": 34,
+   "kind": "doorman",
+   "requires": "flag:lizard_friend | pick:13",
+   "twoWay": true,
+   "notes": "Portcullis at L3 (27,22): no key, pick difficulty 13. Sseetharee's conversation opens exactly this door (gronk_door 27,22) once quest 6 is set; quest 6 is set when whoami 0x18 (the 'prisoner', Murgo) dies. See the report.",
+   "confidence": "certain"
+  },
+  {
+   "id": 50,
+   "from": 2,
+   "to": 35,
+   "kind": "door",
+   "requires": "key:11 | pick:5 | bash",
+   "twoWay": true,
+   "notes": "Door at L3 (31,21): key 11, pick 5, breakable (class 1).",
+   "confidence": "certain"
+  },
+  {
+   "id": 51,
+   "from": 2,
+   "to": 36,
+   "kind": "door",
+   "requires": "key:11 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (33,21): key 11, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 52,
+   "from": 2,
+   "to": 37,
+   "kind": "door",
+   "requires": "key:11 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (33,26): key 11, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 53,
+   "from": 2,
+   "to": 38,
+   "kind": "door",
+   "requires": "key:11 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (29,26): key 11, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 54,
+   "from": 2,
+   "to": 39,
+   "kind": "door",
+   "requires": "key:11 | pick:5",
+   "twoWay": true,
+   "notes": "Door at L3 (25,26): key 11, pick 5, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 55,
+   "from": 66,
+   "to": 67,
+   "kind": "door",
+   "requires": "bash | pick:6",
+   "twoWay": true,
+   "notes": "Door at L3 (4,55): locked, no key, pick 6, breakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 56,
+   "from": 66,
+   "to": 68,
+   "kind": "door",
+   "requires": "key:10 | pick:13",
+   "twoWay": true,
+   "notes": "Massive door at L3 (10,55): key 10, pick 13, unbreakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 57,
+   "from": 2,
+   "to": 40,
+   "kind": "doorman",
+   "requires": "npc:rawstag | pick:14",
+   "twoWay": false,
+   "notes": "Massive door at L4 (61,5): no key, pick difficulty 14 (skill 31). Rawstag doorman; cannot be opened from inside.",
+   "confidence": "certain"
+  },
+  {
+   "id": 58,
+   "from": 2,
+   "to": 41,
+   "kind": "lever",
+   "requires": "item:pole | spell:levitate | spell:jump",
+   "twoWay": false,
+   "notes": "Lever puzzle (E): pole, levitation or a jump? One way.",
+   "confidence": "todo"
+  },
+  {
+   "id": 59,
+   "from": 2,
+   "to": 43,
+   "kind": "walk",
+   "requires": "spell:levitate | flag:bullfrog_solved",
+   "twoWay": false,
+   "notes": "Bullfrog puzzle (wand 555 resets it) or levitation/flying.",
+   "confidence": "certain"
+  },
+  {
+   "id": 60,
+   "from": 43,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down to the bullfrog.",
+   "confidence": "certain"
+  },
+  {
+   "id": 61,
+   "from": 2,
+   "to": 44,
+   "kind": "door",
+   "requires": "key:13",
+   "twoWay": true,
+   "notes": "Unbreakable massive door, key 13 (Rodrick).",
+   "confidence": "certain"
+  },
+  {
+   "id": 62,
+   "from": 44,
+   "to": 45,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Lever puzzle; massive unbreakable door, no way back from 45.",
+   "confidence": "certain"
+  },
+  {
+   "id": 63,
+   "from": 2,
+   "to": 46,
+   "kind": "climb",
+   "requires": "spell:levitate | (spell:waterwalk & spell:jump)",
+   "twoWay": false,
+   "notes": "Levitation or water walking plus jumping.",
+   "confidence": "certain"
+  },
+  {
+   "id": 64,
+   "from": 46,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 65,
+   "from": 2,
+   "to": 47,
+   "kind": "climb",
+   "requires": "spell:levitate | (spell:waterwalk & spell:jump)",
+   "twoWay": false,
+   "notes": "Levitation or water walking plus jumping.",
+   "confidence": "certain"
+  },
+  {
+   "id": 66,
+   "from": 47,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 67,
+   "from": 47,
+   "to": 46,
+   "kind": "climb",
+   "requires": "spell:levitate | (spell:waterwalk & spell:jump)",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 68,
+   "from": 46,
+   "to": 47,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 69,
+   "from": 2,
+   "to": 48,
+   "kind": "doorman",
+   "requires": "flag:crux_writ | pick:14",
+   "twoWay": false,
+   "notes": "Massive door at L4 (3,10): no key, pick difficulty 14. Dorna's conversation opens exactly this door (gronk_door 3,10) in the Knights' quest (quest byte 32).",
+   "confidence": "certain"
+  },
+  {
+   "id": 70,
+   "from": 48,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Lever inside.",
+   "confidence": "certain"
+  },
+  {
+   "id": 71,
+   "from": 2,
+   "to": 49,
+   "kind": "walk",
+   "requires": "flag:kneenibble_code | free",
+   "twoWay": true,
+   "notes": "Needs Kneenibble's code, otherwise free; the teleport is behind an unbreakable portcullis.",
+   "confidence": "todo"
+  },
+  {
+   "id": 72,
+   "from": 49,
+   "to": 50,
+   "kind": "teleport",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "One-way teleport into the zanium mine.",
+   "confidence": "certain"
+  },
+  {
+   "id": 73,
+   "from": 50,
+   "to": 2,
+   "kind": "teleport",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "One-way teleport out.",
+   "confidence": "certain"
+  },
+  {
+   "id": 74,
+   "from": 2,
+   "to": 51,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Lever opens the way; back through the portcullis needs key 15.",
+   "confidence": "certain"
+  },
+  {
+   "id": 75,
+   "from": 52,
+   "to": 2,
+   "kind": "portcullis",
+   "requires": "key:15",
+   "twoWay": true,
+   "notes": "Portcullis at L5 (57,2) between the tomb and zone 2: lock key 15, unpickable; stored open in LEV.ARK (a trap must shut it). The notes put this portcullis on zone 51.",
+   "confidence": "todo"
+  },
+  {
+   "id": 76,
+   "from": 51,
+   "to": 52,
+   "kind": "door",
+   "requires": "key:15",
+   "twoWay": true,
+   "notes": "Massive door, key 15 (the ghost summoned in 51 carries it).",
+   "confidence": "certain"
+  },
+  {
+   "id": 77,
+   "from": 2,
+   "to": 54,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Ramp to the south / stairs back up.",
+   "confidence": "certain"
+  },
+  {
+   "id": 78,
+   "from": 2,
+   "to": 55,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Several entrances and exits.",
+   "confidence": "certain"
+  },
+  {
+   "id": 79,
+   "from": 2,
+   "to": 56,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling from the square room with lava walls and gold floor.",
+   "confidence": "certain"
+  },
+  {
+   "id": 80,
+   "from": 56,
+   "to": 2,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Floating up.",
+   "confidence": "certain"
+  },
+  {
+   "id": 81,
+   "from": 2,
+   "to": 57,
+   "kind": "climb",
+   "requires": "spell:jump",
+   "twoWay": true,
+   "notes": "A good jump? To test.",
+   "confidence": "todo"
+  },
+  {
+   "id": 82,
+   "from": 2,
+   "to": 58,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": true,
+   "notes": "Levitation; drop back into 55.",
+   "confidence": "certain"
+  },
+  {
+   "id": 83,
+   "from": 55,
+   "to": 56,
+   "kind": "climb",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Jumping up a little / dropping back.",
+   "confidence": "certain"
+  },
+  {
+   "id": 84,
+   "from": 55,
+   "to": 57,
+   "kind": "climb",
+   "requires": "spell:jump | spell:levitate",
+   "twoWay": false,
+   "notes": "Jump spell (to test) or floating.",
+   "confidence": "todo"
+  },
+  {
+   "id": 85,
+   "from": 57,
+   "to": 55,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 86,
+   "from": 55,
+   "to": 58,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Levitating up.",
+   "confidence": "certain"
+  },
+  {
+   "id": 87,
+   "from": 58,
+   "to": 55,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 88,
+   "from": 2,
+   "to": 59,
+   "kind": "portcullis",
+   "requires": "item:medallion | flag:fought_guards",
+   "twoWay": false,
+   "notes": "Indestructible portcullis; show the medallion or fight everyone.",
+   "confidence": "certain"
+  },
+  {
+   "id": 89,
+   "from": 59,
+   "to": 2,
+   "kind": "lever",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Possibly by a lever; the editor does not show a way back.",
+   "confidence": "todo"
+  },
+  {
+   "id": 90,
+   "from": 2,
+   "to": 71,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door at L7 (42,10): no lock, breakable. Using it opens it from either side; Reveal does not act on doors. The notes asked whether Reveal opens it.",
+   "confidence": "certain"
+  },
+  {
+   "id": 91,
+   "from": 2,
+   "to": 69,
+   "kind": "door",
+   "requires": "key:24 | pick:8 | bash",
+   "twoWay": true,
+   "notes": "Door at L7 (30,20): key 24, pick 8, breakable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 92,
+   "from": 2,
+   "to": 75,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door at L7 (18,29): no lock. Using it opens it from either side.",
+   "confidence": "certain"
+  },
+  {
+   "id": 93,
+   "from": 2,
+   "to": 82,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Levitation or flying.",
+   "confidence": "certain"
+  },
+  {
+   "id": 94,
+   "from": 82,
+   "to": 2,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 95,
+   "from": 59,
+   "to": 60,
+   "kind": "doorman",
+   "requires": "item:medallion | flag:fought_guards",
+   "twoWay": true,
+   "notes": "Talk to the goblin with the medallion, or fight through; key 23 also works.",
+   "confidence": "certain"
+  },
+  {
+   "id": 96,
+   "from": 60,
+   "to": 61,
+   "kind": "doorman",
+   "requires": "item:medallion | flag:fought_guards | key:23 | pick:13",
+   "twoWay": true,
+   "notes": "Portcullis at L7 (27,54) key 23 pick 13 and massive door at (29,57) key 23 unpickable.",
+   "confidence": "certain"
+  },
+  {
+   "id": 97,
+   "from": 60,
+   "to": 63,
+   "kind": "secret",
+   "requires": "zone:64",
+   "twoWay": false,
+   "notes": "Opened from Dantes' cell (zone 64).",
+   "confidence": "certain"
+  },
+  {
+   "id": 98,
+   "from": 60,
+   "to": 92,
+   "kind": "climb",
+   "requires": "spell:jump | spell:levitate",
+   "twoWay": false,
+   "notes": "Jump or levitate.",
+   "confidence": "certain"
+  },
+  {
+   "id": 99,
+   "from": 92,
+   "to": 60,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 100,
+   "from": 60,
+   "to": 79,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down to the lava river.",
+   "confidence": "certain"
+  },
+  {
+   "id": 101,
+   "from": 60,
+   "to": 75,
+   "kind": "secret",
+   "requires": "item:crystal",
+   "twoWay": false,
+   "notes": "Kallistan's crystal opens the way to the tombs (a change-terrain trap, not a door).",
+   "confidence": "certain"
+  },
+  {
+   "id": 102,
+   "from": 60,
+   "to": 93,
+   "kind": "door",
+   "requires": "bash",
+   "twoWay": true,
+   "notes": "Door at L7 (52,54): locked, no key, unpickable (z 15), breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 103,
+   "from": 61,
+   "to": 62,
+   "kind": "door",
+   "requires": "key:23",
+   "twoWay": true,
+   "notes": "Portcullis at L7 (24,56): key 23, unpickable (stored open).",
+   "confidence": "certain"
+  },
+  {
+   "id": 104,
+   "from": 62,
+   "to": 63,
+   "kind": "portcullis",
+   "requires": "key:23 | pick:12",
+   "twoWay": true,
+   "notes": "Portcullis at L7 (21,56): key 23, pick 12.",
+   "confidence": "certain"
+  },
+  {
+   "id": 105,
+   "from": 63,
+   "to": 64,
+   "kind": "door",
+   "requires": "key:23 | pick:1 | bash",
+   "twoWay": true,
+   "notes": "Cell doors (L7 (9,52), (13,54), (15,54), (19,57), (8,56)): key 23, pick 0-1, breakable (class 0).",
+   "confidence": "certain"
+  },
+  {
+   "id": 106,
+   "from": 63,
+   "to": 65,
+   "kind": "door",
+   "requires": "key:27",
+   "twoWay": true,
+   "notes": "Three cells with unbreakable doors, key 27 (Tyball).",
+   "confidence": "certain"
+  },
+  {
+   "id": 107,
+   "from": 64,
+   "to": 60,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Hole through Dantes' room; makes the troll guard hostile.",
+   "confidence": "certain"
+  },
+  {
+   "id": 108,
+   "from": 60,
+   "to": 66,
+   "kind": "door",
+   "requires": "key:26",
+   "twoWay": true,
+   "notes": "Over the chasms, unbreakable door, key 26 (Smonden).",
+   "confidence": "certain"
+  },
+  {
+   "id": 109,
+   "from": 93,
+   "to": 69,
+   "kind": "door",
+   "requires": "bash",
+   "twoWay": true,
+   "notes": "Door at L7 (41,42): locked, no key, unpickable, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 110,
+   "from": 69,
+   "to": 70,
+   "kind": "walk",
+   "requires": "item:crown_maze | flag:maze_memorised",
+   "twoWay": true,
+   "notes": "The damaging maze: crown of maze navigation, or memorise the route.",
+   "confidence": "certain"
+  },
+  {
+   "id": 111,
+   "from": 69,
+   "to": 78,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door at L7 (36,35): no lock. Using it opens it from either side.",
+   "confidence": "certain"
+  },
+  {
+   "id": 112,
+   "from": 69,
+   "to": 81,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Falling down; back up by levitation.",
+   "confidence": "certain"
+  },
+  {
+   "id": 113,
+   "from": 81,
+   "to": 69,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 114,
+   "from": 69,
+   "to": 79,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 115,
+   "from": 79,
+   "to": 69,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Floating up.",
+   "confidence": "certain"
+  },
+  {
+   "id": 116,
+   "from": 70,
+   "to": 79,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 117,
+   "from": 70,
+   "to": 71,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Just walk.",
+   "confidence": "certain"
+  },
+  {
+   "id": 118,
+   "from": 71,
+   "to": 72,
+   "kind": "portcullis",
+   "requires": "key:27",
+   "twoWay": true,
+   "notes": "Unbreakable portcullis, key 27.",
+   "confidence": "certain"
+  },
+  {
+   "id": 119,
+   "from": 71,
+   "to": 73,
+   "kind": "door",
+   "requires": "key:27",
+   "twoWay": true,
+   "notes": "Unbreakable door, key 27.",
+   "confidence": "certain"
+  },
+  {
+   "id": 120,
+   "from": 74,
+   "to": 2,
+   "kind": "doorman",
+   "requires": "key:23 | pick:13 | item:medallion | flag:fought_guards",
+   "twoWay": true,
+   "notes": "Guard room 3: massive door at L7 (19,4) key 23 pick 13 from the west, the portcullis at (22,5) (no lock, guards open it) from the east, or fighting.",
+   "confidence": "certain"
+  },
+  {
+   "id": 121,
+   "from": 75,
+   "to": 76,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door on the NE tomb.",
+   "confidence": "certain"
+  },
+  {
+   "id": 122,
+   "from": 76,
+   "to": 77,
+   "kind": "secret",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "Secret door.",
+   "confidence": "certain"
+  },
+  {
+   "id": 123,
+   "from": 77,
+   "to": 78,
+   "kind": "door",
+   "requires": "key:25 | bash",
+   "twoWay": true,
+   "notes": "Door at L7 (36,49): key 25, unpickable, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 124,
+   "from": 78,
+   "to": 79,
+   "kind": "door",
+   "requires": "key:25 | bash",
+   "twoWay": true,
+   "notes": "Door at L7 (35,53): key 25, unpickable, breakable (class 2).",
+   "confidence": "certain"
+  },
+  {
+   "id": 125,
+   "from": 78,
+   "to": 80,
+   "kind": "climb",
+   "requires": "spell:levitate",
+   "twoWay": false,
+   "notes": "Levitating or flying up to the imp's alcoves.",
+   "confidence": "certain"
+  },
+  {
+   "id": 126,
+   "from": 80,
+   "to": 78,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 127,
+   "from": 79,
+   "to": 81,
+   "kind": "climb",
+   "requires": "spell:jump | spell:levitate",
+   "twoWay": false,
+   "notes": "Jumping up or levitation.",
+   "confidence": "certain"
+  },
+  {
+   "id": 128,
+   "from": 81,
+   "to": 79,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 129,
+   "from": 79,
+   "to": 60,
+   "kind": "climb",
+   "requires": "spell:levitate | free",
+   "twoWay": false,
+   "notes": "Floating up, or climbing up at the north-west.",
+   "confidence": "todo"
+  },
+  {
+   "id": 130,
+   "from": 60,
+   "to": 89,
+   "kind": "walk",
+   "requires": "free",
+   "twoWay": true,
+   "notes": "",
+   "confidence": "certain"
+  },
+  {
+   "id": 131,
+   "from": 60,
+   "to": 88,
+   "kind": "walk",
+   "requires": "item:lava_boots",
+   "twoWay": true,
+   "notes": "Lava.",
+   "confidence": "certain"
+  },
+  {
+   "id": 132,
+   "from": 73,
+   "to": 94,
+   "kind": "door",
+   "requires": "bash | pick:10",
+   "twoWay": true,
+   "notes": "Door at L8 (47,42): locked, no key, pick 10, breakable (class 1).",
+   "confidence": "certain"
+  },
+  {
+   "id": 133,
+   "from": 73,
+   "to": 84,
+   "kind": "door",
+   "requires": "key:28 | spell:jump",
+   "twoWay": true,
+   "notes": "Massive door at L8 (54,32): key 28 (Carasso), unpickable, unbreakable; perhaps a jump from the southern bit.",
+   "confidence": "todo"
+  },
+  {
+   "id": 134,
+   "from": 84,
+   "to": 85,
+   "kind": "drop",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Falling down.",
+   "confidence": "certain"
+  },
+  {
+   "id": 135,
+   "from": 85,
+   "to": 84,
+   "kind": "climb",
+   "requires": "item:lava_boots",
+   "twoWay": false,
+   "notes": "Going up (ramps).",
+   "confidence": "certain"
+  },
+  {
+   "id": 136,
+   "from": 85,
+   "to": 73,
+   "kind": "walk",
+   "requires": "item:lava_boots",
+   "twoWay": true,
+   "notes": "Many ways: ramps, flying.",
+   "confidence": "certain"
+  },
+  {
+   "id": 137,
+   "from": 84,
+   "to": 90,
+   "kind": "door",
+   "requires": "item:tripartite_key",
+   "twoWay": false,
+   "notes": "Keys of Truth, Love and Courage assembled.",
+   "confidence": "certain"
+  },
+  {
+   "id": 138,
+   "from": 90,
+   "to": 84,
+   "kind": "door",
+   "requires": "free",
+   "twoWay": false,
+   "notes": "Once opened.",
+   "confidence": "certain"
+  },
+  {
+   "id": 139,
+   "from": 90,
+   "to": 87,
+   "kind": "walk",
+   "requires": "talismans:8 & flag:talismans_quest",
+   "twoWay": false,
+   "notes": "All eight talismans thrown into the lava after talking to Garamon.",
+   "confidence": "certain"
+  }
+ ],
+ "placements": [
+  {
+   "zone": 53,
+   "grants": "key:1",
+   "notes": "Backpack close to Bragit."
+  },
+  {
+   "zone": 2,
+   "grants": "key:2",
+   "notes": "L1: SE close to the acid slug; and on the spiral stairs NW."
+  },
+  {
+   "zone": 3,
+   "grants": "key:3",
+   "notes": "Grey goblin Retichall."
+  },
+  {
+   "zone": 6,
+   "grants": "key:4",
+   "notes": "Drog and Vernix."
+  },
+  {
+   "zone": 2,
+   "grants": "key:5",
+   "notes": "L2, near the stairs south of the central shaft."
+  },
+  {
+   "zone": 2,
+   "grants": "key:6",
+   "notes": "L2, after the zigzag maze with the damaging floor."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:eb",
+   "notes": "Grey goblin doorman Eb stands at the portcullis."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:drog",
+   "notes": "Green goblin doorman Drog."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:brawnclan",
+   "notes": "Mountainman doorman Brawnclan."
+  },
+  {
+   "zone": 2,
+   "grants": "npc:rawstag",
+   "notes": "Rawstag, L4."
+  },
+  {
+   "zone": 2,
+   "grants": "key:8",
+   "notes": "L3 (37,36), in a pouch (audit)."
+  },
+  {
+   "zone": 2,
+   "grants": "key:9",
+   "notes": "L3 (35,40), in a sack (audit)."
+  },
+  {
+   "zone": 33,
+   "grants": "key:11",
+   "notes": "L3 (8,26), in a pouch in the corridor with skeletons (zone 33), per the audit of LEV.ARK."
+  },
+  {
+   "zone": 67,
+   "grants": "key:10",
+   "notes": "Shadow beasts."
+  },
+  {
+   "zone": 2,
+   "grants": "key:13",
+   "notes": "Rodrick, L4 (32,61), stands in zone 2 by the maze door (audit)."
+  },
+  {
+   "zone": 52,
+   "grants": "key:15",
+   "notes": "The ghost (create-object trap template at L5 (53,3), in the tomb) carries it; the notes put the summoning trigger in the vestibule."
+  },
+  {
+   "zone": 2,
+   "grants": "item:pole",
+   "notes": "Poles lie around on L1-L2 (goblin storage)."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:cup",
+   "notes": "Cup of Wonder, L3 (needs the flute and the mantra)."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:taper",
+   "notes": "Zak has the taper, L3 (47,38)."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:standard",
+   "notes": "Standard of Honor, carried by Dorna Ironfist, L4 (8,4) (audit)."
+  },
+  {
+   "zone": 25,
+   "grants": "item:broken_blade",
+   "notes": "Sword blade area."
+  },
+  {
+   "zone": 25,
+   "grants": "talisman:sword",
+   "notes": "Counts the Sword of Justice here for the solver: the blade (zone 25) and the hilt (L5 tombs, zone 2) are reforged at an anvil in zone 2."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:ring",
+   "notes": "Ring of Humility: created by a trap at L5 (16,59) (audit)."
+  },
+  {
+   "zone": 2,
+   "grants": "item:broken_hilt",
+   "notes": "Sword hilt in the tombs, L5."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:book",
+   "notes": "Book of Honesty, L6."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:shield",
+   "notes": "Shield of Valor with the golem, L6."
+  },
+  {
+   "zone": 2,
+   "grants": "talisman:wine",
+   "notes": "Wine of Compassion, L6."
+  },
+  {
+   "zone": 2,
+   "grants": "item:medallion",
+   "notes": "L7 (43,13) on the floor; Tyball carries another (audit)."
+  },
+  {
+   "zone": 60,
+   "grants": "key:24",
+   "notes": "Below a skull near the cavern of dead things."
+  },
+  {
+   "zone": 60,
+   "grants": "key:25",
+   "notes": "Near a spider den."
+  },
+  {
+   "zone": 61,
+   "grants": "key:23",
+   "notes": "On the troll."
+  },
+  {
+   "zone": 64,
+   "grants": "item:crystal",
+   "notes": "Kallistan, with the password Deco Morono."
+  },
+  {
+   "zone": 65,
+   "grants": "key:26",
+   "notes": "Smonden."
+  },
+  {
+   "zone": 65,
+   "grants": "item:picture_tom",
+   "notes": "Bolinard."
+  },
+  {
+   "zone": 65,
+   "grants": "flag:gurstang_phrase",
+   "notes": "Gurstang's phrase for Illomo (key of Truth)."
+  },
+  {
+   "zone": 71,
+   "grants": "key:23",
+   "notes": "Tyball."
+  },
+  {
+   "zone": 71,
+   "grants": "key:27",
+   "notes": "Tyball."
+  },
+  {
+   "zone": 78,
+   "grants": "item:crown_maze",
+   "notes": "Crown of maze navigation."
+  },
+  {
+   "zone": 94,
+   "grants": "key:28",
+   "notes": "Carasso."
+  },
+  {
+   "zone": 92,
+   "grants": "item:scroll_gate_travel",
+   "notes": "Gate Travel scroll."
+  },
+  {
+   "zone": 81,
+   "grants": "item:ring_levitation",
+   "notes": "Ring of levitation."
+  },
+  {
+   "zone": 68,
+   "grants": "item:key_of_courage",
+   "notes": "Key of Courage."
+  }
+ ],
+ "openSources": {
+  "flag:deco_morono": "Where is the password learned? Not in the notes.",
+  "flag:lizard_friend": "Quest 6: set by the game when the creature with whoami 0x18 ('prisoner', Murgo) dies; Sseetharee's conversation reads it. Alternative routes to Murgo's prison are not in the notes.",
+  "flag:crux_writ": "Knights' quest (quest byte 32 reaching 3/4): find the writ of Lorne; Dorna opens the armoury.",
+  "flag:fought_guards": "Fighting through the L7 guard posts instead of showing the medallion.",
+  "flag:bullfrog_solved": "Solving the bullfrog puzzle (wand 555 resets it).",
+  "flag:maze_memorised": "Walking the damaging maze from memory.",
+  "flag:kneenibble_code": "Kneenibble's code for the zanium mine (notes say the corridor is otherwise free).",
+  "flag:talismans_quest": "Quest 5: Garamon, at his grave with the incense/figurine, asks for the talismans.",
+  "item:tripartite_key": "Keys of Truth (Illomo, after Gurstang's phrase), Love (Judy, after Tom's picture) and Courage (zone 68).",
+  "item:lava_boots": "Dragon skin boots: where found? Not in the notes.",
+  "talismans:8": "sword (blade from zone 25 + hilt from L5 tombs, reforged at the anvil), shield, ring, taper, cup, wine, book, standard (Dorna). The sword counts only once reforged."
+ },
+ "tiles": {
+  "encoding": "per level: 64 rows (y = 0..63), each 64 zone ids as two hex digits (x = 0..63); 00 solid, 01 open and unassigned",
+  "levels": [
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000035353535000000000000000000000000000000000000000000000000000000000000",
+    "000000000A0A0A0A0A0A0A0A0A0A0A00000000000000000000000000000035353535000202020000000000000000000202020202020202020202020000000000",
+    "000000000A0A0A0A0A0A0A0A0A000A0000000A000000003535353500000035353535000202020200000202020202020202020202020200000000020000000000",
+    "000000000A0A0A0A0A0A0A0A0A000A000A0A0A000000003500353535350000353500000202020200000200000202020202020202020202020202020000000000",
+    "000000000A0A0A0A0A0A0A0A0A000A000A0A0A0A0A0A0A3535353535350000353500000202020200000200000202020202020202020200020200020000000000",
+    "000000000A0A0A0A0A0A0A0A0A0A0A0A0A0A0A000000003535350035350000353500000002000202020200000202020202020202020202020202020000000000",
+    "000000000A0A0A0A0A0A0A0A0A0A0A000A0A0A000000000035000035350000353500000002000000000000000002020202000202000000000200000000000000",
+    "000000000A0A0A0A0A0A0A0A0A0A0A000A0A0A00000035353535003535003535355B5B5B5B5B5B00000000000000020000000000000000000200000000000000",
+    "0000000000000000000A000000000A00000000000B003535353500353535353535005B5B5B5B5B00000000020202020202020000000000020200000000000000",
+    "0000020202020000000A00000A0A0A00000A0A000B0B0035350000353535353535005B5B5B5B5B00000000000202020202000000000000020000000000000000",
+    "0000020202020202000200000A0A0A0A0A0A0A000B0B0B00000000350000000000000000005B0000000000000002020200000000000000020000000000000000",
+    "0000020202020202020202020000000000000A000B0B0B0B0000353535000B0B0B0B000000020000000000000002020200000000000000020002020200000000",
+    "00000002020202020202020202000A0A0A000A000B0B0B0B0B00353535000B0B0B0B000000020000000000000002020200000000000000020002020200000000",
+    "00000202000000000202020202000A0A0A000A0000000B000000000000000B0B0B0B000000020000000000000002020200000000000000020202020200000000",
+    "0000020200000000000002020202020A0A0A0A0A0A0B0B0B0B0B0B0B0B0B0B0B0B0B000000020000000200000002020200000002000000020000000000000000",
+    "000000000000000000000002020202020A0A000000000B0000000000000000000000000000020000000202020202020202020202000000020202020200000000",
+    "000002020202000000000002020202020202000000000B000B0B0B0B0B0B0B0B0B0B0B0000020000000202020202020202020202000000000002020200000000",
+    "0000020002020000000000000000020202020200000B0B0B0B0B0B0B0B0B0B0B0B0B0B0000020000000200000202020202000002000000000000020000000000",
+    "000002020202020202050505050000020202020000000B0B0B0000000B0B0B0B0B0B0B0000020000000000020202000202020000000000000002020202020000",
+    "0000020002020000000005050500000002020202000B0B0B00000202000B0B0B0B0B0B0000020000000000020200000002020000000000020202020202020000",
+    "00000202020200000000000000000000020202020202000000000200000000000000000000020000000000020200000002020000000002020200000000020000",
+    "00000200020200000002020202020202000202020202020202020202020202020202020202020200000000020202000202020000000202020000000000000000",
+    "00000202020200000202020202020202020202020202020202020202020202020202020202020200000000020202020202020000020202000000000000000000",
+    "00000200020200000202020202020202020202020000000202020202020200000202020202020202000000000202020202000000020200000000000000000000",
+    "00000202020200000202020202020202020202000000020202020202020202000000020202020202020000000000000000000000020200000000000000000000",
+    "00000000000200000202020202020202020202000000020000000000020202000000000002020202020200000000000000000000020200000000000000000000",
+    "00000000000200000002020202020202020000020202020202000000000000000000000202020202020202000000000000000002020200000000000000000000",
+    "00000000000200000000000202020202000000020202020202000000020202020202020202020202020202000000000002020202020000000000000000000000",
+    "00000000020202020202020202020202020202020202020202000000020200000000020202020000020202020002020202020200000000000000000000000000",
+    "00000000020202000000000000020200000000000000000000000000020001010101000202020000020202020202020000000008080808080808000000000000",
+    "00000000020202000202020200020202020202020202020202020202020001010101000202020000000002020202000000000008080808080808000000000000",
+    "00000000000200000202020200020202020202020202020202020202020001010101000202020000000000020202000000000008080808080808000000000000",
+    "00000202000200000202020200020202020202020202020202020202020001010101000202020000000000020200000000000008080808080808000000000000",
+    "00000202000200020202020200000006000000000202020202020202020200000000020202020000000000020200000000000008080008000808000000000000",
+    "00000200000200000002000000060606060600000200000000000000020202020202020202020000000000020200000000000008080008000808000000000000",
+    "00000202020202020202000000060606060606000202020202020000000000000000000202020200000002020202000000000000080000000800000000000000",
+    "00000000000200000000000000060606000606000002020202020202020202020000000202020202020202020202020202020202020000000202020202020000",
+    "00000002020202020202020200060606000000000202020202020202020202020000000202020202020202020202020202020202020202020202020202020000",
+    "00000002020202020002020200060606000000000202020200000000000202020202000000000202020202020202000000000000000202020000000000000000",
+    "00000000000000000000000000060606000000000002020000000000000000020202020202020202020002020200000000090909000002000000000000000000",
+    "00000000000000000000000000060606000000000002020202020202000000000202020202020202000000000000000000090909000002000000000000000000",
+    "00000006060606060606060600060606000000000002020202020202020200000000000202020202020200090209020902090002020202000000000000000000",
+    "00000006060006060606060600060606000000000000020202020002020202020000020202000202020200020202020202020202020202000000000000000000",
+    "00000006060006060606060606060606000000000000020202000202000202020000020202000000020200090209020902090202020202000000000000000000",
+    "00000006060006060606060600060606000000000202020202000202020002020202020202020000020200020202020202020202020202000909090900000000",
+    "00000006060006000000000000060606000000000202020000000202020202020202020200000000020200020202020202020202020202090909090900000000",
+    "00000006060000000000000000060606000000000202000202020202020200000202000002020000020200020202020202020202020003000000000000000000",
+    "00000006060606060606000600060606000000000202020202000002020202000002020002020000020200020000000000000000020003000003030000000000",
+    "00000000070006060606000600060606000000000202020202020202000202020202020202020000020200020202020202020202020003030303030003000000",
+    "00000007070006060606060600060606000000000000020202020202000002020200020202000000020200000000000000000000000303000000000003000000",
+    "00000007070006060606060600060606000000000000000202020202020002020000020202000000020202020202020303030303030303000303030303000000",
+    "00000000000000000600000000060606000000020202020200000002020000020000020200000000020200020202000003030303030303000303030303000000",
+    "00000000000606060606060606060606000002020202020200000202020002020200020202020200020200020202000300030303030303000003000000000000",
+    "00000000000606060606060606060606000002020202020000020202000000020200000202020200020200000000000300030303030303030303030000000000",
+    "00000000060606060606060606060606000002020200000002020202000000020000000000000000020200030303030300030303030303030303030000000000",
+    "00000606060606060606060606060606000000020200020202020200000202020000000000000202020200030303030300030303030303030303030000000000",
+    "00000606060606060606060606060606000000000200020202000000000202020202020202020202020200030303030300030303030303000000000000000000",
+    "00000606060606060606060606060606000000000000020202020000000000000000000200020202000000030300000000030303030303000404000000000000",
+    "00000000060606060606060606060606000000000000000202020202020202020202000200020202000000030303030303030303030303040404000000000000",
+    "00000000000606060606060606060606000000000000000002020200000202020002000200020202000000030303030303000000000000000404000000000000",
+    "00000000000000000000000000000000000000000000000002020200000202020002020200020202000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000001313131313131313131313131300020000000000000000000000",
+    "00000000000F00000000000000000000000000000000000000000000000000000000000013131313000000000002020000000000020000000000000202020000",
+    "00000000000F0F000000000000000000000000000002020202020202020200020200001313130000020202020202020202000000020202020202000202020000",
+    "00000000000F0F000000000000000000000000000002020200000000000200020200001313000202020202000000020202000002020202020202000202020000",
+    "00000000000F0F0F0C0C0C0C0C0C0C0C0C0C0C0C0002020200000000000200020200001300020202020202020000000202000202020200020202000202020000",
+    "00000000000000000C0C0C0C0C000C000C000C0C0000000000000000000200020200001300020200020202020200000002000202020000020202000200020000",
+    "00000000101010000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0000000202020200000000020000000000020200000002020202000002020202000002020000",
+    "00000000101010000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0000000200020200000202020000000000020200000202000202000002020000000002020000",
+    "00000000101010000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0000000200020200000202020000000000020200000202000002000000000200000202020000",
+    "00000000001000000C0C0C0C0C000C000C000C0C000000000C0C0002020200020200000000000002020202020200000000000202020202020202000202020000",
+    "00000000000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C000000000C0C0002020200020200000000000002020000020200000002020202020202000000000202020000",
+    "00000000000C0000000000000000000000000000000000000C0C0000000000020200000002020202020200000202000202020202000202000000000002020000",
+    "00000000000C0C000C0C0C1111110000000000000000000C0C0C0C0C0C0C0C020200000002020200020200000202020202000002020202020000020202020000",
+    "00000000000C0C0C0C0C0C00111111110000000000000C0C0C0C0000000000020202000202020000000200020202000000000002020202020202020200020000",
+    "00000000000000000C0C0C000000111100000000000C0C0C000C000C0C0C00020202020202020000000202020202020202020000020202020202020200020000",
+    "00000000000000000C0C0C0000001111000000000C0C0C0C0C0C000C0C0C00020202000202020000000202000000000002020202020202020202020202020000",
+    "000000000000000000000000000011110000000C0C0C0C0C0C0C0C0C0C0C00020200000002020200000000000000000000000202020002020202020002020000",
+    "0000000000000000001111111111111100000C0C0C0C0C0C000C00000C0C00020200000000020200000000020202020202000000000000020202020200020000",
+    "000000000E0E0E0E0E0E0E1100000000000C0C0C0C0C0C0C0C0C000C0C0C00020200000000020202020002020000000202020202020000020002020202020000",
+    "000000000E0E0E0E0E0E0E11000000000C0C0C0C0C0C0C0C0C0C0000000000020200020202000202020202020000000202020202020000020002020000020000",
+    "000000000E0E0E000E0E0E000000000C0C0C0C0C0C0C0C0C000C000C0C0C00020200000002000002020000000000000000020202020000020002020002020000",
+    "000000000E0E0000000E0E0000000C0C0C0C0C0C0C0C0C0C0C0C000C0C0C00020200000002000002020200020200000200000000000000020002020202020000",
+    "000000000E0E0E000E0E0E00000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C00020202020202000000020202020200000202020000000000020200020200000000",
+    "000000000E0E0E0E0E0E0E00000C0C000C0C000C0C000C0C000C00000C0C00020200000000000000000000020200000202020000000000020200000000000000",
+    "000000000E0E0E0E0E0E0E00000C0C0C0C0C0C0C0C0C0C0C0C0C000C0C0C00020200000000000000000000000202000000020200000000020202000202020000",
+    "000000000000000000000000000C0000000D00000000000D00000000000000020200000000000000000000000202000002020202020200000202020202020000",
+    "000000000002020202020000000C000D0D0D0D0D000D0D0D0D0D0002020202020202020202000000000000000202020202020202020200000000000202020000",
+    "0000000000020202020200000C0C000D0D0D0D0D000D0D0D0D0D0002020202020202020202000000000000000000020202000200020202000000000002020000",
+    "0000000000020202020200000C0C000D0D0D0D0D000D0D0D0D0D0002020000000000000202000000000000000000000000000202020202000000000002020000",
+    "000000000002000000000000000C0000000000000000000000000002020001010101000202000000000000000000000000000000000000000000000000000000",
+    "00000002020202020202020202020202020202020202020202020202020001010101000202020202020202020202020202020202020202020202020202000000",
+    "00000002020202020202020202020202020202020202020202020202020001010101000202020202020202020202020202020202020202020202020202000000",
+    "00000000000002000000000000000000000200000000000000000002020001010101000202000000000000000000000000000000000002000000000000000000",
+    "00000000000002005353530002020202000202020000000000000002020000000000000202000202020200000000020200000000000002000000000000000000",
+    "00000000000002005353530002000002000202020017171717000002020202020202020202000202020200000002020202000000000002000002020200000000",
+    "00000000000002005353530002000202000202020017171717000002020202020202020202000202020202020202020202020202020202020202020202020000",
+    "00000202020002000000000002000200000200000017000000000000000000020200000000000202020200000002020202000000000002000002020200020000",
+    "00000200020002020200020202000200020202000216020202020202020200020200020202000202020200000000020000000000000002000000000002020200",
+    "00000200020002000000000002000200020202000216161616161616160200020200020202000002000000000000020000000202020202020202000002020200",
+    "00000200020002020202020202000200020202000202020202020202020200020200000200000002000000000002020000020202020202020202020000000000",
+    "00000200020000000000000002000200020202000000000000000002020200020200000202020202020202020202020002020202000014000202020202000000",
+    "00000200020202020202020202020200020202000000000000000002020200020200000000000000000002000000000002020200000014000002020202000000",
+    "00000200000002000000000000000000020202000002020202020202020200020200000002020200000002000000000002020200000014140000000000000000",
+    "00000202020202000002020202020202020202020202020202020202020200020200000002020202020202000000000202020200000014141400000000000000",
+    "00000000000002000002020202020202020202020202020202020202020200020200000002020200000002000000020202020200000014141400000000000000",
+    "00000000000002000002020202020202020202020202020202020202020200020200000000020000000202020002020202020000000014141400000000000000",
+    "00000000000002000002020200000000000000000002020200000000000000020200000000020202020202020002020202000014141414141414141400000000",
+    "00000000000002000002020202020202020202020002020200000202020000020200020200020000000202020002020200000014001414001414001400000000",
+    "00000000000002000002020202020202020202020002020200020202020200020200020200020000000000000002020200000014141414141414141400000000",
+    "00000000000002000002020202000000020202020002020200020202020200020200020202020000020200000002020200000014001414141414001400000000",
+    "00000000000002000002020202001515020202020002020200020202020200020200000000020002020200000002020200000014141414141414141400000000",
+    "00000000000002000002020202000000020202020002020200020202020200020200000202020202000002020202020202000014001414001414001400000000",
+    "00000000000002000002020202020202020202020002020200020202020200020200000202020202000002000002020202020214141414141414141400000000",
+    "00000000000002000002020202020202020202020002020200020202020200020200000202020202000002000002020202020202020000000000000000000000",
+    "00000000000002000002020202020202020202020002020202020202020200020200000202020202000002000002000002020202020002020200020202000000",
+    "00000000020202000002020202020202020202020002020200020202020200020200000000000000000002000002000002020202020002020200020202000000",
+    "00000002020202000000000000000000000000000000000000000002000000020202020202020202020202000002000002020202020002000000000002000000",
+    "00000202020202020000000000000000000000000000000000000202000000020202020202020202020202000002000000020202000002020202020202000000",
+    "00000202020202020000000000000000000000000000000000000202000000020200000000000002020202000002000000000000000000020000000200000000",
+    "00000002020202000000000000000000000000000000000000000000000000020200000000000002020202000002020202020202020202020202020202000000",
+    "00000000020200000000000000000000000000000000000000000000000000020200000000000000000000000002020202020202020202020202020202000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000002020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000002000200000000000000000000000000020202020202020000000000020202020202020202020202000000000000000000000000000000000000000000",
+    "00000002000200000000000000000000000002020202020202020202020202020202020000000000000000000000000000000000000000000000000000000000",
+    "00000002000000020202020202020202020202020000000000000000000000020202000000000000000000000019191919191919191919191919191919000000",
+    "0000020202000002020202020202020202020200000000000000001E1E1E00020202001F1F1F0000000000000019191919000000000000000019191919000000",
+    "0002020202020002000000000000000000000000000002020000001E1E1E00020202001F1F1F0000000000000019191900000000000000000000000019000000",
+    "0002020202020002000000020002000202020200020202020000001E1E1E1E0202021F1F1F1F0000000000000000000000000000000000001919191919190000",
+    "0002020202020202000000020002000202020200020202020000001E1E1E00020202001F1F1F0000000002020202020202020200000000001919190019190000",
+    "0002020202020000000000020202000200000000020202000000001E1E1E00020202001F1F1F0000000002020202020202020200000000001919190000000000",
+    "00000002000000020202020202020202020200020202020202020000000000020202000000000020200002020202020202000000000000000000000000000000",
+    "00000002000000020000000000000000000200020202020202020000000000020202000000202020200002020202020202000202020202020202020000000000",
+    "00000002000000020002020202020202020202020202020202020000000000020202000000000020200002020202020202020202020202020202020000000000",
+    "00000002000000020002020202020202020202020202020202020000000000000200000000000000000002020202020202020200000000000000020000000000",
+    "00000002000002020202020202020202020202020202020202020200000000020202000000000002020202020202000202020200000000000000020000000000",
+    "00000002000202020202020202020202000202020202020202020202000002020202020000000202020202020202020202020202020000000000020000000000",
+    "00000002000202020202020202020202000202020202020202020202020202020202020202020202020202020202020202000202020000000000020000000000",
+    "00000002000202020202020202020202000202020202020202020202020202020202020202020202020202020202020202020202020200000000020000000000",
+    "00000002000202020202020202020202000202020202020202020202000002020202020000000002020202020202020202020202020200000000020000000000",
+    "00000002000202020202020200000002000202020202020202020200000000020202000000000000000000000000000200000002020202000000020000000000",
+    "00020202000202020202020002020002020202000202020000000000002323000200242400000000000000000000000200000000000202000000020000000000",
+    "00020202020002020202020002020202020200000000000202020200002323230224242400000000000000000000000200000000020202020202020000000000",
+    "00020202020002020202020000000000020000000000020202020222002323000200242400000000001D00000000000200000000020202000002020000000000",
+    "000202020200020202020202000202000200000000000200000000000000000002000000000000001D1D1D001B1B000200000002020200000002020000000000",
+    "000202020202020202020202000202020200000000020202020202020202020202020202020200001D1D1D001B1B000200000002020200000002020000000000",
+    "0002020202020202000000000000000002020202020202020202020202020202020202020202020000001D00001B000200000002020200000002020000000000",
+    "00020202020202002121212121212121020000000002000000270000002600000025000002020200000002020202020200000002020202000002020000000000",
+    "0002020202020202000000000000000002000000000200272727270026262600252525000202020000001C000000000200000002020202000002020000000000",
+    "00020202020202020202020202020200020000000002002727272700262626002525250002020200001C1C001A1A000202020202020202020202020000000000",
+    "00020202020202020202020202020202020000000002000000000000000000000000000002020200001C1C001A1A1A0200000002020202000000000000000000",
+    "00020202020202020202020202020200000000000002020202020202020001010101000202020202001C1C000000000200000002020202000000000000000000",
+    "00020202020202020202020202020200000000000202000002000002020001010101000202020202000000000000000200000000020202000000000000000000",
+    "00020202020202020202020202020200000000000200000202000002020001010101000202020202020202020200000200000000020202000000000000000000",
+    "00020202020202020202020202020202020002020200000000000002020001010101000202020202000000000202020200000002020202000000000000000000",
+    "00020202020202020202020202020200020002020200000000000002020000000000000202020202020202020200000000000002020000000000000000000000",
+    "00020202020202020202020202020200020000000000000000000002020000000200000000000000000000000000000000000202020000000000000000000000",
+    "00020202020202020000000000000000020202020200000002020202020000000200000202020200000000000000000000000202020000000000000000000000",
+    "00020202020202020200000000000000000000000200000000000000000000000200000200000200000000000000000000000202020000000000000000000000",
+    "00020202020202020202020200000000000000000200000000000000000000000200020202000200000002020200020202020002020200000000000000000000",
+    "00020202020202020202020200000000000000000200000000000000000000000200020202000200000000000200020202020000020202000000000000000000",
+    "00020202020200020202020202020202000000000200000000000000000000000200020202000202020202020200020202020000000202000000000000000000",
+    "00020202020200020202020202020200020200000202020202020202020202000200000000000000020000000000020202020000020202000000000000000000",
+    "00000000020200020202020202020202020202000000000000000000000002020202020202000000020202020200000002000202020202000000000000000000",
+    "00000000020200020202020202020202000200000000000202020200000000000000000002000000020000000202020202000202020202000000000000000000",
+    "00000000020202020202020202020202020200000000000202020200020202020202020202000202020000000200000000000202020200000000000000000000",
+    "00000000000000000000020202020202020200000000000202020200000000000000000002000000000000000200000000000202020000000000000000000000",
+    "00000000000000000000000202020202020202020202020202020200020202020000000002020202020202020200000000020202020000000000000000000000",
+    "00000000000000000000000002020202020200000000000000000000020202020200000002000000000000000000000202020202020202000000000000000000",
+    "00000000000000000000000000020202020202020200000000020202020202020202020002020202020202020202020202000202020202020000000000000000",
+    "00000000000000000000000000000202020202020202000002020202020202020202020200000000000200000002020200000002020202020200000000000000",
+    "00000000000000000000000000000002020202020202020202020202020202000000020202020000020202000202020200000002020202020200000000000000",
+    "00004242424200420042424242000000020202020202020202020202020202020200020202020202020202020202020000000000020202020200000000000000",
+    "00004242424242424242424242000000000202020202020202020202020202020202020202020202020202020200000002020000020200020200180000000000",
+    "00000000424242424242420000000000000002020202020202020202020202020202020202000200020202020202020002020000000202020200180000000000",
+    "00004343004242424242004444000000000000000000000000000200000000000000000000000200000000000000000000000000000202020200000000000000",
+    "00004343434242424242444444000000000000000000000000000200000202020202020202020202020202020202020202000000000002020200000000000000",
+    "00004343004242424242004444000000000000000000000000000000000200000000000000000000000000000000000000000202020002020202020202020200",
+    "00000000424242424242420000000000000000000000000000000000000200000000000000000000000000000000000000000202020202020202020202020200",
+    "00004242424242424242424242000000000000000000000000000000000200000000000000000000000000000000000000000202020202020202020202020200",
+    "00004242424242424242424242000000000000000000000000000000000200000000000000000000000000000000000000000202020202020202020202020200",
+    "00004242424200420042424242000000000000000000000000000000000200000000000000020202000202020000000000000002020202020202020202020200",
+    "00000000000000000000000000000000000000000000000000000000000202020202020202020202020202020202020202020202020202020202020202020200",
+    "00000000000000000000000000000000000000000000000000000000000000000000020202020202020202020202020000000000000000020202020202020200",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000020202020202000000000000000000000000000000000000000000000000000000000202000202020200000000000000000000000000002828280000",
+    "00000002020202020202000000020202020200000002020202000000000000000000000000000202000000000200000000000000000000000000002828280000",
+    "00000202020202020202000000020202020200000002020202020200000000000000000000000202020202020200000000000000000000000000000000280000",
+    "00000202020202020202000000020202020202020202020202000200000202020202020200000202020202020202000000000000000000000000000000020000",
+    "00000202000202020202000000020202020200000002020202000202020202020202020200000000000000020202020202020202020202020200000202020000",
+    "00000202000202020202000000020202020200000000000000000000000202020202020200000000000000020202000000000000000000020200000202020000",
+    "00000202000000000000000000020202020200000000000000000000000202020202020200000000000000000200000000000000000000020200000200000000",
+    "00000002020202020202020202020202020200000000020202020202020202020202020202020000000000020200000000000000020202020202020200000000",
+    "00000030000000000202000000000000000000000000020202000000000202020202020200020000000202020202000000000000020202020202020200000000",
+    "00003030300000000202000000000000000000000000020202000000000000000200000000020202020202020200000000000000020202020202020200000000",
+    "00003030300000000202000000000000000000000000020000000002020000000200000000020000000202020200000202020002020202020202020200000000",
+    "00000000000000000202000000000000000000000000020200000202020200000200000202020000000002020202020202020202020202020202020200000000",
+    "00000202020200000202000002020202000000000000020200000202020202020202020202020000000000020202020202020002020202020202020200000000",
+    "00000202020200000202000002020202000000000000020200000002020200000200000202020000000000000202020200000000020202020202020200000000",
+    "00000202020202020202020202020202000000000000020202020202020200000200000202020000000000000000000000000000000002000000000000000000",
+    "00000202020200000202000002020202000000020200000202020002020000000200000002000000000000000202020200000000000002000002020200000000",
+    "00000202020200000202000002020202000000020202000202020000020200000200000202000002020202000200000200000000000002020202020200000000",
+    "00000000000000000202000000000000000000000000000202020200020202020202020202000002020202000200000200000000000002000002020200000000",
+    "00000000000000000202000000000000000000020202020002020202000202020202020202000002020202000200020202020200000002000002020200000000",
+    "00000202020200000202000002020202000000020202020000020202000202020202020202020202020202000200020202020202000202000000000000000000",
+    "00000202020200000202000002020202000000020202020202020200000000020202000000000002020202000200000202020202020202000000020202020000",
+    "000002020202020202020202020202020000000202020202020202002E2E2E000200000000000002020202000200000202020202000202000000020202020000",
+    "00000202020200000202000002020202000000000000002E2E00002E2E2E2E000200000000000002020202020200000002020200000002000002020202020000",
+    "000002020202000002020000020202020000000000002E2E2E2E2E2E2E2E2E000200000000000000000002000000000000000000000002020202020202020000",
+    "000000000000000002020000000000000000000000002E2E00000000000000020202000000000000020202000000020202020202000002000000000202020000",
+    "000000000000000002020000000000000000020202002E2E00000202020202020202020202020200000000000000020000000002000002000029290000000000",
+    "000000000202020202020202020200000002020202002F2F2F000202020202020202020202020200000000000000020000000002000002000000000000000000",
+    "000000000202020202020202020200000202020202002F2F2F000200000000000000000000000200000000000000020000000202020202020000000000000000",
+    "000000000202020202020202020202020202020200002F2F2F000200000000000000000000000200000202020202020000000202020202020002020202020000",
+    "00000000000200000000000000000000020202000202020202000202000000010101000000020200000202020200000000000202020202020002020202020000",
+    "00000000000202000000000000000002020200020202020202000202000000010101000000020200000200020202000000000202020202020002020202020000",
+    "00000000020202000202020000000002020000020002020202000202000000010101000000020200000200020202020202000202020202020202020202020000",
+    "00000000020202020202020000000002000000020002020202000200000000000000000000000200000200000000000002000202020202020002020202020000",
+    "00000000000000000202020000020202020200020000000000000200000000000200000000000200000200000002000002000202020202020000000000020000",
+    "00000000000000000000000000020202020200020002020202000202020000000200000002020200000200020202020202000202020202020002020202020000",
+    "00000000000000000000000000020202020200020002000000000202020202020202020202020200000200000202020200000202020202020000000000000000",
+    "00000000000000000000000000020202020200020002020200000202020000020202000002020200000202020202020200000202020202020000020202020000",
+    "00000000000000000000000000000002000000020000020200000202020000020202000002020200000000000200000000020202020202020000020202020000",
+    "00000000424242000000000000000002020000020202020200000202020000000200000002020200000002000200000002020202020202020202020202020000",
+    "00004242424242424200000000000002020200000000000200000000000002020202020000000000000002020200000202020002020202020000020202020000",
+    "00004200424242004200000000000000020202000000000200000002020202020202020202020000000002000000020202000002020202020000020202020000",
+    "000042000000000042002D2D2D000000000202020200000202020202000202000200020200020000000000000002020200000000000000000000000000000000",
+    "000042424242420042002D002D2D2C2C2C000202020000000002020200020202020202020002000000000000020202000000000000002B2B2B2B000000000000",
+    "000042424242000000002D2D2D00002C2C2C0002020200000002020200020202020202020002020200000002020200000000000000002B2B2B2B2B2B2B2B0000",
+    "0000424242424242420000000000002C2C2C2C0002020200000202020000000000000000000202020000020202000000000000000000000000000000002B0000",
+    "0000004200000042420000002C2C00000000000000020202000000000002020202020202000202020002020200000202020202020202020202020000002B0000",
+    "0000424242420000000000002C2C0000002C2C002C000202020000000000000002000000000000000202020000000202020202020202020202022B2B2B2B0000",
+    "0000424242420000000000002C00002C2C2C2C2C2C2C000202020202020202020202020202020202020200000000020202020202020202020202000000000000",
+    "0000424242420042424200002C002C2C2C2C2C2C2C2C000002020202020202020202020202020202020000000000020202020202020202020202000000000000",
+    "00000042000000420042002C2C2C2C2C00000000002C2C0002020202020202020202020202020202020000000202020202020202020202020202000000000000",
+    "00000042000000000042002C2C2C2C2C2C2C00002C2C2C0002020202020202020202020202020202020000000202020202020202020202020202000000000000",
+    "00000042000000000042002C2C2C002C2C2C2C2C2C2C2C0002020202020202020202020202020202020000000200020202020202020202020202000000000000",
+    "00000042000042424242002C2C2C0000002C2C2C2C2C000002020202020202020202020202020202020000000200020202020202020202020202000000000000",
+    "0000004242424242420000002C2C2C000000002C2C2C2C0002020202020202020202020202020202020000000200020202020202020202020202020202020000",
+    "000000424242424242000000002C2C2C2C0000002C2C2C0002020202020202020202020202020202020000000200020202020202020202020202000000020000",
+    "00000042000042424242000000002C2C2C0000002C2C2C0000000002020000020202000002020000000000000200000000000000000000000000000000020000",
+    "0000004200000000004200000000002C2C2C002C2C2C000000000002020202020202020202020000000000000202020000000000000000000000000200020000",
+    "00000042004200000042000000002C2C2C2C2C2C2C2C002C2C000000000000020202000000000000000000000202020002020000000000020202020200020000",
+    "000000420042004200420000002C2C002C2C2C2C2C2C2C2C2C2C0000000000020202000000000000000000000200020002020200000000000000000200020000",
+    "000000424242004242420000002C2C00002C000000002C2C2C2C2C2C020202020202020202020202020202020200020202020200000000000000000202020000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00003232323232323232323232323232323232323200000000000000000000000202020202020000000202020202020202020034343434343434020202000000",
+    "00003200000000000000320032000000000000003200000000020202020202020202020202020200000202020002000002020034343434000000020002000000",
+    "00003232323232003232320032323200323232323200000002020202020202020202020202020202000002020002000002000034343434000000000002000000",
+    "00000000320032003200000000003200320032000000000002020200000002020202020202020202000002020002020202000000003300000202020002000000",
+    "00003232320032323232323232323232320032323200000002020200000202020202020202020202020002020000020002020200333333000200020002000000",
+    "00003200000032000000320032000000320000003200000002020000000202020202020202020202020000020202020002020200000000000200020002000000",
+    "00003232323232323232320032323232323232323200000002020002020202020202020202020202020202000202020202000200020202020200020202000000",
+    "00000000000032003200000000003200320000000000000202000002020202020202020202020202020202020200000000000200020200000200000202000000",
+    "00000101010032003232323232323200320001010100000202000002020202020202020202020202020202000000020202020200020202000202020202000000",
+    "00000000000032003200000000003200320000000000000202000002000202020202020202020202020000000202020000000000020002000002000000000000",
+    "00003232323232323200010101003232323232323200000202000002000202020202020202020202020002020200000002020202020002020202020202000000",
+    "00000000000032003200000000003200320000000000000202000002000002020202020202020202020002000000020202000000000000000000000202000000",
+    "00000101010032003232323232323200320001010100000200000002000002020202020202020202000002020202020000000202020202020202020202000000",
+    "00000000000032000000320032000000320000000000020200000002000000020202020202020202020000000000000002020200000000000000000000000000",
+    "00003232323232003232320032323200323232323200020200000002000000000200000002000000020002020202020202000000020202020202020202000000",
+    "00003200000032003200000000003200320000003200020200000002020202020202020202000202020002020000000000000202020000000000000002000000",
+    "00003232323232323232323232323232323232323200020200000002000000000000000000000200020002020202020202020200020202020202020202000000",
+    "00003200000032000000320032000000320000003200020200000002020202020200020202020200020000000000000000000000000000000200000002000000",
+    "00003200010032000100320032000100320001003200020200000202020202020200020000000000020202020202000202020202020202000202020002000000",
+    "00003200000032000000320032000000320000003200020000020202000000020200020202020200020200000002000202020202000002000200020002000000",
+    "00003232323232323232323232323232323232323202020002020200000000020200020200000200000000000002000202020202020002000200020002000000",
+    "00000000000000000000000000000000000000000002020002020000000000020200020202000202020202020202020202020202020002000200020002000000",
+    "00000000000002020202020000000000020202020202020002020000000000020200000002000000000000000000000200020202020002000202020002000000",
+    "00000000000002000002020200000000020202020200000202020000000002020202000002020200000000020202000200000000000002000202020202000000",
+    "00000000020202020200020202020202020202020000020202000000000202020202020000000202020000020002000202020202020202020202020202000000",
+    "00313131020202020200020202020000020202000002020200000000020202020202020200000200000002020002000000000000000000000000000000000000",
+    "00000000020202020200020202020200000002000202020000000002020202000002020202000202020202000002000202020202020202000202020202000000",
+    "00000000020202020200000200020202020202020202000000000202020200000000020202020000000000000002020200000000000002020200000002000000",
+    "00000000000000000000000000000000000000000000000000020202020000000000000202020200000000020000000000000000000000000000000002000000",
+    "00000002020000000202020202020202020202020202020202020202000000000000000002020202020202020202020002020202020202020202020202000000",
+    "00000202020000020202020202020202020202020202020202020202000000000000000002020202020202020202020002020202020202020202020202000000",
+    "00000202000002020200000000000000000000000000000000020202020000000000000202020200000000000000000000000000000000000000000000000000",
+    "00000200000202020000000002020202020202020200000000000202020200000000020202020000000000000000000000000002020202020202000202000000",
+    "00000200000202000202020002020202020202020200000000000002020202000002020202000000000000020202000202020002000002020202000202000000",
+    "00000200000200000202020002020202020202020200000000000000020202020202020200000000000000020202000202020002000002020202000202000000",
+    "00000200000200000202020002020202020202020200020202020202000202020202020002020202020200000200000002000002000002020202000202000000",
+    "00000200000200000202020002020202020202020200020000020002000000000200000002000200000200000202020202020202000000000002000202000000",
+    "00000202000200000002000000000200000000000000020002020202020202020202020202020202000200000000000000000002000000000002020202000000",
+    "00000202020202020202020202020200000000000000020202020202020202020202020202020202020200020202000202020002000000000000000000000000",
+    "00000000000000000000000000000000000000000000020002020202020202020202020202020202000200020202000202020002000202020002020200000000",
+    "00000042424200000000000000000000000000000000020202020200020202020202020200020202020200020202000202020002000202020002020200000000",
+    "00000042424200000000000000004242424242420000020002020202020202020202020202020202000200020202000202020002000202020002020200000000",
+    "00000042424200004200000000004242424242420000020202020202020202020202020202020202020200000200000002000002000202020002020200000000",
+    "00000042424200004200424242424242424242420000020002020202020202020202020202020202000200000202020202020202000002000000020000000000",
+    "00000042424200004200420000004242424242420000020000020000000000020000000000000200000200000200000002000002020202020202020000000000",
+    "00000042424200004200420000004242424242420000020202020002020200020200020202000202020200020202000202020002000002000000020000000000",
+    "00000042424200004200420042424242424242420000020000000002000000020200000002000000000200020202000202020002000202020002020200000000",
+    "00000042424242424200420042004242424242420000020000000202020200020200020202020000000200020202000202020002000202020002020200000000",
+    "00000000004200000000420042004242424242420000020000000202020200020200020202020000000200020202000202020002000202020002020200000000",
+    "00000000004200000000420042000000000000420000020202020202020200020200020202020202020200000000000000000002000202020002020200000000",
+    "00000000004200000000420042424242424242420000000000000202020200020200020202020000000000020202000202020002000000000000000000000000",
+    "00000000004200000000420000000000000000420000000000000202020202020202020202020000000000020202000202020002000202020002020202020000",
+    "00000000004200000000420000000000000000420000000000000202020200020200020202020000000000020202000202020002000202020002020202020000",
+    "00000000004242424242420000424242424242420000000000000202020200020200020202020000000000020202000202020002000202020002020202020000",
+    "00000000000000000000000000000000000000000000000000000202020200020200020202020000000000000200000002000002000202020002020202020000",
+    "00000000000000000000000002020202020202020000000000000202020200020200020202020000000000000202020202020202000202020002020202020000",
+    "00000000000000000000000202020202020202020200000000000200000000020200000000000000000000000000000000000002000200000002020202020000",
+    "00000000000000000000000202020202020202020202020202000200000000020202020202020202020202020202020202000002020202020002020202020000",
+    "00000000000000000000000202020202020202020200000002000200000000020202020202020202020202020202020202000002000200000000000200000000",
+    "00000000000000000000000002020202020202020000000002020200000000000000000000000000000000000000000000000002020200020202020200000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000202020200000002020202020200000000000202020000000000000000000000000036363636363636363636360000000000363600000000000000000000",
+    "00000202000200000202020202020200000000000202020202000000000000003636363636360000000000000036363600000000363600000000000000000000",
+    "00000202020202020202020202020200000000000000000002000000000000003636360000000000000002020200363636363600360000000000000000000000",
+    "00000002020202020002020202020202020002020202020202000000000000003636000000000000000002020200003636363636360000000000000000000000",
+    "00000002020202020000020000000000020202000000000002020202020202020202020202020202020000020000000000363636000036360000000000000000",
+    "00000002020202020000020000000000000202000202020202000000000202020202020200000000020202020202020000003636363636360000000000000000",
+    "00000202020202020000020000000202000002000202020002000000000202020202020200000000020000000000020000000036363636000000000000000000",
+    "00000200000202020000020002000002000002000000000002020202020202020202020202020202020000000002020200000036363636000000000000000000",
+    "00000000000002000000020002000002020002000202020002000000000202020202020200000000020002020002020200000000000000000000000000000000",
+    "00000002020202020202020202020002020002000202020002000000000202020202020200000000020202020000000000000000000000000000000000000000",
+    "00000002020202020202020202020000000000000002000202000000000000000200000000000000020002020000000202020202020202020202020200000000",
+    "00000002020202020202020202020202020202020202020202020000000000000200000000000002020000000000000202020002020202020002020200000000",
+    "00000000000202020002020200000000020202000002000002020200020200000200000202000202020000000000000202020002020202020002020200000000",
+    "00000000000202020002020200000002020200000202020000020202020200000200000202020202000002020200000200000002020202020000000200000000",
+    "00000000000000000000000000000002020000000202020000000202020000000200000002020200000002020200000202020202020202020202020200000000",
+    "00000000000002020000000000000002000000000000000000000002020200000200000202020202000000020000000202020202020202020202020200000000",
+    "00000000000202020200000000000002000000000000020202020002020202000200020202000202020202020000000202020202020202020202020200000000",
+    "00003737373737373737000000000202020000000002020202020202020202020202020200000002000000020000000202020202020202020202020200000000",
+    "00003737373737373737000000020202020200000002020202020202000002020202020000000002000002020200000202020202020202020202020200000000",
+    "00003737020202023737000000020202020200000002020202020200000002020002020000000002000002020200000200000002020202020000000200000000",
+    "00003737020202023737370000000202020000000000020202000000000002020202020000000202020000000000000202020002020202020002020200000000",
+    "00003737020202023737373700000000000000000002020202020000000002020202020000000202020000000000000202020002020202020002020200000000",
+    "00003737020202023737373737000000000000000000000000000000000002020202020000000000000000000000000202020202020202020202020200000000",
+    "00003737373737373737373737373700000000000000000000000000000002020202020000000000000000000000000000000000000000000000000000000000",
+    "00003737373737373737003737373737000000000000000000000002020202020202020202020000000000020202000000000000000000000000000000000000",
+    "00000002020202000000003737373737373700000000000000000002020202020202020202020000000000020002000000000000000000000000000000000000",
+    "00000000020200000000003700003737373737000000000000000002020202020202020202020000000000020002000000000000020202000000000000000000",
+    "00000000020200020202020202020037373737000000020202020202020202000000020202020202020202000002000000000002020202020202020000000000",
+    "00000202020200023737373737020000373737000202020202020202020200000000000202020202020202020202020202020002020002020202020002020000",
+    "00000202020202020202020202020202020202020202000202020202020200000000000202020202020202020202020002020202020202020202020202020000",
+    "00000237370200023737373737020000003737000202020202020202020200000000000202020202020202020202020202020002020002020202020002020000",
+    "00000237370200020202020202020000003737000000000000020202020202000000020202020202020202000000000000000002020202020202020000000000",
+    "00000237370200000000000000000000003737000000000000000002020202020202020202020000000000000202020202020000020202000000000038383700",
+    "00000237370200000000000000000000003737000000000000000002020202020202020202020002020202020202020000020202000002020202000037373700",
+    "00000237370200020202000200023737373737370000000000000002020202020202020202020002000202020002020202020202020202020000373737373700",
+    "00000237370200020202020202023737373737373700000000000000000002020202020000000002020202020202020202000202023737373737373738380000",
+    "00000237370200020202000037373737000037373737000000000000000002020202020002020202020202020202020237373737373737373700000000380000",
+    "00000237370200000000003737373700000000373737370000000000000002020202020002023700000000000002020237370202020200000000000002020200",
+    "00000237370200000037373737020202020200373737373A00000000000002020202020002003737373737373737373737020202020202020202020202020200",
+    "00000202020200003737373737000000000000003737373737000000000002020202020000003737020202020002023737373702000202000000000002020200",
+    "00000002020000373737370000000002020202020037373737373737000000020002000000373737020202020002020200373737373700003737373700020000",
+    "00000002023737373737000202000000020202000000373737373737370000020202000000373700020202020000020200020237373737373737373700020000",
+    "00000002023737370000000202000000000200000000003737373737373737020202000000370000020202020000020202020200003737373737370000020000",
+    "00000002020000000000000000000000020202000000000000003937373737020202000000370002020202020002020200020202020202373737000000020000",
+    "00000002020000020200000202000002020202020000000000003939373737020202000000370202020202020002020202020202000002373737020200020000",
+    "00000002020000020202020202000000000200000000000000000000003737020202000202370237373702020000020202020202000002000237370202020000",
+    "00000002020000000200000200000000000200000000000000000000000037020202020237373737373737020200000202020202000002020202370200020000",
+    "00000002020200000200000200000000000200000000000000000000000037020237373737373702020237370200000202020202020000020202373737020000",
+    "00000000020202020202020202000002020202020000000000020202000000020202373737373702373737370200000200000002020202020200373737020000",
+    "00000202020202020200000202000002020202020000000000020202000000020202373737373702373702020200000202020200020202020200003737020000",
+    "00000202020202020200000000000002020202020000020000020202000000020202003737373702373702000000020200020202020202020202000237020000",
+    "00000202020200020202020202020202020202020202020202020202000000020202003737373702373702020202020202020202020200020202000237370000",
+    "00000202020200000000000000000002020202020000020000020202000000020202003737373702000000020202020200000202020200000202000037370000",
+    "00000000004242424242424242420002020202020000000000020202000000020202000000000002000000020000020202000000020202000202020037370000",
+    "00000042424242000000000000000002020202020000000000020202000000020202000202020202000202020002020202000202000202020202020000370000",
+    "00000042420000020202000002020200020202000002020200000000000000020202000202020000000202000002020000000202000002020200000000370000",
+    "00000042420000020202000002020200000200000002020200000000000000020202000000000000000000000000000000020202000202020002020000370000",
+    "00000042424242000200000000020000020202000000020000000000020202020202020202020202020202020202020000000202020202020202020000370000",
+    "00000000000042000202020202020202020202020202020202020202020200020202000202020202020202020202020000000002020202020202020202370000",
+    "00000042424242000000000000000000000000000000000000000000020202020202020202020202020202020202020000000000000202000002020000370000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037373700",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000020202020000000000000000000000000000000000000000000000000000000000000000000000000000004700000000000000000000000000",
+    "0000000202020202020202020202020200000000004A4A4A4A000202020202000202020202000002020202020000474747474747474747494949490049494900",
+    "0000000202020202020202000000000202020200004A004A4A000202020002000000000002000202020002020000474747004700000047000000490000004900",
+    "000000020000000202020202020000020000024A4A4A000000000202000202020202020202000200000202020000004700000000474747474700494949494900",
+    "00000202000000020202020202000002004A00004A4A4A0202020002000202020002000002020202000202000000474747000047474700474747000000000000",
+    "00000202020000000202020202020202004A4A004A00000202020002020202020002020202000202020202000047474747474747470047004747470000000000",
+    "00520202020200000000020202020000004A4A4A4A00000202020000000000000202020002000000020200000047474747004747474747474747470000000000",
+    "0000020202020200000000020202020202004A000000000202020202020202020202020002020200020200000000474747004747474747474747470000000000",
+    "00000202020202000000000002020202020202020200000202020000000000000202020202020200020000474747004700004747474747474747470000000000",
+    "00000200020202020000020200020202020202020202020002020000000002000000000002020202020200474747474747004747474747474747470000000000",
+    "00000200020202020000020202020002020202000202020002000000000002020202020000000002020000474747004747004747474747474747470000000000",
+    "00000200000202020002020202000000000000020000020202020000000000000200020202020202020202020000000000000047474747474747000000000000",
+    "00000200020202020002020202020202020202020202020202020000000000000000000002020000000202020000000000000000474747474700000000000000",
+    "00000200020202000002020202000000000202020202020202020202020202000202000002000200000202020000000000000000000047000000000000000000",
+    "00000200020202000000020202020202020202000202020202020000000202000202000202020202000002000000000000000000004747470000000000000000",
+    "00000200020202000000000002020000000202020202020202000000000202000002020200000002000202000000000000000000004747470000000000000000",
+    "00000200020202000002020000000000000202020202020202020000000202000000000202020202000200000000000000000000000046000000000000000000",
+    "00000200020200000002020202020202020202020202020202020000000202000000000002000002020200464646464600464600464646464646004646460000",
+    "00000200020200000002020000000000020202020202020202020000000200000000000000000000000000460000464600464600464600464646464600460000",
+    "00000200020202000002020000000000000000020200020202020000000245454545454545004545454500464646000000460046464646460000004646460000",
+    "00000200020202000002020000020202020200000200000202000202000200004545454545454545454500460046464646464600000000004646460046460000",
+    "00000200000202020002020202020202020200000200020202000202020200454500454545454545454500464646004646004646464646464600460046460000",
+    "00000202020202020202020202020202020202020202020202000002020200000000454545454545454500460000464600004646004600004646460046460000",
+    "00000200000202020000000000020200000202020202020200000202020202000045454545454545454500460046464646460046464646460046004646464600",
+    "00000202000002020202020202020200000002020202000000020202000202004545454545454545454500464646460046460046004600464646464646004600",
+    "0000020200000202020202020202024B4B4B00000200000002020200000000004545454545454545454500464600464646464646004646464646000046464600",
+    "00000202000000000000000000004B4B4B4B00000200000202020000000000454545454545454545454500464646460046000046460046000046460000000000",
+    "0000000200000000003B3B3B004B4B4B4B0000020202020202000000000000000045454545454545454500004646464646464646460046464646460046460000",
+    "000000023B3B3B00003B3B3B004B004B4B4B00020200000000000000000001010101004545454545450000464600004600004600464646000046460046460000",
+    "00000000003B3B3B3B3B0000004B000000000000000000004B000000000101010101010045454545450000460000464646004646464646464600460000460000",
+    "00003B3B3B3B3B0000000000004B0000004B4B4B004B004B4B4B0000010101010101010100004500000000464646460046460046000046460046464646460000",
+    "00003B00003B3B3B00000000004B4B4B4B4B4B4B4B4B4B4B4B4B0000010101010101010100454545454500004646464646464646464646464646000000460000",
+    "00003B3B00003B3B003C3C3C0000000000000000004B000000000000010101010101010100004500454546464646004600000046460046460046004646460000",
+    "00003B3B3B003B3B003C000000000000004B4B4B4B4B4B4B4B4B0000000101010101010045454500004500004646004646004646460046460046464600000000",
+    "00003B3B0000003B003C003C3C3C0000004B4B4B004B004B4B4B004C000001010101500000000000004500464646460046464600464646004646460046460000",
+    "000000003C3C3C3C003C3C3C3C3C3C0000004B00004B00000000004C4C00000000504E4E4E4E4E50004500460046464646000000000046464646000046460000",
+    "000000003C3C3C3C003C3C3C003C3C000000004B4B4B0000000000004C004C4C4C004E4E4E4E4E00004500464646004646464646464646460046460046460000",
+    "0000003C3C003C3C00003C3C003C3C000000004B0000000000004C4C4C004C4C4C004E4E4E4E4E004F454F000000000000000000000046000046460046000000",
+    "0000003C3C0000003C3C3C3C00003C000000004B4B00000000004C0000004C4C4C4C004E005000004F454F4F4F51515100004F4F4F4F4F000000464646000000",
+    "0000003C3C3C3C00003C003C003C3C3C000000004B00000000004C4C4C00004C004C004E0000004F4F454F4F4F4F4F4F4F4F4F4F514F4F4F4F00000000000000",
+    "0000003C00003C3C3C3C3C3C003C003C0000000000000000000000004C4C4C4C004C000051514F4F51454F51514F4F4F4F4F4F4F4F4F4F4F4F4F4F4F00000000",
+    "00003C3C3C003C3C003C00003C3C003C003C3C3C3C3C000000004D00000000004C4C4C00514F4F4F005D000000000051514F4F510051514F4F4F4F4F4F4F0000",
+    "00003C3C3C3C3C003C3C003C3C3C3C3C003C3C003C00000000004D004D4D4D004C4C4C004F4F4F4F005D00000000515100000000000051514F4F3C3C4F4F4F00",
+    "0000000000003C3C3C3C003C3C3C0000003C3C003C3C3C3C00004D004D004D004C4C4C4F4F4F4F00005D000051005100005D5D5D5D0000000000003C4F4F4F00",
+    "00003C3C3C3C3C00003C3C3C00003C3C3C3C003C3C003C00004D4D004D004D000000514F4F51005D5D5D5D0051515100005D5D5D5D0000000000003C00000000",
+    "00003C3C003C3C003C3C3C3C00003C3C00003C3C3C3C3C004D4D004D4D004D0000004F4F4F00005D5D5D5D0000000000005D5D5D5D00005D5D5D003C003C3C00",
+    "00003C0000003C3C3C3C003C3C3C003C3C003C3C003C00004D004D4D004D4D004F4F4F4F0000005D5D5D5D00005D5D5D5D5D5D5D5D5D005D5D5D003C3C3C0000",
+    "00003C3C0000000000003C3C3C3C003C3C3C3C3C003C3C004D4D4D004D4D00004F4F4F4D4D00005D5D5D0000005D5D5D5D00005D5D5D5D5D5D5D0000003C0000",
+    "00003C3C0000003C3C3C3C003C3C3C3C3C3C3C3C003C3C3C0000004D4D4D4D4D4F4F4D004E004E005D5D005D5D5D5D5D5D5D005D5D5D5D5D5D5D003C3C3C3C00",
+    "00003C3C3C3C3C3C3C000000003C00000000003C00003C3C000000000000004D4F4F00004E004E005D5D5D5D5D5D5D5D5D5D5D5D5D5D5D000000003C00000000",
+    "000000000000000000404000003C3C3C3C3C3C3C3C3C003C3C003C3C3C3C3C004F4F4F004E4E4E005D5D005D5D5D005D5D5D5D5D5D5D5D3C3C3C3C3C3C3C3C00",
+    "0041000000000000004000000000000000000000003C003C3C3C3C0000003C00004F4F004E004E000000005D5D5D00005D5D5D5D00003C3C3C00000000003C00",
+    "0041413F3F3F3F3F3F3F3F004040004040000000003C3C3C3C3C3C3C3C003C3C004F4F4E4E4E4E000000000000003C005D5D5D5D00003C3C3C3C3C003C3C3C00",
+    "000000410041000000003F00004000400000003F3F0000000000003D0000003C004F4F000000003C3C3C000000003C000000005D5D3C3C0000003C003C000000",
+    "00004141004141003F3F3F3F3F3F3F3F3F3F003F00003E3E003D3D3D3D00003C00004F4F0000003C3C3C000000003C3C3C3C3C00003C3C3C00003C0000000000",
+    "000000000000000040000000003F003F003F3F3F3F3F3E3E3E3D3D3D0000003C003C4F4F3C0000003C000000003C3C003C0000003C003C3C3C3C3C003C3C0000",
+    "0000000000000040400000003F3F003F3F00004000003E3E003D3D3D3D3D3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C000000003C3C3C3C0000",
+    "0000000000000000000000000000000000000040400000000000000000003C3C003C4F4F3C003C3C3C3C3C3C3C3C3C3C3C0000003C003C003C3C000000000000",
+    "004242424242003C3C3C3C3C3C3C3C3C3C3C3C000000004F4F000000003C3C3C00004F4F0000003C3C3C0000003C3C003C3C3C3C3C3C3C3C3C3C3C3C3C003C00",
+    "004200000042004F4F003C3C3C3C0000003C4F4F004F4F4F4F4F4F3C3C3C003C00004F4F4F0000000100000000003C3C3C3C3C003C003C003C3C3C3C3C3C3C00",
+    "004242420042003C4F3C3C3C3C3C3C3C3C3C4F4F3C3C3C3C4F4F3C3C3C004F4F4F4F4F4F4F000000000000003C003C003C3C3C3C3C003C3C0000003C3C003C00",
+    "000000000042423C3C003C3C3C3C0000003C4F4F00003C3C3C4F4F4F4F4F4F4F4F00004F4F000000000000003C3C3C000000000000003C3C3C3C00005C5C3C00",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   [
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "00000000000000000000000000000000555500000000000000555555554900494949494949494949494949494900000000005500000000000000000000000000",
+    "00004949004949494949490049004900555549554949005555555549494900004949494949494949494949490000000049495549494949494949494949000000",
+    "00004949004900000000494949494949495555555555495555554949494949494949494949494949490000000000000049495549494949494949494900000000",
+    "00004900004949494900494949494949494955495555555555555500000000494949494949494900490000000000000049495555000000000000555500000000",
+    "00004900004900494900490049004900490049000055555555555500000000004900494949494949000000000000000049490055005555550000555500000000",
+    "00004949494900000000000049000000000000000049555555555500000000004900494949004900000000000000000049495555555555555555555500000000",
+    "00000000000000494949494949494949494949494949554955554949494949494949494949494949494949494949494949555555555555555555555555550000",
+    "00000000000000494949494949494949494949494949555549555549494949494949494949494949494949494949494949555555555555555555555555555500",
+    "00004949494900494900000049000000000000000000495555555500000000004949494949494949000000000000000000555555550000000000495555000000",
+    "00004900494900494900490049004900490049000055555549550000000000000049494949490049000000000000000055555555000000000000494900010000",
+    "00004949494949494900494949494949494949000055495555550055555500000049494949494900000000000000000055005500000000000000494900000000",
+    "00004900004900494900494949494949494949000000495555555555000000000049004949004949494900000000004900555500000000494949494900000000",
+    "00004949494900494900490049004900490049000000555555550055000100494949000049000049490001000000004955555549494900494949494900000000",
+    "00000000494900494900000000000000000000000000495555550000000049000049494900004949494900000049555555494949494900494900000000000000",
+    "00004949494900494900005959590000590000000000555555554900494949494949494949000000494900555555555555555549494900494900000000000000",
+    "00000000000000000000595959590059590000000055554955554949495555494949494949494900494949554949554900495549494949494900000000000000",
+    "00000000595959595959590059595959000000005555000055555555555549490049494900494900495500555549550000495555494900494900000000000000",
+    "00595959595959595959590000005959590000005500005555555500004949494949494949494949495555554955550000494949494900494900000000000000",
+    "005959595959003C3C3C000000000000590000555500000055550049494949494949494949494949495555554955555555550000000000494900000000000000",
+    "000000003C00003C3C3C3C0055000000000000550000005555550049494949495555004949490000005555004949494955554949494949494900000000000000",
+    "000000003C00003C3C003C0055555500000055550000555555550000000049555549495555494900555555004949490000555500000000494900000000000000",
+    "000000003C3C3C3C00003C0000005555000055000000000055555500005555555555555555555555555555004949490000495549494900494900000000000000",
+    "000000003C003C000000000000000055000055000000000055555555555555555555555555555555555500004949490000494955494900494900000000000000",
+    "00003C3C3C003C3C0000000000000055555555000000000000005555555555555555555555555555555500004949490000495555494949494900000000000000",
+    "000000000000003C0000000000000000000055000000555500005555555554545454545455550055005500000000000055555549494900494900000000000000",
+    "0059000000003C3C3C3C3C3C3C595959000055555500005555555555555500545454005455555500555500000000005555494949494900494900000000000000",
+    "0059590000003C3C000000003C590000005555555555000000555555555500015401005455555555555555005555555500000000000000494900000000000000",
+    "005959595900003C000059593C595959000000550055555555555555555500000000005454545555555555555555545454545400000000494900000000000000",
+    "000000595959593C005959593C5959590000000000000055555555550000005A5A5A000000545555005555005400540054005400000000494900000000000000",
+    "0000000000595959595900003C000059000000005500000055555555005A5A5A5A5A5A5A00545555555500005454545454545400000000494900000000000000",
+    "00555500000000005959003C3C3C3C59000055555555555555555555005A5A5A5A5A5A5A00545555550000000000000054000000000000494900000000000000",
+    "0000555500494900000000003C3C3C59000000555555555555555555005A5A5A5A5A5A5A00545454545454545454545454545454545454494900000000000000",
+    "00005555555555555500003C3C3C5959000000000000000055555555005A5A5A5A5A5A5A00555555555555555555000054000000000000555500000055555500",
+    "00555500494900495555000000005959000000555500550055555555005A5A5A5A5A5A5A00555555555555005454545454545400555555555555555555550000",
+    "00005555550000005555555555000000000055555555555555555555005A5A5A5A5A5A5A00555555555500555400540054545555555555555500005500000000",
+    "00495549554955554900555555555555555555555555555555555555000000000000000000555555555555555454545455545555000000495555555555555500",
+    "00555555555555555555494949005555555500555555555555555555555555555555555555555555555555555555555555555555555555494900555500555500",
+    "00490049004949495500490049005555000000495549490000555555555555555555555555555555555555555555555555555500005555555555550000005500",
+    "00490049494900004900490049005555000000494949490000005555555555555555555555555555555555555500550000000000000055555555000000000000",
+    "00494900000000004900000049005555000000494949490000005555555555555555000000000000000055550000000000494949490000554955555500000000",
+    "000049490049494949494949490049494949494949494900005555555555555555004E4E4E4E4E4E4E4E00555500004949490000490000494900005555555500",
+    "004949004949000000000000000049490000004949494900555555000000005555004E004E4E4E4E4E4E00555500005E00494949494949494900000000000000",
+    "004900004900494949494949494949490000000000005555555500000000005555004E4E004E4E4E4E4E005500005E5E5E000000000000494900000000000000",
+    "004949004900490000000000000049490000000000550055550000000000005555004E4E004E4E4E4E4E005555005E5E5E004949494949494900000000000000",
+    "000049004949490049494949490049490000555555555555550000000000005555004E4E4E4E4E4E4E4E4E005500000000004949494949494900585858580000",
+    "004949000000000049000000490049555555550000000000490000000000005555004E4E4E4E4E4E4E4E4E005555550000004949000000000000585858580000",
+    "004900004949494949004949490049490055000049490049494949494900000055550000004E4E4E4E4E4E005555555500004949000000583C3C3C3C3C3C0000",
+    "00490049490000490049000000004949005500004949494949494949494900494955555500004E4E4E4E00555500005555004949000000583C3C3C3C3C3C0000",
+    "0049494900004949004949495555555555554949494949494949494949494949000055550000004E000000550000000055004949000000583C3C3C3C3C3C0000",
+    "000000004900490000490055550049494949490049494949494949494949494949494955550000005555555555000000000049490000000000003C003C3C0000",
+    "000000494900494949495555490049494949000000494949494949494949494900494900555555555555555500000000000049490000000000003C003C3C0000",
+    "0049494900000055555555004900494900490000494949494949494949494949000049000000555555555555555500000000494900000000000000003C3C0000",
+    "0049004949555555004949494900494900494949494949494949490049000049490049004949494955555500005555000000494900000000003C3C003C3C0000",
+    "0049555555554949494900000000494900004949494949494949494949494949000049004949494900555555000055000000494900000000003C3C3C3C3C0000",
+    "00555500490000000000494949004949000049004949494949494949000000000000000049494949000000555555550000004949000000003C3C3C3C3C3C0000",
+    "00494900494949004949490049004949000049494949490000004900000000000000000049000000000000000055550000004949000000003C3C3C3C00000000",
+    "00004900000049004900004949004949494949494949494949494949494949494949494949494949494949490055555500004949000000003C3C3C3C00000000",
+    "000049494949490049000000000049494949494949494949494949494949494949494949494900494949494900000055550049490000000000003C003C000000",
+    "000000000000490049004949490000000000000000000000004900000000000000000000494900000000000000000055550049490000000000003C3C3C000000",
+    "00004949494949004949490049004900494949000049494949494949490049490000000049494949494949494949495555494949000000000000003C3C3C0000",
+    "000049000000494949004900000049004900490000494900494949494949494900000000494949494949494949494955554949490000000000000000003C0000",
+    "00004949494949000000494949494949490000000049494949494949490049490000000000000000000000000000005555000000000000000000003C3C3C0000",
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   ],
+   null
+  ]
+ }
+}
