@@ -117,6 +117,12 @@ public static class DataWriter {
 
 	public static void SaveTextureData(TextureData textures)
 	{
+		// The writers below produce UW1's files (F32/W64 and the rest); UW2's T64.TR is not written yet.
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			SaveTerrainData(textures);
+			return;
+		}
 		SaveTextures("F32.TR", textures.Floors, textures.Palettes[0], 2);
 		SaveTextures("F16.TR", textures.Floors, textures.Palettes[0], 2, 2);
 		SaveTextures("W64.TR", textures.Walls, textures.Palettes[0], 2);
@@ -1150,7 +1156,8 @@ public static class DataWriter {
 			fs.WriteByte(a);
 			fs.WriteByte(b);
 		}
-		for (int i = 0; i < 256; i++)
+		// UW2's file is the one table of 256 words (one per T64.TR texture)
+		for (int i = 0; i < 256 && LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW1; i++)
 		{
 			byte a = (byte)(texData.FloorTypes[i] & 0xFF);
 			byte b = (byte)((texData.FloorTypes[i] & 0xFF00) >> 8);
@@ -1672,6 +1679,20 @@ public static class DataWriter {
 	}
 	public static void SaveMonsterSpriteInfo(ObjectData objDat)
 	{
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			// UW2: CRIT\AS.AN, 64 entries of (page, palette), nothing else in the file
+			string asan = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/AS.AN";
+			if (!File.Exists(asan + ".BKP")) File.Copy(asan, asan + ".BKP");
+			byte[] b = File.ReadAllBytes(asan);
+			for (int i = 0; i < 64 && 2 * i + 1 < b.Length; i++)
+			{
+				b[2 * i] = (byte)objDat.MonsterData[i].SpriteID;
+				b[2 * i + 1] = (byte)objDat.MonsterData[i].AuxPalette;
+			}
+			File.WriteAllBytes(asan, b);
+			return;
+		}
 		string file = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/ASSOC.ANM";
 		string backupFile = file + ".BKP";
 		if (!File.Exists(backupFile))

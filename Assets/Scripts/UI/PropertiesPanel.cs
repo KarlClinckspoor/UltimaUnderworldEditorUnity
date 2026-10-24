@@ -534,7 +534,24 @@ public class PropertiesPanel : MonoBehaviour {
 				createTriggerProperties(so);
 			else
 				createTrapReferenceProperty(so);
-			if (so.ObjectID == 384)   //Damage trap
+			bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+			if (uw2)
+			{
+				// UW2 (uw2/src/event/TRIGGER.C): say what the fields do; the UW1 editors below are
+				// used only for the traps whose fields mean the same in both games.
+				string what = UltimateEditor.Games.Uw2Traps.Describe(so.ObjectID);
+				if (what != null)
+				{
+					var t = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "UW2: " + what + "\nRaw fields: Tools > Object fields.", 11, Color.white);
+					t.horizontalOverflow = HorizontalWrapMode.Wrap;
+				}
+			}
+			if (uw2 && so.IsTrap() && !UltimateEditor.Games.Uw2Traps.SharedWithUw1(so.ObjectID))
+			{
+				createSliderProperty("Quality", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
+				createSliderProperty("Owner", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => changeObjectOwner(so, (int)f));
+			}
+			else if (so.ObjectID == 384)   //Damage trap
 			{
 				// Quality is the damage; a non-zero owner makes it heal instead (it was shown
 				// as a "health/poison" damage type).

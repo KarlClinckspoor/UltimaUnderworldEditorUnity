@@ -20,11 +20,11 @@ namespace UltimateEditor.Uw1.UI
 		{
 			string data = ExtensionsMenu.DataFolder;
 			string exe = FindExe(data);
-			if (exe == null) throw new FileNotFoundException("UW.EXE was not found next to the DATA folder");
+			if (exe == null) throw new FileNotFoundException("UW.EXE or UW2.EXE was not found next to the DATA folder");
 			var models = Uw1ExeModels.Load(File.ReadAllBytes(exe));
 			Color32[] palette = ReadPalette(ExtensionsMenu.FindDataFile("PALS.DAT"));
 
-			var w = UiKit.Window("Built-in 3D models (UW.EXE)", 560, 520);
+			var w = UiKit.Window("Built-in 3D models (" + Path.GetFileName(exe).ToUpperInvariant() + ")", 560, 520);
 			var state = new State { Models = models, Palette = palette, Yaw = 35, Pitch = 25, Zoom = 1f };
 			var top = UiKit.Row(w.Toolbar, 22);
 			var names = new List<string>();
@@ -84,8 +84,10 @@ namespace UltimateEditor.Uw1.UI
 			if (dataFolder == null) return null;
 			var parent = Directory.GetParent(dataFolder);
 			if (parent == null) return null;
+			// the game being edited decides which executable holds the models
+			string want = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? "UW2.EXE" : "UW.EXE";
 			foreach (var f in Directory.GetFiles(parent.FullName))
-				if (string.Equals(Path.GetFileName(f), "UW.EXE", StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(Path.GetFileName(f), want, StringComparison.OrdinalIgnoreCase))
 					return f;
 			return null;
 		}

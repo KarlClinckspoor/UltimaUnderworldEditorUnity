@@ -52,16 +52,36 @@ namespace UltimateEditor.Uw1
 
 		static readonly byte[] TableSignature = { 0xB6, 0x4A, 0x06, 0x40 };
 		const int BaseDelta = 0x8E;
-		const int ColorBase = 0x2920;   // UW1: colour words are offsets into the renderer's data
+		// UW2 (UW-Formats 8): table starting d4 64 aa 59, data at table + 0x9A, colour words based
+		// at 0x2680, and a colour table of 5-byte entries (low nibble: count, then 3 colours, then
+		// a byte) 0x1439A bytes after the table in the documented build.
+		static readonly byte[] Uw2TableSignature = { 0xD4, 0x64, 0xAA, 0x59 };
+		const int Uw2BaseDelta = 0x9A;
+		const long Uw2ColorDelta = 0x6908A - 0x54CF0;
+		int colorBase = 0x2920;   // UW1: colour words are offsets into the renderer's data
+		bool uw2;
+
+		public bool IsUw2 { get { return uw2; } }
 
 		public static Uw1ExeModels Load(byte[] exe)
 		{
 			var m = new Uw1ExeModels();
 			m.TableOffset = Find(exe, TableSignature, null);
-			if (m.TableOffset < 0)
-				throw new InvalidDataException("No UW1 model table found (looked for b6 4a 06 40). Is this UW.EXE?");
-			m.BaseOffset = m.TableOffset + BaseDelta;
-			m.ColorTableOffset = Find(exe, new byte[] { 0xEC, 0, 0, 0, 0xEB, 0, 0 }, new[] { true, true, true, false, true, true, true });
+			if (m.TableOffset >= 0)
+			{
+				m.BaseOffset = m.TableOffset + BaseDelta;
+				m.ColorTableOffset = Find(exe, new byte[] { 0xEC, 0, 0, 0, 0xEB, 0, 0 }, new[] { true, true, true, false, true, true, true });
+			}
+			else
+			{
+				m.TableOffset = Find(exe, Uw2TableSignature, null);
+				if (m.TableOffset < 0)
+					throw new InvalidDataException("No model table found (looked for b6 4a 06 40 for UW1 and d4 64 aa 59 for UW2). Is this UW.EXE or UW2.EXE?");
+				m.uw2 = true;
+				m.colorBase = 0x2680;
+				m.BaseOffset = m.TableOffset + Uw2BaseDelta;
+				m.ColorTableOffset = m.TableOffset + Uw2ColorDelta < exe.Length ? m.TableOffset + Uw2ColorDelta : -1;
+			}
 			for (int i = 0; i < 32; i++)
 			{
 				int rel = exe[m.TableOffset + i * 2] | exe[m.TableOffset + i * 2 + 1] << 8;
@@ -95,6 +115,14 @@ namespace UltimateEditor.Uw1
 		{
 			if (ColorTableOffset < 0) return new int[0];
 			var list = new List<int>();
+			if (uw2)
+			{
+				long e = ColorTableOffset + model * 5;
+				if (e + 4 >= exe.Length) return new int[0];
+				int count = exe[e] & 0x0F;
+				for (int k = 0; k < count && k < 3; k++) list.Add(exe[e + 1 + k]);
+				return list.ToArray();
+			}
 			long o = ColorTableOffset + model * 4;
 			for (int k = 0; k < 3 && o + k < exe.Length; k++)
 			{
@@ -143,7 +171,7 @@ namespace UltimateEditor.Uw1
 		int MapColor(int word, int[] colors)
 		{
 			if (colors.Length == 0) return -1;
-			int i = ((word - ColorBase) >> 1) % colors.Length;
+			int i = ((word - colorBase) >> 1) % colors.Length;
 			if (i < 0) i += colors.Length;
 			return colors[i];
 		}

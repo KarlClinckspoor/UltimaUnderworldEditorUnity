@@ -160,22 +160,44 @@ public class MapCreator : MonoBehaviour {
 		}
 	}
 
+	// Levels are built the first time they are shown (EnsureLevelBuilt): UW2 has 80 level
+	// slots, and 4096 tiles each would be over 300,000 GameObjects at load.
+	static MapCreator instance;
+	static GameObject[] levelParents;
+	static readonly HashSet<int> builtLevels = new HashSet<int>();
+
 	public GameObject[] CreateLevels()
 	{
 		if (LevelData == null)
 			return null;
 
+		instance = this;
+		builtLevels.Clear();
 		GameObject[] levelGOs = new GameObject[LevelData.Count];
 
 		for (int i = 1; i < LevelData.Count + 1; i++)
 		{
 			GameObject levelGO = new GameObject("Level_" + i);
 			levelGO.transform.SetParent(transform);
-			CreateLevel(i, levelGO.transform);
+			levelGO.SetActive(false);
 			levelGOs[i - 1] = levelGO;
 		}
+		levelParents = levelGOs;
+		EnsureLevelBuilt(1);
 		return levelGOs;
 	}
+
+	/// <summary>Builds a level's tiles and objects if that has not happened yet. Level is 1-based.</summary>
+	public static void EnsureLevelBuilt(int level)
+	{
+		if (instance == null || levelParents == null || level < 1 || level > levelParents.Length) return;
+		if (!builtLevels.Add(level)) return;
+		bool wasActive = levelParents[level - 1].activeSelf;
+		instance.CreateLevel(level, levelParents[level - 1].transform);
+		levelParents[level - 1].SetActive(wasActive);
+	}
+
+	public static bool IsLevelBuilt(int level) { return builtLevels.Contains(level); }
 
 	public GameObject SpawnStartGO()
 	{
@@ -1187,6 +1209,7 @@ public class MapCreator : MonoBehaviour {
 			ActivateMob((MobileObject)so, level);
 		tile.AddObjectToTile(so);
 		//so.MapPosition = tile.Position;
+		EnsureLevelBuilt(tile.Level);
 		GameObject obj = SpawnGO(so, MapTileToGO[tile]);
 		ObjectToGO[so] = obj;
 		return true;
@@ -1218,6 +1241,7 @@ public class MapCreator : MonoBehaviour {
 		if (!inventory)			//If is world object (not in a container or something)
 		{
 			tile.AddObjectToTile(obj);
+			EnsureLevelBuilt(tile.Level);
 			GameObject objGO = SpawnGO(obj, MapTileToGO[tile]);
 			ObjectToGO[obj] = objGO;
 		}

@@ -365,6 +365,7 @@ public class UIManager : MonoBehaviour {
 		Slider levelSlider = LevelSlider.GetComponent<Slider>();
 		levelSlider.maxValue = MapCreator.GetLevelCount();
 		levelSlider.handleRect.GetComponentInChildren<Text>().text = "1";
+		ShowLevelName();
 		ModePanel.SetActive(true);
 		levels[0].SetActive(true);
 		TopBarGO.transform.Find("Levels").GetComponent<Button>().interactable = true;
@@ -4780,6 +4781,7 @@ public class UIManager : MonoBehaviour {
 		TilePropertiesObject.SetActive(false);
 		levels[CurrentLevel - 1].SetActive(false);
 		CurrentLevel = (int)slider.value;
+		MapCreator.EnsureLevelBuilt(CurrentLevel);
 		levels[CurrentLevel - 1].SetActive(true);
 		if (CurrentLevel == 1)
 			StartGO.SetActive(true);
@@ -4788,7 +4790,31 @@ public class UIManager : MonoBehaviour {
 		changeTemplateFloorButton(MapCreator.GetFloorTextureFromIndex(0, CurrentLevel));
 		changeTemplateWallButton(MapCreator.GetWallTextureFromIndex(0, CurrentLevel));
 		slider.handleRect.GetComponentInChildren<Text>().text = CurrentLevel.ToString();
+		ShowLevelName();
 		updateSectorDropdown(CurrentLevel);
+	}
+
+	/// <summary>UW2: the world and level under the level slider ("Talorus 1 (33)"), and a note for empty slots.</summary>
+	public void ShowLevelName()
+	{
+		if (!LevelSlider) return;
+		var t = LevelSlider.transform.Find("LevelName");
+		Text label;
+		if (!t)
+		{
+			label = UltimateEditor.Uw1.UI.UiKit.Label(LevelSlider.transform, "", 12, FontStyle.Bold, Color.white, 260, 18);
+			label.name = "LevelName";
+			var rt = label.rectTransform;
+			rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
+			rt.pivot = new Vector2(0.5f, 1);
+			rt.anchoredPosition = new Vector2(0, -2);
+			label.alignment = TextAnchor.UpperCenter;
+		}
+		else label = t.GetComponent<Text>();
+		var ld = MapCreator.LevelData[CurrentLevel - 1];
+		label.text = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2
+			? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved")
+			: "";
 	}
 
 	public void CreateClearLevelsMenu()
@@ -4812,6 +4838,7 @@ public class UIManager : MonoBehaviour {
 			Slider levelSlider = LevelSlider.GetComponent<Slider>();
 			levelSlider.maxValue = MapCreator.GetLevelCount();
 			levelSlider.handleRect.GetComponentInChildren<Text>().text = "1";
+		ShowLevelName();
 			levelSlider.value = 1;
 
 			changeTemplateFloorButton();

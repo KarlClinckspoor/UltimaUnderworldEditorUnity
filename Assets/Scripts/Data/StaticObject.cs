@@ -844,6 +844,9 @@ public class StaticObject {
 
 	public static string GetName(int id)
 	{
+		// UW2 has its own items at many of the same ids (Extensions/Core/Games/Uw2Items.cs)
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && id < 512)
+			return UltimateEditor.Games.Uw2Items.Name(id);
 		switch (id)
 		{
 			case 0: return "Hand axe";
@@ -1326,6 +1329,8 @@ public class StaticObject {
 
 	public static ObjectType GetObjectType(int id)
 	{
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && id < 512)
+			return UltimateEditor.Games.Uw2Items.Type(id);
 		switch (id)
 		{
 			case 0: return ObjectType.Melee;	//"Hand axe";

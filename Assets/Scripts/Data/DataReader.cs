@@ -769,7 +769,7 @@ public static class DataReader {
 
 		fs.Close();
 		fs = new FileStream(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT", FileMode.Open);
-		int[] wallDat = new int[game.Kind == UltimateEditor.Games.GameKind.UW2 ? 512 : 256];
+		int[] wallDat = new int[256];
 		int[] florDat;
 		for (int i = 0; i < 256; i++)		
 			wallDat[i] = fs.ReadByte() + fs.ReadByte() * 256;
@@ -1636,6 +1636,21 @@ public static class DataReader {
 		for (int i = 0; i < 112; i++)		
 			od.UnknownData[i] = fs.ReadByte();		
 		fs.Close();
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			// UW2: CRIT\AS.AN, 64 entries of (page, palette); the art file of page p is CRpp.xx with
+			// pp in octal (uw2 critter/CRPAGES.C). No names are stored, so the files' names stand in.
+			string asan = FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/AS.AN";
+			byte[] b = File.ReadAllBytes(asan);
+			od.MonsterSpriteNames = new string[32];
+			for (int i = 0; i < 32; i++) od.MonsterSpriteNames[i] = "CR" + Convert.ToString(i, 8).PadLeft(2, '0');
+			for (int i = 0; i < 64; i++)
+			{
+				od.MonsterData[i].SpriteID = b[2 * i];
+				od.MonsterData[i].AuxPalette = b[2 * i + 1];
+			}
+			return od;
+		}
 		fs = new FileStream(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/ASSOC.ANM", FileMode.Open);
 		od.MonsterSpriteNames = new string[32];
 		for (int i = 0; i < 32; i++)
