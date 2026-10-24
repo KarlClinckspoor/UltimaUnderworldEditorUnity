@@ -14,7 +14,10 @@ namespace UltimateEditor.Uw1.UI
 	/// </summary>
 	public static class PlayerWindow
 	{
-		public static void Show()
+		public static void Show() { Show(GameSession.SaveFolder); }
+
+		/// <summary>Opens the window on the save in <paramref name="saveFolder"/> when given (the open save by default).</summary>
+		public static void Show(string saveFolder)
 		{
 			string root = Path.GetDirectoryName(ExtensionsMenu.DataFolder.TrimEnd('/', '\\'));
 			var saves = FindSaves(root);
@@ -24,9 +27,12 @@ namespace UltimateEditor.Uw1.UI
 			foreach (var s in saves) names.Add(Path.GetFileName(Path.GetDirectoryName(s)) + "/" + Path.GetFileName(s));
 			var tools = UiKit.Row(w.Toolbar, 22);
 			int current = 0;
-			UiKit.Dropdown(tools, names, 0, i => { current = i; Load(w, saves[current]); }, 200);
+			if (saveFolder != null)
+				for (int i = 0; i < saves.Count; i++)
+					if (string.Equals(Path.GetFullPath(Path.GetDirectoryName(saves[i])), Path.GetFullPath(saveFolder.TrimEnd('/', '\\')), StringComparison.OrdinalIgnoreCase)) current = i;
+			UiKit.Dropdown(tools, names, current, i => { current = i; Load(w, saves[current]); }, 200);
 			UiKit.Paragraph(w.Toolbar, "Saving keeps a one-time .BKP of the file. Vitality is written to the record and to the player object the game actually keeps. Derived values (maximum weight, armour) are recomputed by the game.", 10);
-			Load(w, saves[0]);
+			Load(w, saves[current]);
 		}
 
 		static List<string> FindSaves(string root)
@@ -52,7 +58,7 @@ namespace UltimateEditor.Uw1.UI
 			if (kind == null) { w.Status.text = Path.GetFileName(path) + ": " + bytes.Length + " bytes fits neither game's save layout."; return; }
 			var p = PlayerDat.Parse(bytes, kind.Value);
 			w.Status.text = string.Format("{0} save; {1} objects carried; saved on level {2} at ({3}, {4}).", kind.Value == GameKind.UW2 ? "UW2" : "UW1",
-				p.SavedObjects, LevArk.Game.Kind == kind.Value ? GameProfile.For(kind.Value).LevelName(p.SavedLevel) : p.SavedLevel.ToString(), p.SavedX >> 3, p.SavedY >> 3);
+				p.SavedObjects, LevArk.Game.Kind == kind.Value ? GameProfile.For(kind.Value).LevelName(p.SavedLevel) : p.SavedLevel.ToString(), p.TileX, p.TileY);
 
 			var top = UiKit.Row(w.Content, 22);
 			UiKit.Button(top, "Save PLAYER.DAT", () =>
@@ -86,6 +92,7 @@ namespace UltimateEditor.Uw1.UI
 					p.ExperienceTenths = (long)Math.Round(v * 10);
 				else w.Status.text = "Experience is a number (stored in tenths).";
 			}, 100);
+			Position(w, p, kind.Value);
 			UiKit.Label(w.Content, "Skills", 12, FontStyle.Bold);
 			for (int i = 0; i < 20; i += 2)
 			{
@@ -98,6 +105,47 @@ namespace UltimateEditor.Uw1.UI
 					UiKit.Label(r, "", 11, FontStyle.Normal, null, 40);
 				}
 			}
+		}
+
+		/// <summary>Where the save puts the player: level, square and heading (PlayerDat.SetPosition).</summary>
+		static void Position(Window w, PlayerDat p, GameKind kind)
+		{
+			UiKit.Label(w.Content, "Position", 12, FontStyle.Bold);
+			int level = p.SavedLevel, x = p.TileX, y = p.TileY, heading = p.Heading;
+			var row = UiKit.Row(w.Content, 20);
+			UiKit.Label(row, "Level", 11, FontStyle.Normal, null, 40);
+			var lv = UiKit.Input(row, level.ToString(), s => int.TryParse(s, out level), 40);
+			UiKit.Label(row, "Square x, y", 11, FontStyle.Normal, null, 70);
+			var xi = UiKit.Input(row, x.ToString(), s => int.TryParse(s, out x), 36);
+			var yi = UiKit.Input(row, y.ToString(), s => int.TryParse(s, out y), 36);
+			UiKit.Label(row, "Heading (0 N, 2 E, 4 S, 6 W)", 11, FontStyle.Normal, null, 170);
+			var hi = UiKit.Input(row, heading.ToString(), s => int.TryParse(s, out heading), 30);
+			var row2 = UiKit.Row(w.Content, 20);
+			UiKit.Button(row2, "Use the selected tile", () =>
+			{
+				var t = TilePanel.LastTile;
+				if (t == null) { w.Status.text = "Select a tile on the map first (tile mode)."; return; }
+				level = TilePanel.LastTileLevel; x = t.Position.x; y = t.Position.y;
+				lv.text = level.ToString(); xi.text = x.ToString(); yi.text = y.ToString();
+			}, 150);
+			UiKit.Button(row2, "Set position", () =>
+			{
+				int slots = GameProfile.For(kind).LevelSlots;
+				if (level < 1 || level > slots || x < 1 || x > 62 || y < 1 || y > 62 || heading < 0 || heading > 7)
+				{ w.Status.text = "Level 1-" + slots + ", squares 1-62, heading 0-7."; return; }
+				// the floor height comes from the level as the editor has it loaded
+				int h = 0; bool slope = false; string note = "";
+				var lev = MapCreator.LevelData != null && level <= MapCreator.LevelData.Count ? MapCreator.LevelData[level - 1] : null;
+				if (lev != null && lev.Present && LevArk.Game.Kind == kind)
+				{
+					var t = lev.MapTiles[x, y];
+					if (t.TileType == TileType.Solid) { w.Status.text = "That square is solid rock."; return; }
+					h = t.FloorHeight; slope = (int)t.TileType >= 6;
+				}
+				else note = " (level not loaded here, so z is set for floor height 0: open this save to place the player at the right height)";
+				p.SetPosition(level, x, y, h, slope, heading);
+				w.Status.text = string.Format("Position set to {0} ({1}, {2}), heading {3}{4}. Save PLAYER.DAT to keep it.", GameProfile.For(kind).LevelName(level), x, y, heading, note);
+			}, 100);
 		}
 
 		static void Number(Window w, string label, Func<int> get, Action<int> set)

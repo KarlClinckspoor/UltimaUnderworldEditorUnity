@@ -193,7 +193,8 @@ public class FileExplorer : ResizableWindow {
 			return;
 		}
 		string path = currentPath + "/" + file;
-		DataReader.FilePath = path;
+		// a save's LEV.ARK (SAVEn) is edited with DATA for the other files (Data/GameSession.cs)
+		DataReader.FilePath = GameSession.Choose(path);
 		DataWriter.SavePathToFile(path);		
 		//UIManager.SetMenu(MainPanel);
 	}

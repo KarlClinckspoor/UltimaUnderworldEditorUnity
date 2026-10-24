@@ -48,7 +48,8 @@ public static class DataWriter {
 
 	public static void SaveLevelData(List<LevelData> levels)
 	{
-		BackupData("LEV.ARK");
+		// the LEV.ARK being edited: DATA's or a save's (Data/GameSession.cs)
+		GameSession.BackupOnce(LevArk.Path);
 		// Data/LevArk.cs: patches each level's original block and writes only the blocks that changed.
 		LevArk.Save(levels);
 	}

@@ -20,8 +20,14 @@ public class TilePanel : MonoBehaviour {
 
 	public GameObject ObjectList;
 
+	/// <summary>The tile last shown in this panel and its level (Tools windows read it).</summary>
+	public static MapTile LastTile;
+	public static int LastTileLevel;
+
 	public void SetTile(MapTile tile, int level)
 	{
+		LastTile = tile;
+		LastTileLevel = level;
 		Position.text = "[X : " + tile.Position.x + ", Y : " + tile.Position.y + "]";
 		Type.text = "Type : " + tile.TileType;
 		Height.text = "Height : " + tile.FloorHeight;

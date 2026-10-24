@@ -143,9 +143,49 @@ namespace UltimateEditor.Games
 			set { Record[0x4E] = (byte)value; Record[0x4F] = (byte)(value >> 8); Record[0x50] = (byte)(value >> 16); Record[0x51] = (byte)(value >> 24); }
 		}
 		public int SkillPoints { get { return Record[0x52]; } set { Record[0x52] = B(value); } }
+		// Position (record 0x54-0x5D, save_player_data): PN.x and PN.y in 1/256 of a square,
+		// so the square is the high byte (player_setup puts the player at square * 256 + 0x80);
+		// PN.z with 0x40 a floor step (hgt_val); PlayerFacing, a 16-bit angle whose top 3 bits
+		// are the heading (0 north); PlayerLevel, 1-based.
 		public int SavedLevel { get { return (short)(Record[0x5C] | Record[0x5D] << 8); } }
 		public int SavedX { get { return (short)(Record[0x54] | Record[0x55] << 8); } }
 		public int SavedY { get { return (short)(Record[0x56] | Record[0x57] << 8); } }
+		public int SavedZ { get { return (short)(Record[0x58] | Record[0x59] << 8); } }
+		public int SavedFacing { get { return (ushort)(Record[0x5A] | Record[0x5B] << 8); } }
+		public int TileX { get { return (SavedX >> 8) & 0x3F; } }
+		public int TileY { get { return (SavedY >> 8) & 0x3F; } }
+		public int Heading { get { return (SavedFacing >> 13) & 7; } }
+
+		/// <summary>hgt_val (map/MAP.C): a tile height's z. Heights 14 and 15 give 0 in the game's table.</summary>
+		public static readonly int[] HeightZ = { 0x000, 0x040, 0x080, 0x0C0, 0x100, 0x140, 0x180, 0x1C0, 0x200, 0x240, 0x280, 0x2C0, 0x300, 0x340, 0, 0, 0x400 };
+
+		/// <summary>
+		/// Moves the player, as player_setup places a new player: the middle of square (x, y)
+		/// of level, at the tile's floor (plus 0x20 on a slope), facing heading (0-7, 0 north).
+		/// The workspace's player object gets the same square, height and heading, so the two
+		/// copies the game reads agree.
+		/// </summary>
+		public void SetPosition(int level, int x, int y, int tileHeight, bool slope, int heading)
+		{
+			if (x < 0 || x > 63 || y < 0 || y > 63) throw new ArgumentOutOfRangeException("x/y", "squares are 0-63");
+			int z = HeightZ[Math.Max(0, Math.Min(16, tileHeight))] + (slope ? 0x20 : 0);
+			int fx = (x << 8) + 0x80, fy = (y << 8) + 0x80, facing = (heading & 7) << 13;
+			W(0x54, fx); W(0x56, fy); W(0x58, z); W(0x5A, facing); W(0x5C, level);
+			// the workspace player object: pos word at +2 (z 0-6 = PN.z >> 3, heading 7-9),
+			// home word at +0x16 (y bits 4-9, x bits 10-15); Rest[0..1] is the count word
+			const int obj = 2;
+			if (Rest.Length >= obj + 0x18)
+			{
+				int pos = Rest[obj + 2] | Rest[obj + 3] << 8;
+				pos = (pos & ~0x3FF) | ((z >> 3) & 0x7F) | ((heading & 7) << 7);
+				Rest[obj + 2] = (byte)pos; Rest[obj + 3] = (byte)(pos >> 8);
+				int home = Rest[obj + 0x16] | Rest[obj + 0x17] << 8;
+				home = (home & 0xF) | ((y & 0x3F) << 4) | ((x & 0x3F) << 10);
+				Rest[obj + 0x16] = (byte)home; Rest[obj + 0x17] = (byte)(home >> 8);
+			}
+		}
+
+		void W(int at, int v) { Record[at] = (byte)v; Record[at + 1] = (byte)(v >> 8); }
 
 		/// <summary>
 		/// Current vitality. The game keeps the workspace player object's hp byte (it overwrites

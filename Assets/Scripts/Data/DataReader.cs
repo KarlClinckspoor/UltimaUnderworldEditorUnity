@@ -97,7 +97,7 @@ public static class DataReader {
 			return null;
 		// Both games go through the archive layer now (Data/LevArk.cs): UW2's archive format and
 		// compression, and a byte-exact re-save of unedited levels in both.
-		return LevArk.Load(FilePath);
+		return LevArk.Load(GameSession.LevelFile(FilePath));
 	}
 
 	/// <summary>The editor's original UW1-only loader, kept for comparison.</summary>
@@ -649,6 +649,7 @@ public static class DataReader {
 		// The game decides the texture files (Extensions/Core/Games/GameProfile.cs).
 		var game = UltimateEditor.Games.GameProfile.For(LevArk.DetectFor(FilePath));
 		LevArk.Game = game;
+		UltimateEditor.Games.StartPosition.Load(FileExplorer.GetUpperPath(FilePath), game.Kind);
 		TextureContainer floors, walls;
 		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{

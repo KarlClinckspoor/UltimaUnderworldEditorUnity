@@ -22,11 +22,13 @@ namespace UltimateEditor.Uw1.UI
 		public static void Show()
 		{
 			if (LevArk.Game.Kind != GameKind.UW2 && GameProfile.Detect(ExtensionsMenu.DataFolder) != GameKind.UW2) throw new InvalidOperationException("SCD.ARK belongs to Ultima Underworld II; the loaded game is " + LevArk.Game.Name);
-			string path = ExtensionsMenu.FindDataFile("SCD.ARK");
+			// the open save's schedules when a save is open (Data/GameSession.cs), else DATA's
+			string path = GameSession.SaveFile("SCD.ARK");
+			if (path == null || !File.Exists(path)) path = ExtensionsMenu.FindDataFile("SCD.ARK");
 			if (path == null) throw new FileNotFoundException("SCD.ARK is not in the DATA folder");
 			var arc = ScdArk.Open(path);
 			var blocks = ScdArk.Read(arc);
-			var w = UiKit.Window("Schedules (SCD.ARK)", 1040, 600);
+			var w = UiKit.Window("Schedules (" + (GameSession.IsSave && path.StartsWith(GameSession.SaveFolder) ? GameSession.SaveName + "\\" : "DATA\\") + "SCD.ARK)", 1040, 600);
 
 			var tools = UiKit.Row(w.Toolbar, 22);
 			var names = new List<string>();
@@ -48,7 +50,8 @@ namespace UltimateEditor.Uw1.UI
 				if (problems.Length > 0) { w.Status.text = "Not saved:" + problems + " Use Sort by time."; return; }
 				var written = ScdArk.Write(arc, blocks);
 				if (written.Count == 0) { w.Status.text = "Nothing changed."; return; }
-				ExtensionsMenu.WriteDataFile(Path.GetFileName(path), arc.ToArray());
+				GameSession.BackupOnce(path);
+				File.WriteAllBytes(path, arc.ToArray());
 				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + ".";
 				// The level clocks' "next row" indexes are not moved with the rows (the game's
 				// Sched_InsertLong and Sched_Delete do). DATA's file has every clock at 0.

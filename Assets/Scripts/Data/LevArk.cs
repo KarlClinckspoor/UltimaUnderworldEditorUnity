@@ -198,7 +198,7 @@ public static class LevArk
 	/// changes), keeping the editor's one-time .BKP.</summary>
 	public static void SaveArchiveNow()
 	{
-		DataWriter.BackupData(System.IO.Path.GetFileName(Path));
+		GameSession.BackupOnce(Path);
 		Archive.Save(Path);
 	}
 

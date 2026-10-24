@@ -184,7 +184,7 @@ public class UIManager : MonoBehaviour {
 		CurrentLevel = 1;
 		string path = DataReader.GetPathFromFile();
 		if (!string.IsNullOrEmpty(path) && DataReader.ValidateFilePath(path) && DataReader.ValidateFile(path))
-			DataReader.FilePath = path;
+			DataReader.FilePath = GameSession.Choose(path);
 		else
 			DataReader.FilePath = Application.dataPath;
 		SetCursorMode(CursorType.Normal);
@@ -4833,7 +4833,8 @@ public class UIManager : MonoBehaviour {
 		else label = t.GetComponent<Text>();
 		var ld = MapCreator.LevelData[CurrentLevel - 1];
 		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
-		label.text = uw2 ? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved") : "";
+		label.text = (GameSession.IsSave ? "[" + GameSession.SaveName + "] " : "") +
+			(uw2 ? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved") : "");
 		// An empty UW2 slot is not written; this button makes it a level that is
 		var bt = LevelSlider.transform.Find("UseSlot");
 		Button use = bt ? bt.GetComponent<Button>() : null;

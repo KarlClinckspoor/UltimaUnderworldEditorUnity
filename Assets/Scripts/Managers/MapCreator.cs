@@ -48,7 +48,12 @@ public class MapCreator : MonoBehaviour {
 	/// MAINMENU.C's player_setup call after character creation.</summary>
 	public static Vector2Int GameStart
 	{
-		get { return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? new Vector2Int(0x13, 0x30) : new Vector2Int(32, 2); }
+		get
+		{
+			// read from the executable at load when found (it may have been patched: Games/StartPosition.cs)
+			if (UltimateEditor.Games.StartPosition.ExeX.HasValue) return new Vector2Int(UltimateEditor.Games.StartPosition.ExeX.Value, UltimateEditor.Games.StartPosition.ExeY.Value);
+			return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? new Vector2Int(0x13, 0x30) : new Vector2Int(32, 2);
+		}
 	}
 
 	public bool IsInitialized { get; private set; }
