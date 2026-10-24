@@ -466,6 +466,9 @@ public class StaticObject {
 		}
 		else if(IsPotion() || IsScroll() || IsSpell() || IsDrink())
 		{
+			// UW2 (LOOK.C do_of, OBJUSE.C decode_obj_spell): the spell is 0x100 + e for all 64
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+				return e >= 0 && e < 64 ? e + 256 : -1;
 			if (e < 53) //spell effects
 				return e + 256;
 			else if (e >= 67 && e < 70)	//Maze, frog, halluc
@@ -484,6 +487,12 @@ public class StaticObject {
 	public static Dictionary<string, int> GetPotionScrollEnchants()
 	{
 		Dictionary<string, int> dict = new Dictionary<string, int>();
+		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			for (int i = 256; i < 320; i++)
+				dict[GetEnchantmentName(i)] = i - 256;
+			return dict;
+		}
 		for (int i = 256; i < 309; i++)
 			dict[GetEnchantmentName(i)] = i - 256;
 		for (int i = 211; i < 214; i++)
@@ -1843,8 +1852,13 @@ public class StaticObject {
 			foreach (var b in MapCreator.StringData.Blocks)
 				if (b.BlockNumber == 6)
 				{
-					if (id >= 0 && id < b.Strings.Count && !string.IsNullOrEmpty(b.Strings[id])) return b.Strings[id];
-					return "Spell " + id;
+					if (id < 0 || id >= b.Strings.Count || string.IsNullOrEmpty(b.Strings[id])) return "Spell " + id;
+					// block 6 repeats names (Lesser Heal four times, Hallucination twice); the
+					// enchantment lists are keyed by name, so repeated ones carry their number
+					string n = b.Strings[id];
+					int count = 0;
+					foreach (var other in b.Strings) if (other == n) count++;
+					return count > 1 ? n + " (" + id + ")" : n;
 				}
 
 		switch (id)

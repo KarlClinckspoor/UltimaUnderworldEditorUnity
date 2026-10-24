@@ -446,7 +446,8 @@ public static class ConversationConverter {
 	private static int MapFunctionId(int uw1Id)
 	{
 		var table = MapCreator.ConversationData != null ? MapCreator.ConversationData.DefaultFunctions : null;
-		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW2 || table == null) return uw1Id;
+		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW2) return uw1Id;
+		if (table == null) throw new ConverterException("No UW2 import table: CNV.ARK has no script to take it from", currentNode);
 		string name = ConversationFunction.GetFuncName(uw1Id);
 		foreach (var f in table)
 			if (f.Type == ConversationFunction.Function && f.Name == name) return f.Id_Adress;

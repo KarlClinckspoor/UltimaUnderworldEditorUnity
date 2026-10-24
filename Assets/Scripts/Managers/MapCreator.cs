@@ -1411,9 +1411,18 @@ public class MapCreator : MonoBehaviour {
 		// event/TRIGGER.C: a change terrain trap's fine X/Y are the size of the area it
 		// changes (x..x+fineX); its create menu has already set them, so keep them.
 		// UW2's traps read fine X/Y as data (set and check variable, teleport facing, pit
-		// height, inventory "worn", oscillator, proximity), so they keep theirs.
-		bool uw2Trap = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && (trigger.IsTrap() || trigger.IsDoorTrap());
-		if (trigger.ObjectID != 0x185 && !uw2Trap)
+		// height, inventory "worn", oscillator, proximity) and its pressure triggers as the
+		// plate's state (check_pplate): a new one starts at 0, the neutral value, and is set
+		// up in the properties panel. (They are created plain, at the parent's position.)
+		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+		int id = trigger.ObjectID;
+		bool uw2Data = uw2 && (trigger.IsTrap() || trigger.IsDoorTrap() || id == 0x1A4 || id == 0x1A5 || id == 0x1B4 || id == 0x1B5);
+		if (uw2Data)
+		{
+			trigger.XPos = 0;
+			trigger.YPos = 0;
+		}
+		else if (id != 0x185)
 		{
 			trigger.XPos = 3;
 			trigger.YPos = 3;

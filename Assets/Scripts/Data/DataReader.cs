@@ -1405,7 +1405,7 @@ public static class DataReader {
 			int shift = Math.Abs(hunger - 1);
 			if (best == null || shift < bestShift || (shift == bestShift && c.Functions.Length > best.Functions.Length)) { best = c; bestShift = shift; }
 		}
-		if (best == null) return ReadDefaultConversationFunctions();
+		if (best == null) return null;   // no UW2 script to copy from; the compiler refuses (MapFunctionId)
 		int delta = 0;
 		foreach (var f in best.Functions) if (f.Name == "play_hunger") delta = 1 - f.Id_Adress;
 		var r = new ConversationFunction[best.Functions.Length];

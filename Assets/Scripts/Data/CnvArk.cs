@@ -75,6 +75,7 @@ public static class CnvArk
 			if (old != null && Same(old, now)) continue;
 			archive.Write(b, now);
 			LastWritten.Add(b);
+			Loaded.Add(b);   // a block written now is the editor's, so a later delete removes it
 		}
 		return archive.ToArray();
 	}

@@ -50,6 +50,11 @@ namespace UltimateEditor.Uw1.UI
 				if (written.Count == 0) { w.Status.text = "Nothing changed."; return; }
 				ExtensionsMenu.WriteDataFile(Path.GetFileName(path), arc.ToArray());
 				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + ".";
+				// The level clocks' "next row" indexes are not moved with the rows (the game's
+				// Sched_InsertLong and Sched_Delete do). DATA's file has every clock at 0.
+				foreach (int b in written)
+					foreach (var c in blocks[b].Clocks)
+						if (c != 0) { w.Status.text += " Block " + b + " has running level clocks (a saved game's file?); their next-row indexes were not adjusted."; break; }
 			}, 110, 22, UiKit.AccentColor);
 			UiKit.Button(tools, "Reload", () => { w.Close(); Show(); }, 70, 22);
 			UiKit.Paragraph(w.Toolbar,
