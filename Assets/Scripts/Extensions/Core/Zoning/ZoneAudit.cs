@@ -290,7 +290,11 @@ namespace UltimateEditor.Uw1.Zoning
 					}
 
 					string token = null;
-					if (id >= FirstKey && id <= LastKey && id != Lockpick) token = "key:" + o.Owner;
+					// UW2: 0x100 is the curious implement and keys start at 0x102; the talismans and
+					// notable items below are UW1's
+					bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+					if (id >= (uw2 ? 0x102 : FirstKey) && id <= LastKey && id != Lockpick) token = "key:" + o.Owner;
+					else if (uw2) token = null;
 					else if (TalismanNames.ContainsKey(id) || ((comObjByte7(id) >> 1) & 0xF) == 10)
 					{
 						string tn;

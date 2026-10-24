@@ -13,6 +13,8 @@ namespace UltimateEditor.Uw1.UI
 	/// </summary>
 	public static class ZoneGraphWindow
 	{
+		const int Unpainted = 10000;
+
 		static Window open;
 		const float ColumnWidth = 150, RowHeight = 26, NodeWidth = 130, NodeHeight = 20, Margin = 20;
 
@@ -57,7 +59,7 @@ namespace UltimateEditor.Uw1.UI
 			{
 				if (z.Id <= ZoneSet.Unassigned) continue;
 				var levels = zs.LevelsOf(z.Id);
-				int first = levels.Count > 0 ? levels[0] : 10;   // unpainted zones in a last column
+				int first = levels.Count > 0 ? levels[0] : Unpainted;   // unpainted zones in a last column
 				levelOf[z.Id] = first;
 				List<Zone> list;
 				if (!byLevel.TryGetValue(first, out list)) byLevel[first] = list = new List<Zone>();
@@ -65,7 +67,11 @@ namespace UltimateEditor.Uw1.UI
 			}
 			int maxRows = 1;
 			foreach (var l in byLevel.Values) maxRows = Math.Max(maxRows, l.Count);
-			float width = Margin * 2 + 10 * ColumnWidth, height = Margin * 2 + 30 + maxRows * RowHeight;
+			// one column per level that has zones (UW1 9 levels, UW2 up to 80 slots), then the unpainted
+			var columns = new List<int>(byLevel.Keys);
+			columns.Sort();
+			if (!columns.Contains(Unpainted)) columns.Add(Unpainted);
+			float width = Margin * 2 + columns.Count * ColumnWidth, height = Margin * 2 + 30 + maxRows * RowHeight;
 
 			// the scrolled content gets a fixed-size canvas; make the scroll rect go both ways
 			var scroll = w.Content.parent.parent.GetComponent<ScrollRect>();
@@ -82,10 +88,11 @@ namespace UltimateEditor.Uw1.UI
 			w.Content.sizeDelta = new Vector2(width + 16, w.Content.sizeDelta.y);
 
 			var pos = new Dictionary<int, Vector2>();
-			for (int col = 1; col <= 10; col++)
+			for (int c = 0; c < columns.Count; c++)
 			{
-				float x = Margin + (col - 1) * ColumnWidth;
-				var title = UiKit.Label(canvas, col <= 9 ? "Level " + col : "Not painted", 12, FontStyle.Bold, UiKit.DimTextColor, NodeWidth);
+				int col = columns[c];
+				float x = Margin + c * ColumnWidth;
+				var title = UiKit.Label(canvas, col != Unpainted ? LevArk.Game.LevelName(col) : "Not painted", 12, FontStyle.Bold, UiKit.DimTextColor, NodeWidth);
 				Place(title.rectTransform, x, -Margin, NodeWidth, 18);
 				List<Zone> list;
 				if (!byLevel.TryGetValue(col, out list)) continue;
