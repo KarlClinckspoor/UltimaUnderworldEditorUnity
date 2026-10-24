@@ -1267,7 +1267,9 @@ public class MapCreator : MonoBehaviour {
 		}
 		LevelData[level - 1].Objects[index] = obj;
 		obj.CurrentAdress = index;
-		if (obj.IsMonster())	//Activate mob 
+		// only critters on the map are on the active list (the game's active_critter; a template
+		// inside a create object trap or a container is not)
+		if (obj.IsMonster() && !inventory)
 			ActivateMob((MobileObject)obj, level);
 		if (!inventory)			//If is world object (not in a container or something)
 		{
@@ -1296,7 +1298,9 @@ public class MapCreator : MonoBehaviour {
 		if (so is StaticObject)
 		{
 			listStart = LevelData[level - 1].StaticListStart + 254;
-			if (listStart == 768)
+			// the static stack holds 768 entries (FreeObjects[254..1021]); this compared with 768,
+			// which refused to remove anything on a level with more than 514 free statics
+			if (listStart >= 254 + 767)
 				return false;
 		}
 		if (so is MobileObject)
@@ -1398,6 +1402,8 @@ public class MapCreator : MonoBehaviour {
 		if (!added)
 			return false;
 		oldTile.RemoveObjectFromTile(so);
+		var mo = so as MobileObject;
+		if (mo != null && mo.ActiveMob) DeactivateMob(mo, so.CurrentLevel);
 		GameObject toDestroy = ObjectToGO[so];
 		ObjectToGO.Remove(so);
 		Destroy(toDestroy);
@@ -1476,8 +1482,24 @@ public class MapCreator : MonoBehaviour {
 
 	public static void DeactivateMob(MobileObject mo, int level)
 	{
-		LevelData[level - 1].MobList[mo.MobListIndex] = LevelData[level - 1].MobList[LevelData[level - 1].ActiveMobs];
-		LevelData[level - 1].ActiveMobs--;
+		// free_critter (obj/OBJECTS.C): the last entry moves into the hole. This used to copy the
+		// entry past the end and left the moved critter's index stale.
+		var ld = LevelData[level - 1];
+		int idx = mo.MobListIndex;
+		if (idx < 0 || idx >= ld.ActiveMobs || ld.MobList[idx] != mo.CurrentAdress)
+			idx = Array.IndexOf(ld.MobList, mo.CurrentAdress, 0, Math.Max(0, ld.ActiveMobs));
+		if (idx >= 0)
+		{
+			int last = ld.ActiveMobs - 1;
+			ld.MobList[idx] = ld.MobList[last];
+			ld.MobList[last] = 0;
+			ld.ActiveMobs--;
+			if (idx < ld.ActiveMobs)
+			{
+				var moved = ld.Objects[ld.MobList[idx]] as MobileObject;
+				if (moved != null) moved.MobListIndex = idx;
+			}
+		}
 
 		mo.ActiveMob = false;
 		mo.MobListIndex = -1;

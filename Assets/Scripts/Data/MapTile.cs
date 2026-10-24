@@ -134,6 +134,11 @@ public class MapTile {
 		}
 		so.MapPosition = Position;
 		so.Tile = this;
+		// a critter put on the map (from a container or a trap's template) joins the active
+		// list, as the game keeps every mobile on a tile list there
+		var mo = so as MobileObject;
+		if (mo != null && !mo.ActiveMob && MapCreator.LevelData != null && Level >= 1 && Level <= MapCreator.LevelData.Count)
+			MapCreator.ActivateMob(mo, Level);
 		return true;
 	}
 	public bool AddObjectToTile(StaticObject so, int tx, int ty)

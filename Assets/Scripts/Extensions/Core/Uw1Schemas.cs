@@ -102,7 +102,7 @@ namespace UltimateEditor.Uw1
 			F("Light", 0, 8, 2, "Tile light flag (bit 8 tested when the player moves); bit 9 unknown.", "include/map.h; motion/PHYSICS.C"),
 			F("Floor texture", 0, 10, 4, "Index into the level's 10 floor textures.", "include/map.h"),
 			F("No magic", 0, 14, 1, "Magic does not work here.", "include/map.h anti_magic_p"),
-			F("Door", 0, 15, 1, "A door stands here.", "include/map.h"),
+			F("Door", 0, 15, 1, "Keeps an open door open: DoClosingDoors (after sleeping, some events) never closes a door on this tile. Many shipped door tiles have it clear; it does not mean a door is here.", "event/TRIGGER.C DoClosingDoors"),
 			F("Wall texture", 2, 0, 6, "Index into the level's 48 wall textures.", "include/map.h TILE_WALL"),
 			F("First object", 2, 6, 10, "First object in the tile.", "include/map.h"));
 

@@ -117,6 +117,38 @@ namespace UltimateEditor.Games
 			return sb.ToString();
 		}
 
+		/// <summary>For each index: how often it is on a free stack and how often it is reached from the
+		/// tile lists (the two halves of Obj_ListOkay). The player (1) is not on a tile list.</summary>
+		public void Counts(out int[] free, out int[] reached)
+		{
+			free = new int[Objects];
+			reached = new int[Objects];
+			for (int k = 0; k <= MobileTop && k < 254; k++) { int i = MobileFree(k); if (i < Objects) free[i]++; }
+			for (int k = 0; k <= StaticTop && k < 768; k++) { int i = StaticFree(k); if (i < Objects) free[i]++; }
+			int m = 0, s = 0, t = 0;
+			for (int y = 0; y < 64; y++)
+				for (int x = 0; x < 64; x++)
+				{
+					int head = TileFirstObject(x, y);
+					if (head > 0) Walk(head, reached, ref m, ref s, ref t, 0);
+				}
+		}
+
+		/// <summary>Mobile objects lying directly on a tile list (not inside a container or a trap's
+		/// link): these are the ones the game keeps on the active list (measured: every shipped
+		/// level of both games, 595 and 669 of them, none nested).</summary>
+		public HashSet<int> MobilesOnTiles()
+		{
+			var set = new HashSet<int>();
+			for (int y = 0; y < 64; y++)
+				for (int x = 0; x < 64; x++)
+				{
+					int i = TileFirstObject(x, y), guard = 0;
+					while (i > 0 && i < Objects && guard++ < 1100) { if (i < Mobiles) set.Add(i); i = Next(i); }
+				}
+			return set;
+		}
+
 		void Walk(int i, int[] counts, ref int mob, ref int stat, ref int twice, int depth)
 		{
 			int guard = 0;

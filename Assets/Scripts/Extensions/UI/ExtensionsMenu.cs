@@ -93,6 +93,7 @@ namespace UltimateEditor.Uw1.UI
 			fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 			Entry(root, "Object fields (selected object)...", () => FieldInspectorWindow.Show(Selected), true);
 			Entry(root, "Find items in all levels...", () => ItemFinderWindow.Show(), true);
+			Entry(root, "Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true);
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
 			Entry(root, "Saved games (slots, names, conversation variables)...", () => SaveSlotsWindow.Show(), false);

@@ -160,6 +160,12 @@ public static class LevArk
 		Archive.Save(Path);
 	}
 
+	/// <summary>The level block a save would write for this level now (for checks; nothing is written).</summary>
+	public static byte[] PreviewBlock(LevelData ld)
+	{
+		return BuildLevelBlock(ld, ld.Level);
+	}
+
 	/// <summary>Runs at the start of Save, so a tool window can put pending changes into the archive.</summary>
 	public static event Action BeforeSave;
 

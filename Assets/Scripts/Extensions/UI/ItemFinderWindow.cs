@@ -27,7 +27,7 @@ namespace UltimateEditor.Uw1.UI
 			foreach (var c in Uw1ItemCategories.Choices) cats.Add(c.Value);
 			UiKit.Dropdown(r1, cats, 0, i => { filter.Categories = i == 0 ? ItemCategory.None : Uw1ItemCategories.Choices[i - 1].Key; Run(w, ui, filter); }, 220);
 			var levels = new List<string> { "All levels" };
-			for (int i = 1; i <= MapCreator.LevelData.Count; i++) levels.Add("Level " + i);
+			for (int i = 1; i <= MapCreator.LevelData.Count; i++) levels.Add(LevArk.Game.LevelName(i));
 			UiKit.Dropdown(r1, levels, 0, i => { filter.Level = i; Run(w, ui, filter); }, 100);
 
 			var r2 = UiKit.Row(w.Toolbar, 22);
