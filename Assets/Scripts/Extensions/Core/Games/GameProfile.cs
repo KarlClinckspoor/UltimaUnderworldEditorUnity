@@ -68,6 +68,8 @@ namespace UltimateEditor.Games
 		/// <summary>UW2's worlds: (level - 1) / 8 (Britannia, Prison Tower, Killorn Keep, Ice Caverns, Talorus, Scintillus Academy, Tomb of Praecor Loth, Pits of Carnage, Ethereal Void).</summary>
 		public static readonly string[] Uw2Worlds = { "Britannia", "Prison Tower", "Killorn Keep", "Ice Caverns", "Talorus", "Scintillus Academy", "Tomb of Praecor Loth", "Pits of Carnage", "Ethereal Void", "(unused)" };
 
+		public string WorldName(int world) { return world >= 0 && world < Uw2Worlds.Length ? Uw2Worlds[world] : "world " + world; }
+
 		public string LevelName(int level)
 		{
 			if (Kind == GameKind.UW1) return "Level " + level;
