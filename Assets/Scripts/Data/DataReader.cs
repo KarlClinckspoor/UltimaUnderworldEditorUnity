@@ -818,15 +818,19 @@ public static class DataReader {
 		FileStream fs = new FileStream(filePath, FileMode.Open);
 
 		List<int[]> auxpals = new List<int[]>();
-		for (int p = 0; p < 31; p++)
+		// 32 palettes: the game reads 0x200 bytes (reference gfx/LOADGR.C:428; the file is 513
+		// bytes in both games). UW2's objects use palette 31.
+		for (int p = 0; p < 32; p++)
 		{
 			int[] auxpal = new int[16];
 			for (int i = 0; i < 16; i++)
 			{
-				auxpal[i] = fs.ReadByte();
+				int b = fs.ReadByte();
+				auxpal[i] = b < 0 ? 0 : b;
 			}
 			auxpals.Add(auxpal);
 		}
+		fs.Close();
 		return auxpals;
 	}
 
