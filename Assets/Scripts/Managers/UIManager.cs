@@ -502,8 +502,10 @@ public class UIManager : MonoBehaviour {
 			if (!listObject)
 				continue;
 			listObject.transform.SetParent(list.Content.transform);
+			listObject.AddComponent<UltimateEditor.Uw1.UI.ObjectListEntry>().Object = so;
 			totalCount++;
 		}
+		UltimateEditor.Uw1.UI.ObjectListFilter.Attach(list, true);
 		list.Information.text = "Object count : " + totalCount + ", active mobs : " + MapCreator.LevelData[CurrentLevel - 1].ActiveMobs + "\n";
 		list.Information.text += "Static counter : " + MapCreator.LevelData[CurrentLevel - 1].StaticListStart + ", mobile counter : " + MapCreator.LevelData[CurrentLevel - 1].MobileListStart;
 		Transform searchT = list.transform.Find("Search");
@@ -1917,6 +1919,13 @@ public class UIManager : MonoBehaviour {
 			InputField inputField = searchT.GetComponent<InputField>();
 			Action<string> search = (str) =>
 			{
+				// Lists with the category filter combine it with the name search.
+				var filter = list.GetComponent<UltimateEditor.Uw1.UI.ObjectListFilter>();
+				if (filter)
+				{
+					filter.SetSearch(str);
+					return;
+				}
 				if(string.IsNullOrEmpty(str))
 				{
 					for (int i = 0; i < list.Content.transform.childCount; i++)
@@ -1952,12 +1961,14 @@ public class UIManager : MonoBehaviour {
 		ListMenu list = itemPicker.GetComponent<ListMenu>();
 		list.Title.text = title;
 		list.Information.text = info;
+		UltimateEditor.Uw1.UI.ObjectListFilter.Attach(list, false);
 		addSearch(list);
 
 		for (int i = 0; i < 459; i++)
 		{
 			int new_i = i;
 			GameObject itemGO = createItemButton(new_i, list.Content.transform, getItemButtonTooltip(new_i));
+			itemGO.AddComponent<UltimateEditor.Uw1.UI.ObjectListEntry>().Item = new_i;
 			Button button = itemGO.GetComponent<Button>();
 			button.onClick.AddListener(() => onClick(new_i));
 			button.onClick.AddListener(() => Destroy(itemPicker));
@@ -2386,6 +2397,7 @@ public class UIManager : MonoBehaviour {
 			setInputProperty(weaponProps.transform, "Unk3", wd.Unk3);
 			setInputProperty(weaponProps.transform, "Durability", wd.Durability);
 			setInputProperty(weaponProps.transform, "Skill", wd.Skill);
+			UltimateEditor.Uw1.UI.FieldTooltips.Attach(weaponProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Weapon);
 		}
 	}
 	private void addBasicMonsterEditor(int id, Transform parent)
@@ -2422,6 +2434,7 @@ public class UIManager : MonoBehaviour {
 		setInventoryProperty(monsterProps.transform, "Inv2", md.Inventory[1], md.InventoryInfo[1], false, (i) => md.Inventory[1] = i, (i) => md.InventoryInfo[1] = i);
 		setInventoryProperty(monsterProps.transform, "Inv3", md.Inventory[2], md.InventoryInfo[2], true, (i) => md.Inventory[2] = i, (i) => md.InventoryInfo[2] = i);
 		setInventoryProperty(monsterProps.transform, "Inv4", md.Inventory[3], md.InventoryInfo[3], true, (i) => md.Inventory[3] = i, (i) => md.InventoryInfo[3] = i);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(monsterProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Creature);
 	}
 	private void addBasicWeaponEditor(int id, Transform parent)
 	{
@@ -2435,14 +2448,16 @@ public class UIManager : MonoBehaviour {
 		setInputProperty(weaponProps.transform, "Unk3", wd.Unk3, (i) => wd.Unk3 = i, 0, 255);
 		setInputProperty(weaponProps.transform, "Durability", wd.Durability, (i) => wd.Durability = i, 0, 255);
 		setDropdownProperty(weaponProps.transform, "Skill", wd.Skill, WeaponData.GetSkills(), (i) => wd.Skill = i);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(weaponProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Weapon);
 	}
 	private void addProjectileEditor(int id, Transform parent)
 	{
 		GameObject projProps = Instantiate(ProjectileEditorPrefab, parent);
 		ProjectileData pd = MapCreator.ObjectData.ProjectileData[id - 16];
-		setInputProperty(projProps.transform, "Damage", pd.Damage, (i) => pd.Damage = i, 0, 127);
-		setInputProperty(projProps.transform, "Unk1", pd.Unk1, (i) => pd.Unk1 = i, 0, 511);
+		setInputProperty(projProps.transform, "Damage", pd.Damage, (i) => pd.Damage = i, 0, 255);
+		setInputProperty(projProps.transform, "Unk1", pd.Unk1, (i) => pd.Unk1 = i, 0, 255);
 		setInputProperty(projProps.transform, "Unk2", pd.Unk2, (i) => pd.Unk2 = i, 0, 255);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(projProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Missile);
 	}
 	private void addRangedEditor(int id, Transform parent)
 	{
@@ -2450,6 +2465,7 @@ public class UIManager : MonoBehaviour {
 		RangedData rd = MapCreator.ObjectData.RangedData[id - 24];
 		setInputProperty(rangedProps.transform, "Ammo", rd.Ammo, (i) => rd.Ammo = i, 0, 255);
 		setInputProperty(rangedProps.transform, "Unk1", rd.Unk1, (i) => rd.Unk1 = i, 0, 255);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(rangedProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Launcher);
 	}
 	private void addArmourEditor(int id, Transform parent)
 	{
@@ -2459,6 +2475,7 @@ public class UIManager : MonoBehaviour {
 		setInputProperty(armorProps.transform, "Durability", ad.Durability, (i) => ad.Durability = i, 0, 255);
 		setInputProperty(armorProps.transform, "Unk1", ad.Unk1, (i) => ad.Unk1 = i, 0, 255);
 		setDropdownProperty(armorProps.transform, "Type", ad.Type, ArmourData.GetArmourTypes(), (i) => ad.Type = i);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(armorProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Armour);
 	}
 	private void addContainerEditor(int id, Transform parent)
 	{
@@ -2466,7 +2483,10 @@ public class UIManager : MonoBehaviour {
 		ContainerData cd = MapCreator.ObjectData.ContainerData[id - 128];
 		setInputProperty(contProps.transform, "Capacity", cd.Capacity, (i) => cd.Capacity = i, 0, 255);
 		setInputProperty(contProps.transform, "Slots", cd.Slots, (i) => cd.Slots = i, 0, 255);
-		setDropdownProperty(contProps.transform, "Type", cd.Type, ContainerData.GetContainerTypes(), (i) => cd.Type = i);
+		// Type and Slots are the low and high bytes of one int16 (include/object.h struct
+		// Container): -1 for anything, 0x200 + kind for a kind. Keep them consistent.
+		setDropdownProperty(contProps.transform, "Type", cd.Type, ContainerData.GetContainerTypes(), (i) => { cd.Type = i; cd.Slots = i == 255 ? 255 : 2; });
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(contProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Container);
 	}
 	private void addLightEditor(int id, Transform parent)
 	{
@@ -2474,6 +2494,7 @@ public class UIManager : MonoBehaviour {
 		LightData ld = MapCreator.ObjectData.LightData[id - 144];
 		setInputProperty(lightProps.transform, "Brightness", ld.Brightness, (i) => ld.Brightness = i);
 		setInputProperty(lightProps.transform, "Duration", ld.Duration, (i) => ld.Duration = i);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(lightProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Light);
 	}
 	private void addMonsterEditor(int id, Transform parent)
 	{
@@ -2516,6 +2537,7 @@ public class UIManager : MonoBehaviour {
 		setInputProperty(monsterProps.transform, "Unk8", md.Unk8);
 		setInputProperty(monsterProps.transform, "Unk9", md.Unk9);
 		setInputProperty(monsterProps.transform, "Unk10", md.Unk10);
+		UltimateEditor.Uw1.UI.FieldTooltips.Attach(monsterProps.transform, UltimateEditor.Uw1.UI.FieldTooltips.Kind.Creature);
 	}
 	public void CreateBasicCommonPropertiesEditor(int id)
 	{
