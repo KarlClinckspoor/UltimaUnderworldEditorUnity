@@ -20,6 +20,16 @@ public static class LevArk
 	/// <summary>Blocks the last save wrote (for the status message and the tests).</summary>
 	public static readonly List<int> LastWritten = new List<int>();
 
+	/// <summary>Forgets the open archive and the save hooks (opening another game without restarting).</summary>
+	public static void Reset()
+	{
+		Game = GameProfile.UW1;
+		Archive = null;
+		Path = null;
+		LastWritten.Clear();
+		BeforeSave = null;
+	}
+
 	public static GameKind DetectFor(string levArkPath)
 	{
 		// A relative path has an empty directory name; resolve it so the folder's files can be seen

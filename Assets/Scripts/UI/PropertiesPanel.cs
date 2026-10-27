@@ -582,6 +582,7 @@ public class PropertiesPanel : MonoBehaviour {
 				if (!uiManager)
 					Start();
 				GameObject targetLevel = createSliderProperty("Target level", BasicPanel.transform, so.ZPos, 1.0f, uiManager.MapCreator.GetLevelCount(), (f) => changeObjectZPos(so, (int)f));
+				UIManager.NameLevelSlider(targetLevel.GetComponentInChildren<Slider>(), "Target level");
 				if (teleInThisLvl)
 					targetLevel.SetActive(false);
 				Action<bool> curLevelAct = (b) =>

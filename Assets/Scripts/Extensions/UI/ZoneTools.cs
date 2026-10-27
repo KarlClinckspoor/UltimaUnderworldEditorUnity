@@ -26,6 +26,17 @@ namespace UltimateEditor.Uw1.UI
 		public static bool FillMode;
 		public static event Action Changed;
 
+		/// <summary>Forgets the zoning and its listeners (opening another game without restarting).</summary>
+		public static void Reset()
+		{
+			Zones = null;
+			Path = null;
+			Dirty = false;
+			PaintEnabled = false;
+			FillMode = false;
+			Changed = null;
+		}
+
 		public static string DefaultPath()
 		{
 			string folder = ExtensionsMenu.DataFolder;

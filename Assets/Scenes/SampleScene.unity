@@ -23233,7 +23233,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: UW file path
+  m_Text: Open game...
 --- !u!222 &1439959003
 CanvasRenderer:
   m_ObjectHideFlags: 0

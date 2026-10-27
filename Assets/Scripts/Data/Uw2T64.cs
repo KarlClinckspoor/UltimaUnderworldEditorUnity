@@ -18,6 +18,12 @@ public static class Uw2T64
 	static Texture2D[] walls, floors;
 	static Color[] palette;
 
+	/// <summary>Forgets the open file (opening another game without restarting).</summary>
+	public static void Reset()
+	{
+		Path = null; file = null; offsets = null; walls = null; floors = null; palette = null;
+	}
+
 	public static void Remember(string path, int[] offs, List<Texture2D> wallTex, List<Texture2D> floorTex, Color[] pal)
 	{
 		Path = path;

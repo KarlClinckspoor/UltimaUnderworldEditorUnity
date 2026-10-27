@@ -91,6 +91,24 @@ public class MapCreator : MonoBehaviour {
 		IsInitialized = true;
 	}
 
+	/// <summary>Forgets the loaded game: the static data and the lookups from it to objects of
+	/// the scene, which is about to be reloaded (UltimateEditor.Uw1.UI.GameOpener.Reopen).</summary>
+	public static void ResetStatics()
+	{
+		LevelData = null;
+		TextureData = null;
+		StringData = null;
+		ConversationData = null;
+		ObjectData = null;
+		GameData = null;
+		StartObject = null;
+		MapTileToGO = new Dictionary<MapTile, GameObject>();
+		ObjectToGO = new Dictionary<StaticObject, GameObject>();
+		instance = null;
+		levelParents = null;
+		builtLevels.Clear();
+	}
+
 	public void ClearAllData()
 	{
 		for (int i = 0; i < transform.childCount; i++)

@@ -182,12 +182,23 @@ public class UIManager : MonoBehaviour {
 	{
 		listMenu = null;
 		CurrentLevel = 1;
-		string path = DataReader.GetPathFromFile();
-		if (!string.IsNullOrEmpty(path) && DataReader.ValidateFilePath(path) && DataReader.ValidateFile(path))
-			DataReader.FilePath = GameSession.Choose(path);
+		// After File > Open with data loaded, the scene was reloaded to open another game
+		string pendingOpen = UltimateEditor.Uw1.UI.GameOpener.TakePending();
+		string path = pendingOpen ?? DataReader.GetPathFromFile();
+		bool valid = !string.IsNullOrEmpty(path) && DataReader.ValidateFilePath(path) && DataReader.ValidateFile(path);
+		if (valid)
+			DataReader.FilePath = UltimateEditor.Uw1.UI.GameOpener.Slashes(GameSession.Choose(path));
 		else
 			DataReader.FilePath = Application.dataPath;
 		SetCursorMode(CursorType.Normal);
+		if (pendingOpen != null && valid)
+			StartCoroutine(loadNextFrame());
+	}
+
+	IEnumerator loadNextFrame()
+	{
+		yield return null;
+		LoadData();
 	}
 
 	private void Update()
@@ -229,7 +240,7 @@ public class UIManager : MonoBehaviour {
 		}
 		if (string.IsNullOrEmpty(DataReader.FilePath) || !DataReader.ValidateFilePath(DataReader.FilePath))
 		{
-			SpawnPopupMessage("Invalid path to UW level data.");
+			SpawnPopupMessage("No game chosen yet: use File > Open game... and choose the game's UW.EXE or UW2.EXE.");
 			return;
 		}
 		if(!DataReader.ValidateFile(DataReader.FilePath))
@@ -362,11 +373,10 @@ public class UIManager : MonoBehaviour {
 		}
 		InfoPanel.SetActive(true);
 		LevelSlider.SetActive(true);
-		Slider levelSlider = LevelSlider.GetComponent<Slider>();
-		levelSlider.maxValue = MapCreator.GetLevelCount();
-		levelSlider.handleRect.GetComponentInChildren<Text>().text = "1";
-		ShowLevelName();
 		ModePanel.SetActive(true);
+		BuildLevelPicker();
+		syncLevelPicker(1);
+		ShowLevelName();
 		levels[0].SetActive(true);
 		TopBarGO.transform.Find("Levels").GetComponent<Button>().interactable = true;
 		TopBarGO.transform.Find("Objects").GetComponent<Button>().interactable = true;
@@ -421,8 +431,29 @@ public class UIManager : MonoBehaviour {
 			MapCreator.LevelData[i].LoadLevel(sls[i]);
 	}
 
+	bool lastSaveOk;
+
+	/// <summary>Saves, then runs after if everything was written (File > Open: "Save, then open").</summary>
+	public void SaveThen(Action after)
+	{
+		if (!MapCreator.IsInitialized)
+		{
+			after();
+			return;
+		}
+		StartCoroutine(saveThen(after));
+	}
+
+	IEnumerator saveThen(Action after)
+	{
+		yield return StartCoroutine(Save());
+		if (lastSaveOk)
+			after();
+	}
+
 	private IEnumerator Save()
 	{
+		lastSaveOk = false;
 		SpawnPopupMessage("Saving level data", null, false, true);
 		yield return null;
 		try
@@ -479,6 +510,9 @@ public class UIManager : MonoBehaviour {
 			yield break;
 		}
 		Destroy(popup);
+		lastSaveOk = true;
+		if (Uw2Graphics.Problems.Count > 0)
+			SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), null, true);
 	}
 
 	#endregion
@@ -4251,6 +4285,7 @@ public class UIManager : MonoBehaviour {
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
 		addDescriptionToCreateMenu("Teleports player. Used for stairs too.", mainPanelGO.transform);
 		Slider targetLevel = addSliderToCreateMenu("Target level", mainPanelGO.transform, 1.0f, MapCreator.GetLevelCount(), 1.0f);
+		NameLevelSlider(targetLevel, "Target level");
 		Action<bool> curLevelAct = (b) => targetLevel.interactable = !b;
 		Toggle curLevel = addToggleToCreateMenu("Teleport in this level", mainPanelGO.transform, false, curLevelAct);
 		Slider targetX = addSliderToCreateMenu("Target X", mainPanelGO.transform, 0, 63.0f, 0);
@@ -4792,15 +4827,143 @@ public class UIManager : MonoBehaviour {
 
 	#region Levels
 
+	// The level picker. UW1: the slider picks the level (1 to 9). UW2: a dropdown picks the
+	// world (eight level slots each, (level - 1) / 8 as in the game) and the slider the
+	// level inside it; the slots after the ninth world are a group of their own. The panel
+	// right of the mode panel shows the level's name, notes and the button for empty slots.
+	RectTransform levelPanel;
+	Dropdown worldPicker;
+	Text levelLabel;
+	Button useSlotButton;
+	bool syncingLevelPicker;
+
+	/// <summary>UW2: a level slider's description names the level it is on ("Target level:
+	/// Talorus 1 (33)"), since the bare number says little with 80 slots.</summary>
+	public static void NameLevelSlider(Slider slider, string what)
+	{
+		if (!slider || LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW2) return;
+		Text descr = null;
+		for (Transform t = slider.transform; t != null && descr == null; t = t.parent)
+		{
+			var d = t.Find("Description");
+			if (d) descr = d.GetComponent<Text>();
+		}
+		if (!descr) return;
+		Action<float> show = f => descr.text = what + ": " + LevArk.Game.LevelName(Mathf.Max(1, (int)f));
+		show(slider.value);
+		slider.onValueChanged.AddListener(f => show(f));
+	}
+
+	void BuildLevelPicker()
+	{
+		if (levelPanel)
+			Destroy(levelPanel.gameObject);
+		worldPicker = null;
+		var game = LevArk.Game;
+		bool uw2 = game.Kind == UltimateEditor.Games.GameKind.UW2;
+		Slider slider = LevelSlider.GetComponent<Slider>();
+		// a new range can clamp the value, which would call ChangeLevelView mid-build
+		syncingLevelPicker = true;
+		try
+		{
+			slider.wholeNumbers = true;
+			slider.minValue = 1;
+			slider.maxValue = uw2 ? game.LevelsPerWorld : Math.Max(1, MapCreator.GetLevelCount());
+		}
+		finally { syncingLevelPicker = false; }
+
+		var parent = ModePanel ? ModePanel.transform : LevelSlider.transform.parent;
+		levelPanel = UltimateEditor.Uw1.UI.UiKit.Rect("LevelPicker", parent);
+		levelPanel.anchorMin = levelPanel.anchorMax = new Vector2(1, 0);
+		levelPanel.pivot = new Vector2(0, 0);
+		levelPanel.anchoredPosition = new Vector2(6, 4);
+		levelPanel.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.55f);
+		var v = levelPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+		v.padding = new RectOffset(5, 5, 4, 4);
+		v.spacing = 3;
+		v.childControlWidth = true; v.childControlHeight = true;
+		v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+		var fit = levelPanel.gameObject.AddComponent<ContentSizeFitter>();
+		fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+		fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+		if (uw2)
+		{
+			var options = new List<string>();
+			for (int w = 0; w < game.WorldCount; w++)
+			{
+				int used = 0;
+				for (int p = 1; p <= game.LevelsPerWorld; p++)
+				{
+					int l = game.LevelAt(w, p);
+					if (l <= MapCreator.LevelData.Count && MapCreator.LevelData[l - 1].Present) used++;
+				}
+				options.Add(string.Format("{0} ({1} of {2} used)", game.WorldName(w), used, game.LevelsPerWorld));
+			}
+			worldPicker = UltimateEditor.Uw1.UI.UiKit.Dropdown(levelPanel, options, 0, onWorldPicked, 250, 20);
+			UltimateEditor.Uw1.UI.UiKit.Tooltip(worldPicker.gameObject, "UW2 keeps eight level slots per world. Worlds with fewer levels leave the rest of their slots empty; slots 73 to 80 belong to no world (map scraps keep their maps there).");
+		}
+		levelLabel = UltimateEditor.Uw1.UI.UiKit.Label(levelPanel, "", 12, FontStyle.Bold, Color.white, 250, -1);
+		useSlotButton = UltimateEditor.Uw1.UI.UiKit.Button(levelPanel, "Make this slot a level", () =>
+		{
+			MapCreator.LevelData[CurrentLevel - 1].Present = true;
+			SpawnPopupMessage(LevArk.Game.LevelName(CurrentLevel) + " will be saved as a level (with its texture block).");
+			ShowLevelName();
+		}, 170, 20);
+	}
+
+	/// <summary>Puts the world dropdown and the slider on a level without changing the view.</summary>
+	void syncLevelPicker(int level)
+	{
+		var game = LevArk.Game;
+		Slider slider = LevelSlider.GetComponent<Slider>();
+		syncingLevelPicker = true;
+		try
+		{
+			if (worldPicker)
+			{
+				worldPicker.SetValueWithoutNotify(game.WorldOf(level));
+				worldPicker.RefreshShownValue();
+			}
+			slider.SetValueWithoutNotify(game.PlaceInWorld(level));
+			slider.handleRect.GetComponentInChildren<Text>().text = game.PlaceInWorld(level).ToString();
+		}
+		finally { syncingLevelPicker = false; }
+	}
+
+	void onWorldPicked(int world)
+	{
+		if (!MapCreator.IsInitialized || syncingLevelPicker)
+			return;
+		Slider slider = LevelSlider.GetComponent<Slider>();
+		showLevel(LevArk.Game.LevelAt(world, (int)slider.value));
+	}
+
+	/// <summary>The scene's level slider calls this.</summary>
 	public void ChangeLevelView(Slider slider)
+	{
+		if (!MapCreator.IsInitialized || syncingLevelPicker)
+			return;
+		int world = worldPicker ? worldPicker.value : 0;
+		showLevel(LevArk.Game.LevelAt(world, (int)slider.value));
+	}
+
+	/// <summary>Shows a level (1-based) and moves the picker to it.</summary>
+	public void GoToLevel(int level)
 	{
 		if (!MapCreator.IsInitialized)
 			return;
+		showLevel(level);
+	}
+
+	void showLevel(int level)
+	{
+		level = Mathf.Clamp(level, 1, levels.Length);
 		InputManager.DeselectObject();
 		ObjectProperties.SetActive(false);
 		TilePropertiesObject.SetActive(false);
 		levels[CurrentLevel - 1].SetActive(false);
-		CurrentLevel = (int)slider.value;
+		CurrentLevel = level;
 		MapCreator.EnsureLevelBuilt(CurrentLevel);
 		levels[CurrentLevel - 1].SetActive(true);
 		if (CurrentLevel == 1)
@@ -4809,52 +4972,28 @@ public class UIManager : MonoBehaviour {
 			StartGO.SetActive(false);
 		changeTemplateFloorButton(MapCreator.GetFloorTextureFromIndex(0, CurrentLevel));
 		changeTemplateWallButton(MapCreator.GetWallTextureFromIndex(0, CurrentLevel));
-		slider.handleRect.GetComponentInChildren<Text>().text = CurrentLevel.ToString();
+		syncLevelPicker(CurrentLevel);
 		ShowLevelName();
 		updateSectorDropdown(CurrentLevel);
 	}
 
-	/// <summary>UW2: the world and level under the level slider ("Talorus 1 (33)"), and a note for empty slots.</summary>
+	/// <summary>The level's name in the picker panel ("Talorus 1 (33)" in UW2), the open save,
+	/// what an empty or extra UW2 slot is, and the button that makes an empty slot a level.</summary>
 	public void ShowLevelName()
 	{
-		if (!LevelSlider) return;
-		var t = LevelSlider.transform.Find("LevelName");
-		Text label;
-		if (!t)
-		{
-			label = UltimateEditor.Uw1.UI.UiKit.Label(LevelSlider.transform, "", 12, FontStyle.Bold, Color.white, 260, 18);
-			label.name = "LevelName";
-			var rt = label.rectTransform;
-			rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
-			rt.pivot = new Vector2(0.5f, 1);
-			rt.anchoredPosition = new Vector2(0, -2);
-			label.alignment = TextAnchor.UpperCenter;
-		}
-		else label = t.GetComponent<Text>();
+		if (!levelLabel || !MapCreator.IsInitialized)
+			return;
+		var game = LevArk.Game;
 		var ld = MapCreator.LevelData[CurrentLevel - 1];
-		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
-		label.text = (GameSession.IsSave ? "[" + GameSession.SaveName + "] " : "") +
-			(uw2 ? LevArk.Game.LevelName(CurrentLevel) + (ld.Present ? "" : " - empty slot, not saved") : "");
-		// An empty UW2 slot is not written; this button makes it a level that is
-		var bt = LevelSlider.transform.Find("UseSlot");
-		Button use = bt ? bt.GetComponent<Button>() : null;
-		if (!use)
-		{
-			use = UltimateEditor.Uw1.UI.UiKit.Button(LevelSlider.transform, "Make this slot a level", null, 160, 18);
-			use.name = "UseSlot";
-			var rt = use.GetComponent<RectTransform>();
-			rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
-			rt.pivot = new Vector2(0.5f, 1);
-			rt.anchoredPosition = new Vector2(0, -22);
-		}
-		use.onClick.RemoveAllListeners();
-		use.onClick.AddListener(() =>
-		{
-			MapCreator.LevelData[CurrentLevel - 1].Present = true;
-			SpawnPopupMessage(LevArk.Game.LevelName(CurrentLevel) + " will be saved as a level (with its texture block).");
-			ShowLevelName();
-		});
-		use.gameObject.SetActive(uw2 && !ld.Present);
+		bool uw2 = game.Kind == UltimateEditor.Games.GameKind.UW2;
+		string text = (GameSession.IsSave ? "[" + GameSession.SaveName + "] " : "") + game.LevelName(CurrentLevel);
+		if (uw2 && !ld.Present)
+			text += "\nEmpty slot: not saved unless you make it a level.";
+		string note = game.SlotNote(CurrentLevel);
+		if (note != null)
+			text += "\n" + char.ToUpper(note[0]) + note.Substring(1) + ".";
+		levelLabel.text = text;
+		useSlotButton.gameObject.SetActive(uw2 && !ld.Present);
 	}
 
 	public void CreateClearLevelsMenu()
@@ -4875,11 +5014,9 @@ public class UIManager : MonoBehaviour {
 			levels = MapCreator.CreateLevels();
 			levels[0].SetActive(true);
 
-			Slider levelSlider = LevelSlider.GetComponent<Slider>();
-			levelSlider.maxValue = MapCreator.GetLevelCount();
-			levelSlider.handleRect.GetComponentInChildren<Text>().text = "1";
-		ShowLevelName();
-			levelSlider.value = 1;
+			BuildLevelPicker();
+			syncLevelPicker(1);
+			ShowLevelName();
 
 			changeTemplateFloorButton();
 			changeTemplateWallButton();
@@ -4983,14 +5120,22 @@ public class UIManager : MonoBehaviour {
 		popup.transform.SetAsLastSibling();
 	}
 
+	/// <summary>File > Open: the game's UW.EXE or UW2.EXE, through the system's file dialog
+	/// where there is one (Extensions/UI/GameOpener.cs).</summary>
 	public void CreateFileExplorer()
 	{
-		string path = DataReader.FilePath;
-		if (string.IsNullOrEmpty(path) && !DataReader.ValidateFilePath(path))
-			path = Application.dataPath;
+		UltimateEditor.Uw1.UI.GameOpener.Browse(this);
+	}
 
+	/// <summary>The editor's own file explorer, starting in folder.</summary>
+	public void CreateInAppFileExplorer(string folder)
+	{
+		if (fileExplorer)
+			Destroy(fileExplorer);
+		if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+			folder = FileExplorer.GetUpperPath(Application.dataPath);
 		fileExplorer = Instantiate(FileExplorerPrefab, transform);
-		fileExplorer.GetComponent<FileExplorer>().InitFileReader(FileExplorer.GetUpperPath(path));
+		fileExplorer.GetComponent<FileExplorer>().InitFileReader(UltimateEditor.Uw1.UI.GameOpener.Slashes(folder));
 	}
 
 	public void Undo()

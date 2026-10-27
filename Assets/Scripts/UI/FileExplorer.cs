@@ -22,12 +22,55 @@ public class FileExplorer : ResizableWindow {
 	public void InitFileReader(string path = null)
 	{
 		uiManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
-		if (path == null)
+		if (path == null || !Directory.Exists(path))
 			currentPath = Application.dataPath;
 		else
 			currentPath = path;
 		SetContent(currentPath, currentPath);
 		SetDrives();
+		// a folder typed or pasted into the path box opens; a file there is chosen
+		CurrentDirInfo.onEndEdit.AddListener(GoToTypedPath);
+	}
+
+	void GoToTypedPath(string typed)
+	{
+		if (string.IsNullOrEmpty(typed)) return;
+		typed = typed.Trim().Trim('"').Replace('\\', '/');
+		if (typed.Length > 3) typed = typed.TrimEnd('/');
+		if (Directory.Exists(typed))
+		{
+			string oldpath = currentPath;
+			currentPath = typed;
+			SetContent(currentPath, oldpath);
+		}
+		else if (File.Exists(typed))
+		{
+			Destroy(gameObject);
+			UltimateEditor.Uw1.UI.GameOpener.Picked(uiManager, typed);
+		}
+		else
+			ShowCurrentDir();
+	}
+
+	/// <summary>The files the editor can open: the games' programs and LEV.ARK.</summary>
+	static bool Openable(string name)
+	{
+		name = name.ToUpperInvariant();
+		return name.EndsWith(".EXE") || name == "LEV.ARK";
+	}
+
+	/// <summary>A label for a folder that holds a game (DATA with LEV.ARK) or is a game's DATA folder.</summary>
+	static string GameLabel(DirectoryInfo dir)
+	{
+		try
+		{
+			string data = UltimateEditor.Games.GameFiles.Resolve(dir.FullName + "/DATA");
+			string folder = File.Exists(UltimateEditor.Games.GameFiles.Resolve(data + "/LEV.ARK")) ? data
+				: File.Exists(UltimateEditor.Games.GameFiles.Resolve(dir.FullName + "/LEV.ARK")) ? dir.FullName : null;
+			if (folder == null) return null;
+			return UltimateEditor.Games.GameProfile.For(UltimateEditor.Games.GameProfile.Detect(folder)).Name;
+		}
+		catch (System.Exception) { return null; }
 	}
 	private void SetContent(string path, string oldpath)
 	{
@@ -74,13 +117,13 @@ public class FileExplorer : ResizableWindow {
 		}
 		ChosenFile.text = "";
 	}
-	private void CreateDirectoryInfo(string text)
+	private void CreateDirectoryInfo(string name, string label = null)
 	{
 		GameObject dirInfo = Instantiate(DirectoryInfoPrefab, Content.transform);
 		Text dirText = dirInfo.GetComponentInChildren<Text>();
-		dirText.text = text;
+		dirText.text = label == null ? name : name + "   [" + label + "]";
 		Button button = dirInfo.GetComponentInChildren<Button>();
-		button.onClick.AddListener(() => GoToDirectory(button));
+		button.onClick.AddListener(() => GoToDirectory(name));
 	}
 	private void CreateFileInfo(string text)
 	{
@@ -104,7 +147,9 @@ public class FileExplorer : ResizableWindow {
 		DirectoryInfo[] dirs = GetDirectoryList(path);
 		foreach (var dir in dirs)
 		{
-			CreateDirectoryInfo(dir.Name);
+			if ((dir.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+				continue;
+			CreateDirectoryInfo(dir.Name, GameLabel(dir));
 		}
 	}
 	private void SetFiles(string path)
@@ -112,7 +157,8 @@ public class FileExplorer : ResizableWindow {
 		FileInfo[] files = GetFileList(path);
 		foreach (var file in files)
 		{
-			CreateFileInfo(file.Name);
+			if (Openable(file.Name))
+				CreateFileInfo(file.Name);
 		}
 	}
 	private bool IsRootDirectory(string path)
@@ -123,7 +169,10 @@ public class FileExplorer : ResizableWindow {
 	}
 	public static string GetUpperPath(string path)
 	{
-		int index = path.LastIndexOf('/');
+		if (string.IsNullOrEmpty(path))
+			return null;
+		// Windows paths may use either separator (the native file dialog returns backslashes)
+		int index = System.Math.Max(path.LastIndexOf('/'), path.LastIndexOf('\\'));
 		if (index == -1)
 			return null;
 
@@ -182,27 +231,15 @@ public class FileExplorer : ResizableWindow {
 	//}
 	public void LoadData()
 	{
-		LoadData(ChosenFile.text);
+		string file = ChosenFile.text;
+		if (string.IsNullOrEmpty(file))
+		{
+			uiManager.SpawnPopupMessage("Choose the game's UW.EXE or UW2.EXE (or a LEV.ARK).");
+			return;
+		}
+		string path = currentPath.TrimEnd('/') + "/" + file;
 		Destroy(gameObject);
-	}
-	private void LoadData(string file)
-	{
-		if(file != "LEV.ARK")
-		{
-			uiManager.SpawnPopupMessage("Invalid file. Choose LEV.ARK from Ultima Underworld 'Data' directory.");
-			return;
-		}
-		string path = currentPath + "/" + file;
-		DataWriter.SavePathToFile(path);
-		// with data loaded, switching files would mix the session (levels of one file, saves
-		// and schedules of another); the choice takes effect at the next start
-		if (uiManager && uiManager.MapCreator && uiManager.MapCreator.IsInitialized)
-		{
-			uiManager.SpawnPopupMessage("Data is already loaded. The chosen LEV.ARK opens the next time the editor starts.");
-			return;
-		}
-		// a save's LEV.ARK (SAVEn) is edited with DATA for the other files (Data/GameSession.cs)
-		DataReader.FilePath = GameSession.Choose(path);		
-		//UIManager.SetMenu(MainPanel);
+		// a program: the game's DATA and saves to pick from; a LEV.ARK opens directly (GameOpener)
+		UltimateEditor.Uw1.UI.GameOpener.Picked(uiManager, path);
 	}
 }

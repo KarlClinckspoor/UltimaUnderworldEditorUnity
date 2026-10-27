@@ -65,16 +65,36 @@ namespace UltimateEditor.Games
 		public int AutomapBlock(int level) { return level + AutomapBlockBase; }
 		public int NotesBlock(int level) { return level + NotesBlockBase; }
 
-		/// <summary>UW2's worlds: (level - 1) / 8 (Britannia, Prison Tower, Killorn Keep, Ice Caverns, Talorus, Scintillus Academy, Tomb of Praecor Loth, Pits of Carnage, Ethereal Void).</summary>
-		public static readonly string[] Uw2Worlds = { "Britannia", "Prison Tower", "Killorn Keep", "Ice Caverns", "Talorus", "Scintillus Academy", "Tomb of Praecor Loth", "Pits of Carnage", "Ethereal Void", "(unused)" };
+		/// <summary>UW2's worlds: (level - 1) / 8, LEVELS_PER_WORLD in uw2 map.h (Britannia, Prison Tower,
+		/// Killorn Keep, Ice Caverns, Talorus, Scintillus Academy, Tomb of Praecor Loth, Pits of
+		/// Carnage, Ethereal Void). LEV.ARK has room for 80 levels (NUM_LEVELS), so slots 73 to 80
+		/// belong to no world: the game keeps the maps that map scraps copy there (ui/AUTOMAP.C:
+		/// level 0x47 + the scrap's quality), and the shipped file has one more level in 73.</summary>
+		public static readonly string[] Uw2Worlds = { "Britannia", "Prison Tower", "Killorn Keep", "Ice Caverns", "Talorus", "Scintillus Academy", "Tomb of Praecor Loth", "Pits of Carnage", "Ethereal Void", "Beyond the worlds" };
+
+		/// <summary>The number of worlds the level picker offers: UW2's nine and the slots after them.</summary>
+		public int WorldCount { get { return Kind == GameKind.UW1 ? 1 : (LevelSlots + LevelsPerWorld - 1) / LevelsPerWorld; } }
 
 		public string WorldName(int world) { return world >= 0 && world < Uw2Worlds.Length ? Uw2Worlds[world] : "world " + world; }
+
+		/// <summary>The 0-based world of a 1-based level, and the level's place in it (1 to 8).</summary>
+		public int WorldOf(int level) { return Kind == GameKind.UW1 ? 0 : (level - 1) / LevelsPerWorld; }
+		public int PlaceInWorld(int level) { return Kind == GameKind.UW1 ? level : (level - 1) % LevelsPerWorld + 1; }
+		public int LevelAt(int world, int place) { return Kind == GameKind.UW1 ? place : world * LevelsPerWorld + place; }
 
 		public string LevelName(int level)
 		{
 			if (Kind == GameKind.UW1) return "Level " + level;
-			int w = (level - 1) / LevelsPerWorld, l = (level - 1) % LevelsPerWorld + 1;
+			int w = WorldOf(level), l = PlaceInWorld(level);
 			return string.Format("{0} {1} ({2})", w < Uw2Worlds.Length ? Uw2Worlds[w] : "World " + w, l, level);
+		}
+
+		/// <summary>What the game does with a UW2 slot outside the nine worlds, or null.</summary>
+		public string SlotNote(int level)
+		{
+			if (Kind == GameKind.UW1 || level <= 9 * LevelsPerWorld) return null;
+			int quality = level - 0x47;
+			return "not part of any world; map scraps of quality " + quality + " copy the map kept here";
 		}
 
 		/// <summary>

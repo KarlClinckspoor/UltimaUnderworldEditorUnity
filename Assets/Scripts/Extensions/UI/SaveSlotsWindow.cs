@@ -44,15 +44,11 @@ namespace UltimateEditor.Uw1.UI
 			{
 				string lev = GameFiles.Resolve(Path.Combine(s.Folder, "LEV.ARK"));
 				if (!File.Exists(lev)) { w.Status.text = s.Name + " has no LEV.ARK."; return; }
-				DataWriter.SavePathToFile(lev);
 				var uim = UiKit.FindUIManager();
-				if (uim && uim.MapCreator && uim.MapCreator.IsInitialized)
-					w.Status.text = s.Name + " will open the next time the editor starts (the data already loaded stays as it is). Save your changes first.";
-				else
-				{
-					DataReader.FilePath = GameSession.Choose(lev);
-					w.Status.text = s.Name + " chosen: use File > Read data.";
-				}
+				if (!uim) return;
+				w.Close();
+				// with data loaded this asks first, then reopens the editor's scene on the save
+				GameOpener.OpenLevArk(uim, lev);
 			}, 50, 20);
 			UiKit.Button(row, "Character", () => PlayerWindow.Show(s.Folder), 70, 20);
 			UiKit.Button(row, "Conversation variables", () => ShowGlobals(s), 150, 20);

@@ -26,9 +26,17 @@ namespace UltimateEditor.Uw1.UI
 			}
 		}
 
+		static bool hooked;
+
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 		static void Install()
 		{
+			// File > Open reloads the scene to open another game (GameOpener.Reopen): install again then
+			if (!hooked)
+			{
+				hooked = true;
+				UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) => Install();
+			}
 			var ui = UiKit.FindUIManager();
 			if (!ui || ui.GetComponent<ExtensionsMenu>()) return;
 			ui.gameObject.AddComponent<ExtensionsMenu>();
@@ -122,12 +130,12 @@ namespace UltimateEditor.Uw1.UI
 				Destroy(popup);
 				if (needsLevels && (ui.MapCreator == null || !ui.MapCreator.IsInitialized))
 				{
-					ui.SpawnPopupMessage("Load the game data first (File > Read data).");
+					ui.SpawnPopupMessage("Open the game first (File > Open game...).");
 					return;
 				}
 				if (!needsLevels && string.IsNullOrEmpty(DataFolder))
 				{
-					ui.SpawnPopupMessage("Choose the game's LEV.ARK first (File menu), so the editor knows the DATA folder.");
+					ui.SpawnPopupMessage("Choose the game first (File > Open game...), so the editor knows its DATA folder.");
 					return;
 				}
 				try { act(); }

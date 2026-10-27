@@ -16,7 +16,31 @@ namespace UltimateEditor.Uw1.UI
 		public static readonly Color WindowColor = new Color(0.16f, 0.16f, 0.18f, 0.97f);
 		public static readonly Color BarColor = new Color(0.10f, 0.10f, 0.12f, 1f);
 		public static readonly Color FieldColor = new Color(0.93f, 0.93f, 0.93f, 1f);
-		public static readonly Color ButtonColor = new Color(0.32f, 0.34f, 0.40f, 1f);
+		/// <summary>Buttons are blue with UW2's data and brown with UW1's, so the two are easy to tell apart.</summary>
+		public static readonly Color Uw2ButtonColor = new Color(0.32f, 0.34f, 0.40f, 1f);
+		public static readonly Color Uw1ButtonColor = new Color(0.44f, 0.32f, 0.21f, 1f);
+		public static Color ButtonColor { get { return ThemeGame == UltimateEditor.Games.GameKind.UW1 ? Uw1ButtonColor : Uw2ButtonColor; } }
+
+		static string themePath;
+		static UltimateEditor.Games.GameKind themeGame = UltimateEditor.Games.GameKind.UW2;
+
+		/// <summary>The game of the loaded data, or before loading, of the file chosen in File > Open
+		/// (blue until a game is known).</summary>
+		public static UltimateEditor.Games.GameKind ThemeGame
+		{
+			get
+			{
+				if (LevArk.Path != null) return LevArk.Game.Kind;
+				string p = DataReader.FilePath;
+				if (p != themePath)
+				{
+					themePath = p;
+					try { themeGame = !string.IsNullOrEmpty(p) && System.IO.File.Exists(p) ? LevArk.DetectFor(p) : UltimateEditor.Games.GameKind.UW2; }
+					catch (Exception) { themeGame = UltimateEditor.Games.GameKind.UW2; }
+				}
+				return themeGame;
+			}
+		}
 		public static readonly Color AccentColor = new Color(0.36f, 0.52f, 0.34f, 1f);
 		public static readonly Color TextColor = new Color(0.92f, 0.92f, 0.92f, 1f);
 		public static readonly Color DimTextColor = new Color(0.70f, 0.72f, 0.76f, 1f);

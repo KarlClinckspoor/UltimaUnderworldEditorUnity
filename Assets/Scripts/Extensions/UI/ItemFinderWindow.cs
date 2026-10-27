@@ -104,11 +104,8 @@ namespace UltimateEditor.Uw1.UI
 
 		public static void GoTo(UIManager ui, StaticObject so)
 		{
-			if (ui.CurrentLevel != so.CurrentLevel && ui.LevelSlider)
-			{
-				var slider = ui.LevelSlider.GetComponent<Slider>();
-				if (slider) { slider.value = so.CurrentLevel; ui.ChangeLevelView(slider); }
-			}
+			if (ui.CurrentLevel != so.CurrentLevel)
+				ui.GoToLevel(so.CurrentLevel);
 			if (!ui.SelectObject(so, true))
 				ui.SetObjectProperties(so);
 		}

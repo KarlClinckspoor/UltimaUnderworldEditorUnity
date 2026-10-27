@@ -27,6 +27,8 @@ public static class GameSession
 	/// </summary>
 	public static string Choose(string chosenLevArk)
 	{
+		// the editor builds paths with '/' (FileExplorer.GetUpperPath); Path.Combine below gives '\\' on Windows
+		if (chosenLevArk != null) chosenLevArk = chosenLevArk.Replace('\\', '/');
 		LevArkPath = chosenLevArk;
 		SaveFolder = null;
 		if (string.IsNullOrEmpty(chosenLevArk)) return chosenLevArk;
@@ -36,7 +38,7 @@ public static class GameSession
 		string dataLev = GameFiles.Resolve(Path.Combine(data, "LEV.ARK"));
 		if (!File.Exists(dataLev)) return chosenLevArk;   // no DATA beside it: treat as a plain folder
 		SaveFolder = dir;
-		return dataLev;
+		return dataLev.Replace('\\', '/');
 	}
 
 	/// <summary>The LEV.ARK to load: the save's when one is open.</summary>

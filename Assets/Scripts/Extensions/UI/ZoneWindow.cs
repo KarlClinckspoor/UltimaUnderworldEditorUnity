@@ -28,6 +28,17 @@ namespace UltimateEditor.Uw1.UI
 
 		public static int SelectedZone { get { return selectedZone; } }
 
+		/// <summary>Forgets the last results (opening another game without restarting).</summary>
+		public static void ResetState()
+		{
+			open = null;
+			lastReport = "";
+			lastAudit = null;
+			unassignedLabel = null;
+			paintLabel = null;
+			rebuildQueued = false;
+		}
+
 		public static void Show()
 		{
 			if (open != null) open.Close();

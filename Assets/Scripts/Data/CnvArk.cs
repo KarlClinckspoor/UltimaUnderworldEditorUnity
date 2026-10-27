@@ -15,6 +15,15 @@ public static class CnvArk
 	static Archive archive;
 	static string path;
 
+	/// <summary>Forgets the open archive (opening another game without restarting).</summary>
+	public static void Reset()
+	{
+		archive = null;
+		path = null;
+		Loaded.Clear();
+		LastWritten.Clear();
+	}
+
 	/// <summary>The archive as a UW1-format image (UW2's blocks decompressed), for DataReader.LoadConversations.</summary>
 	public static byte[] LoadAsUw1Image(string cnvPath)
 	{

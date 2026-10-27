@@ -739,7 +739,10 @@ public static class DataReader {
 
 		//string datadump = "";
 
-		for (int i = 0; i < 461; i++)	//Forced 460
+		// UW1's file lists 464 pictures, the last 3 past its end; UW2's has all 464
+		int iUsed = 0;
+		while (iUsed < iCount && itemOffsets[iUsed] < fs.Length) iUsed++;
+		for (int i = 0; i < iUsed; i++)
 		{
 			AdditionalTextureInfo ati = new AdditionalTextureInfo(true, 0, 0, 0, 0);
 			int[] nibbles = Read4BitGraphic(fs, itemOffsets[i], 6, i, ati);
@@ -769,6 +772,19 @@ public static class DataReader {
 		TextureContainer items = new TextureContainer(itemsTex, iFirst, 6, null);
 		items.RawTextures = rawTexs;
 		items.AuxPalettes = objAuxPals;
+
+		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			// UW2's pictures are written back by patching their files (Data/Uw2Graphics.cs)
+			string dataDir = FileExplorer.GetUpperPath(FilePath);
+			Uw2Graphics.Reset();
+			Uw2Graphics.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), doortex, pals[0]);
+			Uw2Graphics.Remember("TMFLAT.GR", GameFiles.Resolve(dataDir + "/TMFLAT.GR"), levertex, pals[0]);
+			Uw2Graphics.Remember("TMOBJ.GR", GameFiles.Resolve(dataDir + "/TMOBJ.GR"), othertex, pals[0]);
+			Uw2Graphics.Remember("GENHEAD.GR", GameFiles.Resolve(dataDir + "/GENHEAD.GR"), portrTex, pals[0]);
+			Uw2Graphics.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
+			Uw2Graphics.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
+		}
 
 		fs.Close();
 		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open);
@@ -1159,6 +1175,12 @@ public static class DataReader {
 		{
 			width = 64;
 			height = 64;
+		}
+		else if (texType == TextureType.NPCHead && LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+		{
+			// UW2's character heads (CHARHEAD.GR) are 64x70; its generic heads are UW1's size
+			width = 64;
+			height = 70;
 		}
 		else if (texType == TextureType.NPCHead || texType == TextureType.GenericHead)
 		{
