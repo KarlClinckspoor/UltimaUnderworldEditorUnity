@@ -12,7 +12,7 @@ using UnityEngine;
 public static class ReleaseBuild
 {
 	/// <summary>Which game this branch's release is for. Used only in the output folder name.</summary>
-	const string Edition = "UW1";
+	const string Edition = "UW2";
 
 	public const string ExeName = "UltimateUnderworldEditor.exe";
 
