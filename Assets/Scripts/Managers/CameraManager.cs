@@ -52,7 +52,7 @@ public class CameraManager : MonoBehaviour {
 		}
 		GetKeyboardInput(dt);
 		GetDepthInput(dt);
-		onUI = EventSystem.current.IsPointerOverGameObject();
+		onUI = UiInput.PointerOverUI;
 		
 		MoveCamera();
 		if(mouseZ != 0 && !onUI)
@@ -66,7 +66,8 @@ public class CameraManager : MonoBehaviour {
 
 	private void GetKeyboardInput(float dt)
 	{
-		if (!onUI)
+		// typing in a Dear ImGui field must not move the map
+		if (!onUI && !UiInput.ImGuiWantsKeyboard)
 		{
 			moveX = Input.GetAxis("Horizontal") * MoveSpeed * dt;
 			moveY = Input.GetAxis("Vertical") * MoveSpeed * dt;

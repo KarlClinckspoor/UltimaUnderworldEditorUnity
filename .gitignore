@@ -10,3 +10,6 @@
 /.vs/
 /.vscode/
 /.idea/
+
+# Dear ImGui window layout (written next to the program)
+imgui.ini

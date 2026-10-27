@@ -99,22 +99,59 @@ namespace UltimateEditor.Uw1.UI
 			var fit = root.gameObject.AddComponent<ContentSizeFitter>();
 			fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 			fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-			Entry(root, "Object fields (selected object)...", () => FieldInspectorWindow.Show(Selected), true);
-			Entry(root, "Find items in all levels...", () => ItemFinderWindow.Show(), true);
-			Entry(root, "Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true);
-			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
-			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
-			Entry(root, "Light levels (SHADES.DAT)...", () => ShadesWindow.Show(), true);
-			Entry(root, "Saved games (slots, names, conversation variables)...", () => SaveSlotsWindow.Show(), false);
-			Entry(root, "Character in a save (PLAYER.DAT, position)...", () => PlayerWindow.Show(), false);
-			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
-			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
-			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
-				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
-			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
-			Entry(root, "Zones (randomizer logic)...", () => ZoneWindow.Show(), true);
-			Entry(root, "Zone graph...", () => ZoneGraphWindow.Show(), true);
+			foreach (var e in Entries())
+				Entry(root, e.Label, e.Action, e.NeedsLevels);
 			root.SetAsLastSibling();
+		}
+
+		/// <summary>A Tools menu entry: NeedsLevels entries need loaded data, the others only the DATA folder.</summary>
+		public sealed class ToolEntry
+		{
+			public string Label;
+			public Action Action;
+			public bool NeedsLevels;
+			public ToolEntry(string label, Action action, bool needsLevels) { Label = label; Action = action; NeedsLevels = needsLevels; }
+		}
+
+		/// <summary>The Tools menu's entries, shared by this menu and the Dear ImGui shell.</summary>
+		public static System.Collections.Generic.List<ToolEntry> Entries()
+		{
+			var list = new System.Collections.Generic.List<ToolEntry>
+			{
+				new ToolEntry("Object fields (selected object)...", () => FieldInspectorWindow.Show(Selected), true),
+				new ToolEntry("Find items in all levels...", () => ItemFinderWindow.Show(), true),
+				new ToolEntry("Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true),
+				new ToolEntry("Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false),
+				new ToolEntry("Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false),
+				new ToolEntry("Light levels (SHADES.DAT)...", () => ShadesWindow.Show(), true),
+				new ToolEntry("Saved games (slots, names, conversation variables)...", () => SaveSlotsWindow.Show(), false),
+				new ToolEntry("Character in a save (PLAYER.DAT, position)...", () => PlayerWindow.Show(), false),
+				new ToolEntry("New game start square (in the executable)...", () => StartWindow.Show(), true),
+				new ToolEntry("Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false),
+			};
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
+				list.Add(new ToolEntry("Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false));
+			list.Add(new ToolEntry("Automap and map notes...", () => AutomapWindow.Show(), true));
+			list.Add(new ToolEntry("Zones (randomizer logic)...", () => ZoneWindow.Show(), true));
+			list.Add(new ToolEntry("Zone graph...", () => ZoneGraphWindow.Show(), true));
+			return list;
+		}
+
+		/// <summary>Runs an entry after the same checks as the menu.</summary>
+		public static void Run(UIManager ui, ToolEntry e)
+		{
+			if (e.NeedsLevels && (ui.MapCreator == null || !ui.MapCreator.IsInitialized))
+			{
+				ui.SpawnPopupMessage("Open the game first (File > Open game...).");
+				return;
+			}
+			if (!e.NeedsLevels && string.IsNullOrEmpty(DataFolder))
+			{
+				ui.SpawnPopupMessage("Choose the game first (File > Open game...), so the editor knows its DATA folder.");
+				return;
+			}
+			try { e.Action(); }
+			catch (Exception ex) { ui.SpawnPopupMessage("Error: " + ex.Message); Debug.LogException(ex); }
 		}
 
 		float CanvasScale()

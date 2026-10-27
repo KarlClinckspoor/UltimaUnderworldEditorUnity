@@ -38,8 +38,12 @@ public class StaticObjectPanel : MonoBehaviour {
 	public GameObject MobilePanel;
 	public GameObject ContainerPanel;
 
+	/// <summary>The object last shown in this panel (the object under the mouse), for the Dear ImGui shell.</summary>
+	public static StaticObject LastObject;
+
 	public void SetStaticObject(StaticObject so)
 	{
+		LastObject = so;
 		Name.text = so.GetFullName();
 		Name.text += " (" + so.ObjectID + ") [" + DataReader.ToHex(so.ObjectID) + "] {" + DataReader.ToHex(so.GetFileIndex()) + "}";
 		Icon.sprite = MapCreator.GetObjectSpriteFromID(so);

@@ -58,7 +58,7 @@ public class InputManager : MonoBehaviour {
 		mousePosition = MapCreator.GetWorldPosition(Input.mousePosition, true);
 		if (mousePosition != lastMousePosition)
 			UIManager.DestroyTooltip();
-		if(!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+		if(!UiInput.PointerOverUI)
 		{
 			GameObject newObject = MapCreator.GetObjectUnderMouse(UIManager.CurrentMode);
 			//Debug.Log($"newObject : {newObject}, mode : {UIManager.CurrentMode}");

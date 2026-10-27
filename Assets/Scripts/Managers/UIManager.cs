@@ -857,6 +857,36 @@ public class UIManager : MonoBehaviour {
 	{
 		templateType = (TileType)dropdown.value;
 	}
+
+	// The tile and texture templates (what Tile and Texture modes paint), for the Dear ImGui
+	// shell; setting them keeps the mode panel's controls in step.
+	public TileType TemplateType
+	{
+		get { return templateType; }
+		set
+		{
+			templateType = value;
+			var dd = TemplatePanel ? TemplatePanel.GetComponentInChildren<Dropdown>(true) : null;
+			if (dd) dd.SetValueWithoutNotify((int)value);
+		}
+	}
+	public int TemplateHeight
+	{
+		get { return templateHeight; }
+		set
+		{
+			templateHeight = Mathf.Clamp(value, 0, 15);
+			var sl = TemplatePanel ? TemplatePanel.GetComponentInChildren<Slider>(true) : null;
+			if (sl)
+			{
+				sl.SetValueWithoutNotify(templateHeight);
+				var t = sl.handleRect ? sl.handleRect.GetComponentInChildren<Text>() : null;
+				if (t) t.text = templateHeight.ToString();
+			}
+		}
+	}
+	public int TemplateFloor { get { return templateFloor; } }
+	public int TemplateWall { get { return templateWall; } }
 	public void ChangeTemplateHeight(Slider slider)
 	{
 		templateHeight = (int)slider.value;
@@ -5211,10 +5241,21 @@ public class UIManager : MonoBehaviour {
 
 	public void SetEditorMode(Dropdown dropdown)
 	{
+		SetEditorMode((EditorMode)(dropdown.value + 1));
+	}
+
+	/// <summary>Object, Tile, Texture or Sector mode (the mode panel's dropdown and the Dear ImGui shell).</summary>
+	public void SetEditorMode(EditorMode mode)
+	{
 		InputManager.DeselectObject();
 		ObjectProperties.SetActive(false);
 		TilePropertiesObject.SetActive(false);
-		CurrentMode = (EditorMode)(dropdown.value + 1);
+		CurrentMode = mode;
+		// keep the mode panel's dropdown in step when the mode is set from elsewhere
+		var modeDropdown = ModePanel ? ModePanel.transform.Find("ModeDropdown") : null;
+		var dd = modeDropdown ? modeDropdown.GetComponent<Dropdown>() : null;
+		if (dd && dd.value != (int)mode - 1)
+			dd.SetValueWithoutNotify((int)mode - 1);
 		if (CurrentMode == EditorMode.Tile)
 		{
 			TemplatePanel.SetActive(true);
