@@ -184,6 +184,9 @@ public class UIManager : MonoBehaviour {
 		CurrentLevel = 1;
 		// After File > Open with data loaded, the scene was reloaded to open another game
 		string pendingOpen = UltimateEditor.Uw1.UI.GameOpener.TakePending();
+		// the previous game's static state is cleared here, once its scene is gone
+		if (pendingOpen != null)
+			UltimateEditor.Uw1.UI.GameOpener.ResetSession();
 		string path = pendingOpen ?? DataReader.GetPathFromFile();
 		bool valid = !string.IsNullOrEmpty(path) && DataReader.ValidateFilePath(path) && DataReader.ValidateFile(path);
 		if (valid)
@@ -231,6 +234,12 @@ public class UIManager : MonoBehaviour {
 		activatedMenu = activeMenu.activeSelf;
 	}
 
+	bool loading;
+	/// <summary>True while Load runs (several frames, before MapCreator.IsInitialized).</summary>
+	public bool IsLoading { get { return loading; } }
+	/// <summary>A load was started in this scene; if it failed, its leftovers need a fresh scene.</summary>
+	public bool LoadAttempted { get; private set; }
+
 	public void LoadData()
 	{
 		if (MapCreator.IsInitialized)
@@ -238,6 +247,8 @@ public class UIManager : MonoBehaviour {
 			SpawnPopupMessage("Data is already loaded.");
 			return;
 		}
+		if (loading)
+			return;
 		if (string.IsNullOrEmpty(DataReader.FilePath) || !DataReader.ValidateFilePath(DataReader.FilePath))
 		{
 			SpawnPopupMessage("No game chosen yet: use File > Open game... and choose the game's UW.EXE or UW2.EXE.");
@@ -251,10 +262,37 @@ public class UIManager : MonoBehaviour {
 
 		CurrentLevel = 1;
 		CurrentMode = EditorMode.Object;
+		LoadAttempted = true;
 		StartCoroutine(Load());
 	}
 
+	/// <summary>Runs loadSteps with the loading flag set, and reports an unexpected exception.</summary>
 	private IEnumerator Load()
+	{
+		loading = true;
+		try
+		{
+			IEnumerator steps = loadSteps();
+			while (true)
+			{
+				bool more;
+				Exception failure = null;
+				try { more = steps.MoveNext(); }
+				catch (Exception e) { more = false; failure = e; }
+				if (failure != null)
+				{
+					Debug.LogException(failure);
+					if (popup) Destroy(popup);
+					SpawnPopupMessage("Failed to load the game data\n" + failure.Message);
+				}
+				if (!more) break;
+				yield return steps.Current;
+			}
+		}
+		finally { loading = false; }
+	}
+
+	private IEnumerator loadSteps()
 	{
 		DataReader.Init(this);
 		SpawnPopupMessage("Loading textures", null, false, true);
@@ -447,8 +485,20 @@ public class UIManager : MonoBehaviour {
 	IEnumerator saveThen(Action after)
 	{
 		yield return StartCoroutine(Save());
-		if (lastSaveOk)
+		if (!lastSaveOk)
+			yield break;
+		if (Uw2Graphics.Problems.Count == 0)
+		{
 			after();
+			yield break;
+		}
+		// opening reloads the scene at once, so ask here rather than leave a popup nobody sees
+		if (popup) Destroy(popup);
+		var w = UltimateEditor.Uw1.UI.UiKit.Window("Saved, with problems", 480, 240);
+		UltimateEditor.Uw1.UI.UiKit.Paragraph(w.Content, "Everything was saved except these pictures:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), 11, Color.white);
+		var row = UltimateEditor.Uw1.UI.UiKit.Row(w.Content, 24);
+		UltimateEditor.Uw1.UI.UiKit.Button(row, "Open anyway", () => { w.Close(); after(); }, 120, 22);
+		UltimateEditor.Uw1.UI.UiKit.Button(row, "Stay here", w.Close, 100, 22);
 	}
 
 	private IEnumerator Save()
@@ -4891,15 +4941,7 @@ public class UIManager : MonoBehaviour {
 		{
 			var options = new List<string>();
 			for (int w = 0; w < game.WorldCount; w++)
-			{
-				int used = 0;
-				for (int p = 1; p <= game.LevelsPerWorld; p++)
-				{
-					int l = game.LevelAt(w, p);
-					if (l <= MapCreator.LevelData.Count && MapCreator.LevelData[l - 1].Present) used++;
-				}
-				options.Add(string.Format("{0} ({1} of {2} used)", game.WorldName(w), used, game.LevelsPerWorld));
-			}
+				options.Add(worldOption(w));
 			worldPicker = UltimateEditor.Uw1.UI.UiKit.Dropdown(levelPanel, options, 0, onWorldPicked, 250, 20);
 			UltimateEditor.Uw1.UI.UiKit.Tooltip(worldPicker.gameObject, "UW2 keeps eight level slots per world. Worlds with fewer levels leave the rest of their slots empty; slots 73 to 80 belong to no world (map scraps keep their maps there).");
 		}
@@ -4908,8 +4950,27 @@ public class UIManager : MonoBehaviour {
 		{
 			MapCreator.LevelData[CurrentLevel - 1].Present = true;
 			SpawnPopupMessage(LevArk.Game.LevelName(CurrentLevel) + " will be saved as a level (with its texture block).");
+			if (worldPicker)
+			{
+				int wi = LevArk.Game.WorldOf(CurrentLevel);
+				worldPicker.options[wi].text = worldOption(wi);
+				worldPicker.RefreshShownValue();
+			}
 			ShowLevelName();
 		}, 170, 20);
+	}
+
+	/// <summary>A world's entry in the dropdown: its name and how many of its slots hold a level.</summary>
+	string worldOption(int w)
+	{
+		var game = LevArk.Game;
+		int used = 0;
+		for (int p = 1; p <= game.LevelsPerWorld; p++)
+		{
+			int l = game.LevelAt(w, p);
+			if (l <= MapCreator.LevelData.Count && MapCreator.LevelData[l - 1].Present) used++;
+		}
+		return string.Format("{0} ({1} of {2} used)", game.WorldName(w), used, game.LevelsPerWorld);
 	}
 
 	/// <summary>Puts the world dropdown and the slider on a level without changing the view.</summary>

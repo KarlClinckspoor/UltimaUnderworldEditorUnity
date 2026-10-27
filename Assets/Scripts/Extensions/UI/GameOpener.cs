@@ -129,9 +129,20 @@ namespace UltimateEditor.Uw1.UI
 		public static void OpenLevArk(UIManager ui, string levArk)
 		{
 			levArk = Slashes(levArk);
+			if (ui.IsLoading)
+			{
+				ui.SpawnPopupMessage("Wait until the game has finished loading.");
+				return;
+			}
 			if (ui.MapCreator != null && ui.MapCreator.IsInitialized)
 			{
 				Confirm(ui, levArk);
+				return;
+			}
+			// a load that failed may have left part of its game behind: start from a fresh scene
+			if (ui.LoadAttempted)
+			{
+				Reopen(levArk);
 				return;
 			}
 			DataWriter.SavePathToFile(levArk);
@@ -157,12 +168,15 @@ namespace UltimateEditor.Uw1.UI
 			return "the game data in " + dir;
 		}
 
-		/// <summary>Forgets the loaded game and reloads the scene; the new scene's UIManager loads levArk.</summary>
+		/// <summary>Reloads the scene; the new scene's UIManager clears the old game's static state
+		/// (ResetSession) and loads levArk. The statics stay until then, because the old scene
+		/// keeps running until the end of this frame.</summary>
 		public static void Reopen(string levArk)
 		{
 			DataWriter.SavePathToFile(levArk);
 			pending = levArk;
-			ResetSession();
+			if (chooser != null && chooser.Root) chooser.Close();
+			chooser = null;
 			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 		}
 
@@ -180,7 +194,6 @@ namespace UltimateEditor.Uw1.UI
 			HuffmanNode.SetTree(null);
 			TilePanel.LastTile = null;
 			TilePanel.LastTileLevel = 0;
-			PropertiesPanel.TypeLinks.Clear();
 			UIManager.ItemDropdownPrefab = null;
 			ZoneTools.Reset();
 			ZoneWindow.ResetState();

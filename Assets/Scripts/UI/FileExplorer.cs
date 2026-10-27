@@ -37,6 +37,9 @@ public class FileExplorer : ResizableWindow {
 		if (string.IsNullOrEmpty(typed)) return;
 		typed = typed.Trim().Trim('"').Replace('\\', '/');
 		if (typed.Length > 3) typed = typed.TrimEnd('/');
+		// onEndEdit also fires when the box just loses focus: leave the list alone then, or
+		// rebuilding it would swallow the click on an entry
+		if (typed == currentPath) return;
 		if (Directory.Exists(typed))
 		{
 			string oldpath = currentPath;

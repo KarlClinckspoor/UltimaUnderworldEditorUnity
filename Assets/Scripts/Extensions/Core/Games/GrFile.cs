@@ -128,6 +128,7 @@ namespace UltimateEditor.Games
 		{
 			var o = new List<int>();
 			int n = pixels.Length, i = 0;
+			bool lastWasRepeat = false;
 			while (i < n)
 			{
 				// repeat records: every stretch of three or more equal pixels from here
@@ -145,13 +146,21 @@ namespace UltimateEditor.Games
 					if (reps.Count > 1) { PutCount(o, 2); PutCount(o, reps.Count); }
 					foreach (var r in reps) { PutCount(o, r[0]); o.Add(r[1]); }
 				}
+				lastWasRepeat = reps.Count > 0;
 				if (i >= n) break;
 				// a run of single pixels, up to the next stretch of three
 				int start = i;
 				while (i < n && i - start < 0xFFF && RunLength(pixels, i) < 3) i++;
 				PutCount(o, i - start);
 				for (int k = start; k < i; k++) o.Add(pixels[k] & 0xF);
+				lastWasRepeat = false;
 			}
+			// End the way the shipped pictures do, which the editor's own reader relies on
+			// (DataReader.Read4BitGraphic drops an odd last nibble; Convert4BitToRawTex keeps
+			// reading until one nibble before the end): after a final repeat, "1" (go to the
+			// run) and a 0; after a final run nothing, plus a 0 when the count is odd.
+			if (lastWasRepeat) { o.Add(1); o.Add(0); }
+			else if ((o.Count & 1) != 0) o.Add(0);
 			return o;
 		}
 

@@ -773,9 +773,13 @@ public static class DataReader {
 		items.RawTextures = rawTexs;
 		items.AuxPalettes = objAuxPals;
 
+		fs.Close();
+
 		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
-			// UW2's pictures are written back by patching their files (Data/Uw2Graphics.cs)
+			// UW2's pictures are written back by patching their files (Data/Uw2Graphics.cs).
+			// After fs.Close(): on Windows, OBJECTS.GR cannot be read again while that stream
+			// (opened for writing too) holds it.
 			string dataDir = FileExplorer.GetUpperPath(FilePath);
 			Uw2Graphics.Reset();
 			Uw2Graphics.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), doortex, pals[0]);
@@ -785,8 +789,6 @@ public static class DataReader {
 			Uw2Graphics.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
 			Uw2Graphics.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
 		}
-
-		fs.Close();
 		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open);
 		int[] wallDat = new int[256];
 		int[] florDat;
@@ -1201,11 +1203,12 @@ public static class DataReader {
 		Texture2D newTex = new Texture2D(width, height);
 		newTex.name = oldTex.name;
 		newTex.filterMode = FilterMode.Point;
+		// nearest-neighbour scaling (a 34x34 head becomes UW2's 64x70; same size copies as before)
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
 			{
-				newTex.SetPixel(x, y, oldTex.GetPixel(x, y));
+				newTex.SetPixel(x, y, oldTex.GetPixel(x * oldTex.width / width, y * oldTex.height / height));
 			}
 		}
 		newTex.Apply();

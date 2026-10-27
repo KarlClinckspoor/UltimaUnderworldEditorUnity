@@ -52,12 +52,21 @@ public static class Uw2Graphics
 	{
 		var report = new List<string>();
 		Problems.Clear();
-		SaveFile("DOORS.GR", t.Doors, false, report, backup);
-		SaveFile("TMFLAT.GR", t.Levers, false, report, backup);
-		SaveFile("TMOBJ.GR", t.Other, false, report, backup);
-		SaveFile("GENHEAD.GR", t.GenHeads, false, report, backup);
-		SaveFile("CHARHEAD.GR", t.NPCHeads, false, report, backup);
-		SaveFile("OBJECTS.GR", t.Objects, true, report, backup);
+		var all = new[]
+		{
+			new KeyValuePair<string, TextureContainer>("DOORS.GR", t.Doors),
+			new KeyValuePair<string, TextureContainer>("TMFLAT.GR", t.Levers),
+			new KeyValuePair<string, TextureContainer>("TMOBJ.GR", t.Other),
+			new KeyValuePair<string, TextureContainer>("GENHEAD.GR", t.GenHeads),
+			new KeyValuePair<string, TextureContainer>("CHARHEAD.GR", t.NPCHeads),
+			new KeyValuePair<string, TextureContainer>("OBJECTS.GR", t.Objects),
+		};
+		// one file failing (unreadable, in use) must not stop the rest of the save
+		foreach (var f in all)
+		{
+			try { SaveFile(f.Key, f.Value, f.Key == "OBJECTS.GR", report, backup); }
+			catch (Exception e) { Warn(report, f.Key + ": not written (" + e.Message + ")"); }
+		}
 		return report;
 	}
 
@@ -69,6 +78,8 @@ public static class Uw2Graphics
 		int n = o.Length - 1;
 		if (c.Count > tr.Original.Length)
 			Warn(report, name + ": pictures added after the first " + tr.Original.Length + " are not written (the game's file has a fixed list)");
+		if (c.Count < tr.Original.Length)
+			Warn(report, name + ": " + (tr.Original.Length - c.Count) + " removed picture(s) stay in the file (the game's file has a fixed list)");
 		var replace = new Dictionary<int, GrFile.Picture>();
 		int limit = Math.Min(c.Count, Math.Min(tr.Original.Length, n));
 		for (int i = 0; i < limit; i++)
@@ -104,7 +115,8 @@ public static class Uw2Graphics
 		backup(name);
 		File.WriteAllBytes(tr.Path, now);
 		tr.Bytes = now;
-		tr.Original = c.Textures.ToArray();
+		// only the pictures written count as saved; skipped ones are reported again next time
+		foreach (var i in replace.Keys) tr.Original[i] = c.Textures[i];
 		report.Add(name + ": " + replace.Count + " picture(s) written");
 	}
 
