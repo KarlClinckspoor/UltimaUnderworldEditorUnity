@@ -1,0 +1,12 @@
+# Unity-generated folders
+/[Ll]ibrary/
+/[Tt]emp/
+/[Ll]ogs/
+/[Oo]bj/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+
+# IDE folders
+/.vs/
+/.vscode/
+/.idea/
