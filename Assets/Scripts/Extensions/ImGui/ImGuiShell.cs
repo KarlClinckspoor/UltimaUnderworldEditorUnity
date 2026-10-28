@@ -25,7 +25,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 	/// </summary>
 	public sealed partial class ImGuiShell : MonoBehaviour
 	{
-		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize13", PrefSegoe = "imgui.segoe", PrefTrial = "imgui.fonttrial";
+		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize13", PrefSegoe = "imgui.segoe", PrefTrial = "imgui.fonttrial", PrefStarting = "imgui.starting";
 		static readonly float[] FontSizes = { 13f, 16f, 20f, 26f };
 
 		static bool hooked;
@@ -35,6 +35,8 @@ namespace UltimateEditor.Uw1.ImGuiUI
 		bool classic;
 		float fontSize;
 		bool segoe;
+		bool startPending;
+		int goodFrames;
 		float pendingFontSize = -1;
 		bool styleDirty = true;
 		GameKind? styledFor;
@@ -64,36 +66,58 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			ui = GetComponent<UIManager>();
 			classic = PlayerPrefs.GetInt(PrefClassic, 0) == 1;
 			fontSize = PlayerPrefs.GetFloat(PrefFontSize, 13f);
-			// building a TrueType font atlas crashed the Unity editor natively on one machine; a flag
-			// is saved before trying it, and still being set at the next start means it crashed
-			if (PlayerPrefs.GetInt(PrefTrial, 0) == 1)
-			{
-				PlayerPrefs.SetInt(PrefTrial, 0);
-				PlayerPrefs.SetInt(PrefSegoe, 0);
-				PlayerPrefs.Save();
-				Debug.LogWarning("Dear ImGui: the last start with the Segoe UI font did not finish; using the built-in font from now on (View > Text size > Segoe UI to retry).");
-			}
-			// the Segoe UI atlas crashed Unity natively again when chosen: it stays off (and a saved
-			// choice from the earlier build is dropped) until the cause is found
+			// Segoe UI is off (an earlier build offered it); drop what that build saved
 			segoe = false;
 			PlayerPrefs.DeleteKey(PrefSegoe);
-			try
+			PlayerPrefs.DeleteKey(PrefTrial);
+#if !(UIMGUI_REMOVE_IMPLOT && UIMGUI_REMOVE_IMNODES && UIMGUI_REMOVE_IMGUIZMO)
+			// ImPlot, imnodes and ImGuizmo each carry their own copy of Dear ImGui, and using them
+			// with this package crashes Unity natively; Assets/Editor/ImGuiShellDefine.cs turns them off
+			Debug.LogError("Dear ImGui: the defines UIMGUI_REMOVE_IMPLOT, UIMGUI_REMOVE_IMNODES and UIMGUI_REMOVE_IMGUIZMO are missing (Project Settings > Player > Scripting Define Symbols); using the classic interface.");
+			host = null;
+#else
+			// a native crash cannot be caught: a flag is saved before starting and cleared once the
+			// interface has drawn a few frames (or the scene ends); still set means the last start crashed
+			if (PlayerPrefs.GetInt(PrefStarting, 0) == 1)
 			{
-				if (segoe) { PlayerPrefs.SetInt(PrefTrial, 1); PlayerPrefs.Save(); }
-				host = ImGuiHost.Create(Camera.main, fontSize, segoe, OnLayout);
-				if (segoe) { PlayerPrefs.SetInt(PrefTrial, 0); PlayerPrefs.Save(); }
-			}
-			catch (Exception e)
-			{
-				// the classic interface stays as it is
-				Debug.LogError("The Dear ImGui interface could not start; using the classic one. " + e);
+				PlayerPrefs.SetInt(PrefStarting, 0);
+				PlayerPrefs.Save();
+				Debug.LogWarning("Dear ImGui: the last start crashed; using the classic interface this time. Start again to retry.");
 				host = null;
 			}
+			else
+			{
+				PlayerPrefs.SetInt(PrefStarting, 1);
+				PlayerPrefs.Save();
+				startPending = true;
+				try
+				{
+					host = ImGuiHost.Create(Camera.main, fontSize, segoe, OnLayout);
+				}
+				catch (Exception e)
+				{
+					// the classic interface stays as it is
+					Debug.LogError("The Dear ImGui interface could not start; using the classic one. " + e);
+					host = null;
+					StartFinished();
+				}
+			}
+#endif
 			ApplyClassicVisibility();
+		}
+
+		/// <summary>The start is over (it worked, failed in managed code, or the scene ended): clear the crash flag.</summary>
+		void StartFinished()
+		{
+			if (!startPending) return;
+			startPending = false;
+			PlayerPrefs.SetInt(PrefStarting, 0);
+			PlayerPrefs.Save();
 		}
 
 		void OnDestroy()
 		{
+			StartFinished();
 			UiInput.ImGuiWantsMouse = false;
 			UiInput.ImGuiWantsKeyboard = false;
 		}
@@ -202,6 +226,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			}
 			finally
 			{
+				if (startPending && ++goodFrames >= 60) StartFinished();
 				UiInput.ImGuiWantsMouse = io.WantCaptureMouse;
 				UiInput.ImGuiWantsKeyboard = io.WantTextInput;
 			}
