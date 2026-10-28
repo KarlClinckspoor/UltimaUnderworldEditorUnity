@@ -25,8 +25,8 @@ namespace UltimateEditor.Uw1.ImGuiUI
 	/// </summary>
 	public sealed partial class ImGuiShell : MonoBehaviour
 	{
-		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize", PrefSegoe = "imgui.segoe", PrefTrial = "imgui.fonttrial";
-		static readonly float[] FontSizes = { 14f, 16f, 18f, 20f, 24f };
+		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize13", PrefSegoe = "imgui.segoe", PrefTrial = "imgui.fonttrial";
+		static readonly float[] FontSizes = { 13f, 16f, 20f, 26f };
 
 		static bool hooked;
 
@@ -63,7 +63,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 		{
 			ui = GetComponent<UIManager>();
 			classic = PlayerPrefs.GetInt(PrefClassic, 0) == 1;
-			fontSize = PlayerPrefs.GetFloat(PrefFontSize, 16f);
+			fontSize = PlayerPrefs.GetFloat(PrefFontSize, 13f);
 			// building a TrueType font atlas crashed the Unity editor natively on one machine; a flag
 			// is saved before trying it, and still being set at the next start means it crashed
 			if (PlayerPrefs.GetInt(PrefTrial, 0) == 1)
@@ -73,7 +73,10 @@ namespace UltimateEditor.Uw1.ImGuiUI
 				PlayerPrefs.Save();
 				Debug.LogWarning("Dear ImGui: the last start with the Segoe UI font did not finish; using the built-in font from now on (View > Text size > Segoe UI to retry).");
 			}
-			segoe = PlayerPrefs.GetInt(PrefSegoe, 0) == 1;
+			// the Segoe UI atlas crashed Unity natively again when chosen: it stays off (and a saved
+			// choice from the earlier build is dropped) until the cause is found
+			segoe = false;
+			PlayerPrefs.DeleteKey(PrefSegoe);
 			try
 			{
 				if (segoe) { PlayerPrefs.SetInt(PrefTrial, 1); PlayerPrefs.Save(); }
@@ -150,6 +153,10 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			if (classicApplied == showClassic && classicObjectEditorApplied == classicObjectEditor) return;
 			classicApplied = showClassic;
 			classicObjectEditorApplied = classicObjectEditor;
+			hiddenPanels.Clear();
+			foreach (var g in new[] { ui.TopBarGO, ui.TopBarGO && ui.TopBarGO.transform.parent ? ui.TopBarGO.transform.parent.gameObject : null,
+				ui.ModePanel, ui.InfoPanel, ui.TilePanelObject, ui.StaticObjectPanelObject, ui.TilePropertiesObject })
+				if (g) hiddenPanels.Add(g.transform);
 			Show(ui.TopBarGO, showClassic);
 			Show(ui.ModePanel, showClassic);
 			Show(ui.InfoPanel, showClassic);
@@ -175,8 +182,8 @@ namespace UltimateEditor.Uw1.ImGuiUI
 		{
 			var io = ImGui.GetIO();
 			// a uGUI dialog over the shell gets the mouse, not the ImGui window under it
-			bool overUgui = EventSystem.current && EventSystem.current.IsPointerOverGameObject();
-			BlockedBy = overUgui ? UguiUnderPointer() : null;
+			BlockedBy = ShellOn ? UguiUnderPointer() : null;
+			bool overUgui = ShellOn ? BlockedBy != null : EventSystem.current && EventSystem.current.IsPointerOverGameObject();
 			if (overUgui) io.ConfigFlags |= ImGuiConfigFlags.NoMouse;
 			else io.ConfigFlags &= ~ImGuiConfigFlags.NoMouse;
 			// arrow keys move the map; ImGui's keyboard navigation would take them too
@@ -203,6 +210,16 @@ namespace UltimateEditor.Uw1.ImGuiUI
 		/// <summary>Name of the classic-interface object under the pointer while it keeps the mouse from ImGui (shown in the "Under the mouse" window).</summary>
 		public static string BlockedBy;
 
+		/// <summary>The classic panels the shell hides (set by ApplyClassicVisibility): whatever they still catch does not count.</summary>
+		static readonly System.Collections.Generic.List<Transform> hiddenPanels = new System.Collections.Generic.List<Transform>();
+
+		static bool UnderHiddenPanel(Transform t)
+		{
+			foreach (var h in hiddenPanels)
+				if (h && (t == h || t.IsChildOf(h))) return true;
+			return false;
+		}
+
 		static string UguiUnderPointer()
 		{
 			try
@@ -210,11 +227,15 @@ namespace UltimateEditor.Uw1.ImGuiUI
 				var data = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
 				var hits = new System.Collections.Generic.List<RaycastResult>();
 				EventSystem.current.RaycastAll(data, hits);
-				if (hits.Count == 0) return "(unknown)";
-				var t = hits[0].gameObject.transform;
-				string path = t.name;
-				for (int i = 0; i < 3 && t.parent; i++) { t = t.parent; path = t.name + "/" + path; }
-				return path;
+				foreach (var hit in hits)
+				{
+					var t = hit.gameObject.transform;
+					if (UnderHiddenPanel(t)) continue;
+					string path = t.name;
+					for (int i = 0; i < 3 && t.parent; i++) { t = t.parent; path = t.name + "/" + path; }
+					return path;
+				}
+				return null;
 			}
 			catch (Exception) { return "(unknown)"; }
 		}
@@ -380,12 +401,6 @@ namespace UltimateEditor.Uw1.ImGuiUI
 					if (ImGui.MenuItem(s.ToString("0") + " px", "", Math.Abs(s - fontSize) < 0.1f))
 						pendingFontSize = s;
 			});
-			bool segoeNext = PlayerPrefs.GetInt(PrefSegoe, 0) == 1;
-			if (ImGui.MenuItem("Segoe UI font (next start)", "", segoeNext))
-			{
-				PlayerPrefs.SetInt(PrefSegoe, segoeNext ? 0 : 1);
-				PlayerPrefs.Save();
-			}
 			if (ImGui.MenuItem("Classic interface", "F11", false)) SetClassic(true);
 			ImGui.Separator();
 			ImGui.MenuItem("Dear ImGui demo", "", ref showDemo);
