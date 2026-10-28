@@ -97,17 +97,14 @@ namespace UltimateEditor.Modding.Exe
 			return cur;
 		}
 
-		/// <summary>The file ranges [start, end) of the hacked executable that the hack writes
-		/// (overwrites, copies' destinations, inserted bytes).</summary>
+		/// <summary>The file ranges [start, end) of the hacked executable whose bytes the hack itself
+		/// writes (its overwrites: its code and the changed headers). Inserts and copies only make
+		/// room and move an overlay's code, which stays the game's: a mod may patch it there.</summary>
 		public List<KeyValuePair<int, int>> WrittenRanges()
 		{
 			var r = new List<KeyValuePair<int, int>>();
 			foreach (var e in Edits)
-			{
 				if (e.Kind == EditKind.Overwrite) r.Add(new KeyValuePair<int, int>(e.Start, e.Start + e.Data.Length));
-				else if (e.Kind == EditKind.Copy) r.Add(new KeyValuePair<int, int>(e.Destination, e.Destination + e.Length));
-				else r.Add(new KeyValuePair<int, int>(e.Start, e.Start + e.Length));
-			}
 			return r;
 		}
 
