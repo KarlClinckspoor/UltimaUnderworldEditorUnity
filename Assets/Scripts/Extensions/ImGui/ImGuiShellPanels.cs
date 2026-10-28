@@ -368,6 +368,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 
 		void DrawHoverWindow()
 		{
+			if (BlockedBy != null) Dim("Classic interface under the pointer: " + BlockedBy);
 			if (!Loaded) { Dim("Nothing loaded."); return; }
 			var so = ui.StaticObjectPanelObject && ui.StaticObjectPanelObject.activeSelf ? StaticObjectPanel.LastObject : null;
 			if (so)

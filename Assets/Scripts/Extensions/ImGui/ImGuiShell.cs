@@ -158,6 +158,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			var io = ImGui.GetIO();
 			// a uGUI dialog over the shell gets the mouse, not the ImGui window under it
 			bool overUgui = EventSystem.current && EventSystem.current.IsPointerOverGameObject();
+			BlockedBy = overUgui ? UguiUnderPointer() : null;
 			if (overUgui) io.ConfigFlags |= ImGuiConfigFlags.NoMouse;
 			else io.ConfigFlags &= ~ImGuiConfigFlags.NoMouse;
 			// arrow keys move the map; ImGui's keyboard navigation would take them too
@@ -177,6 +178,25 @@ namespace UltimateEditor.Uw1.ImGuiUI
 				UiInput.ImGuiWantsMouse = io.WantCaptureMouse;
 				UiInput.ImGuiWantsKeyboard = io.WantTextInput;
 			}
+		}
+
+		/// <summary>Name of the classic-interface object under the pointer while it keeps the mouse from ImGui (shown in the "Under the mouse" window).</summary>
+		public static string BlockedBy;
+
+		static string UguiUnderPointer()
+		{
+			try
+			{
+				var data = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
+				var hits = new System.Collections.Generic.List<RaycastResult>();
+				EventSystem.current.RaycastAll(data, hits);
+				if (hits.Count == 0) return "(unknown)";
+				var t = hits[0].gameObject.transform;
+				string path = t.name;
+				for (int i = 0; i < 3 && t.parent; i++) { t = t.parent; path = t.name + "/" + path; }
+				return path;
+			}
+			catch (Exception) { return "(unknown)"; }
 		}
 
 		void Report(Exception e)
