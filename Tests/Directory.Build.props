@@ -1,0 +1,18 @@
+<Project>
+  <!-- Shared by the test projects. The editor's own sources are C# 8 (Unity 2020.3). -->
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</RepoRoot>
+    <ScriptsDir>$(RepoRoot)/Assets/Scripts</ScriptsDir>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- The editor's code is built as it is; these warnings are its own, not the tests'. -->
+    <NoWarn>$(NoWarn);CS0618;CS0414;CS0169;CS0649;CS0219;CS0162;CS0168;CS0108;CS0114;CS0252;CS0067;CS0105;CS8981;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- The commit the formats were moved from (branch uw2-support). The legacy build and the
+         parity tests compare the moved code with it. -->
+    <LegacyCommit>b61e96af21ea7f0ac2a7e6d0a0ba98ea81c1f32e</LegacyCommit>
+  </PropertyGroup>
+</Project>

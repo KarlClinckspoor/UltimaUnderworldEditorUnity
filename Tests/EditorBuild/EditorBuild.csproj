@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The editor's scripts as they are now (Assembly-CSharp without the Formats and Modding
+       folders, which are their own assemblies), built against the Unity stand-ins. A build
+       error here is a build error in Unity. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Editor.Current</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ScriptsDir)/**/*.cs" Exclude="$(ScriptsDir)/Formats/**;$(ScriptsDir)/Modding/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../UnityStubs/UnityStubs.csproj" />
+    <ProjectReference Include="../Formats/Underworld.Formats.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(ScriptsDir)/Modding')">
+    <ProjectReference Include="../Modding/Underworld.Modding.csproj" />
+  </ItemGroup>
+</Project>

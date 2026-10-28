@@ -809,51 +809,11 @@ public static class DataReader {
 		return texData;
 	}
 
-	/// <summary>Nearest-neighbour halving of a raw (palette index) picture.</summary>
-	public static int[] Downscale(int[] raw, int width, int height)
-	{
-		int w = width / 2, h = height / 2;
-		var r = new int[w * h];
-		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
-				r[y * w + x] = raw[(y * 2) * width + x * 2];
-		return r;
-	}
+	public static int[] Downscale(int[] raw, int width, int height) { return GraphicsCodec.Downscale(raw, width, height); }
 
-	public static int[] ReadPallette(Stream fs, int index)
-	{
-		int[] pal = new int[256 * 3];
-		//string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/pals.dat");
-		//FileStream fs = new FileStream(filePath, FileMode.Open);
-		for (int i = 0; i < 256 * 3; i++)
-		{
-			pal[i] = fs.ReadByte();
-		}
-		//fs.Close();
-		return pal;
-	}
+	public static int[] ReadPallette(Stream fs, int index) { return GraphicsCodec.ReadPallette(fs, index); }
 
-	public static List<int[]> ReadAuxPalettes()
-	{
-		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/ALLPALS.dat");
-		FileStream fs = new FileStream(filePath, FileMode.Open);
-
-		List<int[]> auxpals = new List<int[]>();
-		// 32 palettes: the game reads 0x200 bytes (reference gfx/LOADGR.C:428; the file is 513
-		// bytes in both games). UW2's objects use palette 31.
-		for (int p = 0; p < 32; p++)
-		{
-			int[] auxpal = new int[16];
-			for (int i = 0; i < 16; i++)
-			{
-				int b = fs.ReadByte();
-				auxpal[i] = b < 0 ? 0 : b;
-			}
-			auxpals.Add(auxpal);
-		}
-		fs.Close();
-		return auxpals;
-	}
+	public static List<int[]> ReadAuxPalettes() { return GraphicsCodec.ReadAuxPalettes(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/ALLPALS.dat")); }
 
 	public static Color[] CreateColorPallette(int[] oldPal)
 	{
@@ -877,196 +837,23 @@ public static class DataReader {
 		return newPal;
 	}
 
-	public static int ReadPaletteMapping(Stream fs, int r, int g, int b)
-	{
-		fs.Position = r * 256 * 256 + g * 256 + b;
-		return fs.ReadByte();
-	}
+	public static int ReadPaletteMapping(Stream fs, int r, int g, int b) { return GraphicsCodec.ReadPaletteMapping(fs, r, g, b); }
 
-	public static int[] ReadGraphicOffsets(string fileName, ref int count, ref int first)
-	{
-		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName);
-		FileStream fs = new FileStream(filePath, FileMode.Open);
-		int start = fs.ReadByte();
-		int size = 0;
-		if (start == 2)
-			size = fs.ReadByte();
+	public static int[] ReadGraphicOffsets(string fileName, ref int count, ref int first) { return GraphicsCodec.ReadGraphicOffsets(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName), ref count, ref first); }
 
-		int c_a = fs.ReadByte();
-		int c_b = fs.ReadByte();
+	public static int[] Read4BitGraphic(Stream fs, long offset, int startingOffset, int index, AdditionalTextureInfo ati) { return GraphicsCodec.Read4BitGraphic(fs, offset, startingOffset, index, ati); }
 
-		count = c_a + c_b * 256;
-		
-		int[] offsets = new int[count];
-		first = start + 2;
-		for (int i = 0; i < count; i++)
-		{
-			fs.Position = start + 2 + i * 4;
-			int a = fs.ReadByte();
-			int b = fs.ReadByte();
-			int c = fs.ReadByte();
-			int d = fs.ReadByte();
+	public static int[] Read4BitGraphic(Stream fs, long offset, int width, int height, int count) { return GraphicsCodec.Read4BitGraphic(fs, offset, width, height, count); }
 
-			int offset = a + (b * 256) + (c * 256 * 256) + (d * 256 * 256 * 256);
-			offsets[i] = offset;
-		}
-		fs.Close();
-		return offsets;
-	}
-
-	public static int[] Read4BitGraphic(Stream fs, long offset, int startingOffset, int index, AdditionalTextureInfo ati)
-	{
-		fs.Position = offset + 1;
-		ati.Width = fs.ReadByte();
-		ati.Height = fs.ReadByte();
-		ati.AuxPalette = fs.ReadByte();
-		ati.SizeA = fs.ReadByte();
-		ati.SizeB = fs.ReadByte();
-		int size = ati.SizeA + ati.SizeB * 256;
-
-		//Debug.LogFormat("Index : {0}, size : {1}, fs.Position : {2}", index, size, fs.Position);
-		return Read4BitGraphic(fs, fs.Position, ati.Width, ati.Height, size);
-	}
-
-	public static int[] Read4BitGraphic(Stream fs, long offset, int width, int height, int count)
-	{
-		int i = 0;
-		int[] rawGr = new int[count];
-		while (count > 1)
-		{
-			int n = fs.ReadByte();
-			int n1 = (n & 0xF0) >> 4;
-			int n2 = n & 0x0F;
-			rawGr[i] = n1;
-			rawGr[i + 1] = n2;
-
-			i += 2;
-			count -= 2;
-		}
-		return rawGr;
-	}
-
-	public static int[] Convert4BitToRawTex(int[] nibbles, int width, int height)
-	{
-		int[] rawImg = new int[width * height];
-		int state = 0;
-		int ptr = 0;
-		int count = 0;
-		int repeatCount = 0;
-		int curNibble = 0;
-		int curPixel = 0;
-		//Debug.LogFormat("size : {0}, nibbles.Length : {1}", width * height, nibbles.Length);
-		while(ptr < nibbles.Length || curPixel < rawImg.Length)
-		{
-			if (ptr >= nibbles.Length - 1)
-				break;
-			//Debug.LogFormat("state : {0}, nibble : {1}, ptr : {2}, count : {3}, pixel : {4}, repeatCount : {5}, nibbles.Length : {6}", state, curNibble, ptr, count, curPixel, repeatCount, nibbles.Length);
-			if(state == 0)		//Start
-			{
-				count = getCount(nibbles, ref ptr);
-				if(count == 1)
-					state = 2;
-				else if (count == 2)
-					repeatCount = getCount(nibbles, ref ptr) - 1;
-				else
-					state = 1;
-			}
-			else if(state == 1)	//Repeat
-			{
-				curNibble = getNibble(nibbles, ref ptr);
-				if(width * height - curPixel < count)
-					count = width * height - curPixel;
-				for (int i = 0; i < count; i++)
-					rawImg[curPixel++] = curNibble;
-				if(repeatCount == 0)
-					state = 2;
-				else
-				{
-					state = 0;
-					repeatCount--;
-				}
-			}
-			else if(state == 2)	//Run
-			{
-				count = getCount(nibbles, ref ptr);
-				if(width * height - curPixel < count)
-					count = width * height - curPixel;
-				for (int i = 0; i < count; i++)
-				{
-					curNibble = getNibble(nibbles, ref ptr);
-					rawImg[curPixel++] = curNibble;
-				}
-				state = 0;
-			}
-		}
-		return rawImg;
-	}
-	private static int getCount(int[] nibbles, ref int ptr)
-	{
-		int n1;
-		int n2;
-		int n3;
-		int count = 0;
-
-		n1 = getNibble(nibbles, ref ptr);
-		count = n1;
-
-		if (count == 0)
-		{
-			n1 = getNibble(nibbles, ref ptr);
-			n2 = getNibble(nibbles, ref ptr);
-			count = (n1 << 4) | n2;
-		}
-		if (count == 0)
-		{
-			n1 = getNibble(nibbles, ref ptr);
-			n2 = getNibble(nibbles, ref ptr);
-			n3 = getNibble(nibbles, ref ptr);
-			count = (((n1 << 4) | n2) << 4) | n3;
-		}
-		return count;
-	}
-	private static int getNibble(int[] nibbles, ref int ptr)
-	{
-		int nibble = nibbles[ptr];
-		ptr++;
-		return nibble;
-	}
+	public static int[] Convert4BitToRawTex(int[] nibbles, int width, int height) { return GraphicsCodec.Convert4BitToRawTex(nibbles, width, height); }
 
 	public static List<int[]> ReadRawTextures(string fileName, int[] offsets, int width, int height, int startingOffset = 0, bool specificSize = false, Dictionary<int, Vector2Int> dict = null)
 	{
-		if (offsets == null)
-			return null;
-		int count = offsets.Length;
-		List<int[]> textures = new List<int[]>();
-		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName);
-		FileStream fs = new FileStream(filePath, FileMode.Open);
-		for (int i = 0; i < count; i++)
-		{
-			if (!specificSize)
-				fs.Position = offsets[i] + startingOffset;
-			else
-			{
-				fs.Position = offsets[i] + 1;
-				width = fs.ReadByte();
-				height = fs.ReadByte();
-				fs.Position = offsets[i] + startingOffset;
-				dict[i] = new Vector2Int(width, height);
-			}
-			int[] texture = new int[width * height];
-			for (int j = 0; j < width * height; j++)
-			{
-				texture[j] = fs.ReadByte();
-				if(texture[j] == -1)
-				{
-					fs.Close();
-					return textures;
-				}
-			}
-			textures.Add(texture);
-		}
-		fs.Close();
-		return textures;
+		// The Formats assembly has no Vector2Int: it reports the sizes as (width, height) pairs
+		var sizes = dict == null ? null : new Dictionary<int, GraphicsCodec.Size>();
+		List<int[]> r = GraphicsCodec.ReadRawTextures(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/" + fileName), offsets, width, height, startingOffset, specificSize, sizes);
+		if (sizes != null) foreach (var kv in sizes) dict[kv.Key] = new Vector2Int(kv.Value.x, kv.Value.y);
+		return r;
 	}
 
 	public static Texture2D ConvertToTexture(string name, int[] rawtex, int width, int height, Color[] pal, bool reverse, int[] auxpal = null)
@@ -1234,166 +1021,13 @@ public static class DataReader {
 		return strData;
 	}
 
-	public static Tuple<HuffmanNode[], long> ReadHuffmanNodes(Stream fs)
-	{
-		fs.Position = 0;
+	public static Tuple<HuffmanNode[], long> ReadHuffmanNodes(Stream fs) { return StringsPak.ReadHuffmanNodes(fs); }
 
-		int a = fs.ReadByte();
-		int b = fs.ReadByte();
+	public static Tuple<List<StringBlock>, Dictionary<int, int>> ReadStringBlocks(Stream fs, long startOffset) { return StringsPak.ReadStringBlocks(fs, startOffset); }
 
-		int nodeCount = a + b * 256;
+	public static List<string> ReadStrings(Stream fs, StringBlock block, HuffmanNode[] nodes, bool debug = false) { return StringsPak.ReadStrings(fs, block, nodes, debug); }
 
-		HuffmanNode[] nodes = new HuffmanNode[nodeCount];
-		//Debug.Log("Node count  " + nodeCount);
-		for (int i = 0; i < nodeCount; i++)
-		{
-			int _char = fs.ReadByte();
-			int parent = fs.ReadByte();
-			int left = fs.ReadByte();
-			int right = fs.ReadByte();
-			nodes[i] = new HuffmanNode(_char, i, parent, left, right);
-			//Debug.LogFormat("Node {0} : {1}", i, nodes[i]);
-		}
-		HuffmanNode.SetTree(nodes);
-		Tuple<HuffmanNode[], long> pair = new Tuple<HuffmanNode[], long>(nodes, fs.Position);
-		return pair;
-	}
-
-	public static Tuple<List<StringBlock>, Dictionary<int, int>> ReadStringBlocks(Stream fs, long startOffset)
-	{
-		fs.Position = startOffset;
-
-		int a = fs.ReadByte();
-		int b = fs.ReadByte();
-
-		int blockCount = a + b * 256;
-		List<StringBlock> blocks = new List<StringBlock>();
-		Dictionary<int, int> blockDict = new Dictionary<int, int>();
-
-		for (int i = 0; i < blockCount; i++)
-		{
-			int blk_a = fs.ReadByte();
-			int blk_b = fs.ReadByte();
-			int blk_c = fs.ReadByte();
-			int blk_d = fs.ReadByte();
-			int blk_e = fs.ReadByte();
-			int blk_f = fs.ReadByte();
-
-			StringBlock block = new StringBlock();
-			block = new StringBlock();
-			block.BlockNumber = blk_a + blk_b * 256;
-			block.Offset = blk_c + blk_d * 256 + blk_e * 256 * 256 + blk_f * 256 * 256 * 256;
-			blockDict[block.BlockNumber] = i;
-			blocks.Add(block);
-			//Debug.LogFormat("String block {0}, block number {1}", i, blocks[i].BlockNumber);
-		}
-		for (int i = 0; i < blockCount; i++)
-		{
-			fs.Position = blocks[i].Offset;
-			int blk2_a = fs.ReadByte();
-			int blk2_b = fs.ReadByte();
-
-			blocks[i].StringCount = blk2_a + blk2_b * 256;
-			blocks[i].Offsets = new List<int>();
-			for (int j = 0; j < blocks[i].StringCount; j++)
-			{
-				int blk3_a = fs.ReadByte();
-				int blk3_b = fs.ReadByte();
-				int offset = blk3_a + blk3_b * 256;
-				blocks[i].Offsets.Add(offset);
-
-				//Debug.LogFormat("string block {0} string {1} offset : {2}", i, j, offset);
-			}
-		}
-
-		return new Tuple<List<StringBlock>, Dictionary<int, int>>(blocks, blockDict);
-	}
-
-	public static List<string> ReadStrings(Stream fs, StringBlock block, HuffmanNode[] nodes, bool debug = false)
-	{
-		if (block == null)
-			return null;
-
-		block.Strings = new List<string>();
-		for (int i = 0; i < block.StringCount; i++)
-		{
-			fs.Position = block.Offset + 2 + (2 * block.StringCount) + block.Offsets[i];
-			string curString = "";
-			char curChar = default(char);
-
-			// GAMESTRN.C: a string ends at '|', at a 0xFF character or after 512 characters.
-			int safe = 512;
-			int raw = 0;
-			int bit = 0;
-			while (true)
-			{
-				curChar = GetChar(fs, nodes, ref raw, ref bit, debug);
-				if (curChar == '|' || curChar == (char)0xFF)
-				{
-					block.Strings.Add(curString);
-					break;
-				}
-				curString += curChar;
-
-				safe--;
-				if (safe == 0)
-				{
-					Debug.LogWarningFormat("String {0} of block {1} reached 512 characters without a terminator", i, block.BlockNumber);
-					block.Strings.Add(curString);
-					break;
-				}
-			}
-			//if (i == block.StringCount - 1)
-			//{
-			//	Debug.LogFormat("Last string ({0}) of block {1}, offset : {2}, string : {3}", i, block.BlockNumber, ToHex(fs.Position - 1), block.Strings[i]);
-			//}
-		}
-		return block.Strings;
-	}
-
-	public static char GetChar(Stream fs, HuffmanNode[] nodes, ref int raw, ref int bit, bool debug = false)
-	{
-		HuffmanNode curNode = nodes[nodes.Length - 1];
-		//Debug.Log("nodes.Length - 1 " + (nodes.Length - 1));
-
-		int safe = 100;
-
-		while (curNode.Left != 255 && curNode.Right != 255)
-		{
-
-			if (bit == 0)
-			{
-				raw = fs.ReadByte();
-				bit = 8;
-			}
-			//Debug.LogFormat("curNode : {0}, raw : {1}({3}), bit : {2}, fs.Position (after) : {4}", curNode, raw, bit, ToHex(raw), ToHex(fs.Position));
-			if (((raw & 0x80) >> 7) == 1)
-			{
-				curNode = nodes[curNode.Right];
-				//Debug.Log("right");
-			}
-			else
-			{
-				curNode = nodes[curNode.Left];
-				//Debug.Log("left");
-			}
-
-			bit--;
-			raw = raw << 1;
-
-			safe--;
-			if (safe == 0)
-			{
-				Debug.LogErrorFormat("Failed to get char, curNode {0}, raw {1}, bit {2}, fs.Position {3}", curNode, raw, bit, fs.Position);
-				break;
-			}
-		}
-		if (debug)
-		{
-			Debug.LogFormat("Got char : {0}[{2}], node {1}", (char)curNode.Char, curNode, curNode.Char);
-		}
-		return (char)curNode.Char;
-	}
+	public static char GetChar(Stream fs, HuffmanNode[] nodes, ref int raw, ref int bit, bool debug = false) { return StringsPak.GetChar(fs, nodes, ref raw, ref bit, debug); }
 
 	#endregion
 
@@ -1626,310 +1260,32 @@ public static class DataReader {
 
 
 
-	public static void LoadCommonData(ObjectData objDat)
-	{
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/COMOBJ.DAT"), FileMode.Open);
-		int val_a = fs.ReadByte();
-		int val_b = fs.ReadByte();
-		objDat.CommonStart = val_a + val_b * 256;
-		objDat.CommonData = new CommonData[512];
-		for (int i = 0; i < 512; i++)
-		{
-			CommonData comDat = new CommonData();
-			int[] raw = new int[11];
-			raw[0] = fs.ReadByte();	//Height
-			raw[1] = fs.ReadByte();	//Mass, radius, type
-			raw[2] = fs.ReadByte();
-			raw[3] = fs.ReadByte();	//Flags
-			raw[4] = fs.ReadByte();	//Value
-			raw[5] = fs.ReadByte();
-			raw[6] = fs.ReadByte(); //Quality + ?
-			raw[7] = fs.ReadByte();	//Type + ownable + ?
-			raw[8] = fs.ReadByte();	//?
-			raw[9] = fs.ReadByte();	//?
-			raw[10] = fs.ReadByte();//Quality (?) + look + ?
-
-			comDat.RawData = raw;
-
-			comDat.Height = raw[0];
-			int b1 = raw[1] + raw[2] * 256;
-			comDat.Radius = b1 & 0x07;
-			comDat.Type = (b1 >> 3) & 0x01;
-			comDat.Mass = b1 >> 4;
-
-			comDat.Flag0 = raw[3] & 0x01;
-			comDat.Flag1 = (raw[3] >> 1) & 0x01;
-			comDat.Flag2 = (raw[3] >> 2) & 0x01;
-			comDat.Flag3 = (raw[3] >> 3) & 0x01;
-			comDat.Flag4 = (raw[3] >> 4) & 0x01;
-			comDat.Pickable = (raw[3] >> 5) & 0x01;
-			comDat.Flag6 = (raw[3] >> 6) & 0x01;
-			comDat.Container = (raw[3] >> 7) & 0x01;
-
-			comDat.Value = raw[4] + raw[5] * 256;
-
-			comDat.QualityClass = (raw[6] >> 2) & 0x03;
-
-			comDat.ObjectType = (raw[7] >> 1) & 0x0F;
-			comDat.PickupFlag = (raw[7] >> 5) & 0x01;
-			comDat.UnkFlag1 = (raw[7] >> 6) & 0x01;
-			comDat.Ownable = (raw[7] >> 7) & 0x01;
-
-			comDat.QualityType = raw[10] & 0x0F;
-			comDat.LookDescription = (raw[10] >> 4) & 0x01;
-
-			objDat.CommonData[i] = comDat;
-		}
-
-		fs.Close();
-	}
+	public static void LoadCommonData(ObjectData objDat) { ObjectDataCodec.LoadCommonData(objDat, GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/COMOBJ.DAT")); }
 
 	public static ObjectData LoadObjectData()
 	{
 		ObjectData od = new ObjectData();
 		LoadCommonData(od);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.DAT"), FileMode.Open);
-		int val_a = fs.ReadByte();
-		int val_b = fs.ReadByte();
-		od.StartValue = val_a + val_b * 256;
-		od.WeaponData = ReadWeaponDatas(fs);
-		od.ProjectileData = ReadProjectileDatas(fs);
-		od.RangedData = ReadRangedDatas(fs);
-		od.ArmourData = ReadArmourDatas(fs);
-		od.MonsterData = ReadMonsterDatas(fs);
-		od.ContainerData = ReadContainerDatas(fs);
-		od.LightData = ReadLightDatas(fs);
-		od.UnknownData = new int[112];
-		for (int i = 0; i < 112; i++)		
-			od.UnknownData[i] = fs.ReadByte();		
-		fs.Close();
-		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
-		{
-			// UW2: CRIT\AS.AN, 64 entries of (page, palette); the art file of page p is CRpp.xx with
-			// pp in octal (uw2 critter/CRPAGES.C). No names are stored, so the files' names stand in.
-			string asan = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/AS.AN");
-			byte[] b = File.ReadAllBytes(asan);
-			od.MonsterSpriteNames = new string[32];
-			for (int i = 0; i < 32; i++) od.MonsterSpriteNames[i] = "CR" + Convert.ToString(i, 8).PadLeft(2, '0');
-			for (int i = 0; i < 64; i++)
-			{
-				od.MonsterData[i].SpriteID = b[2 * i];
-				od.MonsterData[i].AuxPalette = b[2 * i + 1];
-			}
-			return od;
-		}
-		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)) + "/CRIT/ASSOC.ANM"), FileMode.Open);
-		od.MonsterSpriteNames = new string[32];
-		for (int i = 0; i < 32; i++)
-		{
-			string s = "";
-			for (int j = 0; j < 8; j++)
-			{
-				s += (char)fs.ReadByte();
-			}
-			od.MonsterSpriteNames[i] = s;
-		}
-		for (int i = 0; i < 64; i++)
-		{
-			od.MonsterData[i].SpriteID = fs.ReadByte();
-			od.MonsterData[i].AuxPalette = fs.ReadByte();
-		}
-		fs.Close();
+		ObjectDataCodec.ReadObjectsDat(od, GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.DAT"));
+		ObjectDataCodec.ReadMonsterSprites(od, LevArk.Game.Kind, FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(FilePath)));
 		return od;
 	}
 
-	public static WeaponData[] ReadWeaponDatas(Stream fs)
-	{
-		WeaponData[] wds = new WeaponData[16];
-		for (int i = 0; i < 16; i++)
-			wds[i] = ReadWeaponData(fs, i);
-		return wds;
-	}
+	public static WeaponData[] ReadWeaponDatas(Stream fs) { return ObjectDataCodec.ReadWeaponDatas(fs); }
 
-	public static WeaponData ReadWeaponData(Stream fs, int i)
-	{
-		WeaponData wd = new WeaponData();
-		wd.Slash = fs.ReadByte();
-		wd.Bash = fs.ReadByte();
-		wd.Stab = fs.ReadByte();
-		wd.Unk1 = fs.ReadByte();
-		wd.Unk2 = fs.ReadByte();
-		wd.Unk3 = fs.ReadByte();
-		wd.Skill = fs.ReadByte();
-		wd.Durability = fs.ReadByte();
-		wd.ObjectID = i;
-		return wd;
-	}
-	public static ProjectileData[] ReadProjectileDatas(Stream fs)
-	{
-		ProjectileData[] pds = new ProjectileData[8];
-		for (int i = 0; i < 8; i++)
-			pds[i] = ReadProjectileData(fs, i);
-		return pds;
-	}
-	public static ProjectileData ReadProjectileData(Stream fs, int i)
-	{
-		ProjectileData pd = new ProjectileData();
-		int a = fs.ReadByte();
-		int b = fs.ReadByte();
-		int c = fs.ReadByte();
-
-		// include/object.h struct MissileInfo: damage, type, signed ammo (here: the damage
-		// type, as minus its value). It was read as a word with the damage in bits 9-15,
-		// which showed the type's upper bits as the damage.
-		pd.Damage = a;
-		pd.Unk1 = b;
-		pd.Unk2 = c;
-		return pd;
-	}
-	public static RangedData[] ReadRangedDatas(Stream fs)
-	{
-		RangedData[] rds = new RangedData[8];
-		for (int i = 0; i < 8; i++)
-			rds[i] = ReadRangedData(fs, i);
-		return rds;
-	}
-	public static RangedData ReadRangedData(Stream fs, int i)
-	{
-		RangedData rd = new RangedData();
-		int a = fs.ReadByte();
-		int b = fs.ReadByte();
-		int c = fs.ReadByte();
-
-		// struct MissileInfo again: damage, type, then the ammunition (item - 0x10,
-		// COMBAT.C:555). It was read as Ammo = the first word, Unk1 = the ammunition byte.
-		rd.Unk1 = a;
-		rd.Type = b;
-		rd.Ammo = c;
-		return rd;
-	}
-	public static ArmourData[] ReadArmourDatas(Stream fs)
-	{
-		ArmourData[] ads = new ArmourData[32];
-		for (int i = 0; i < 32; i++)
-			ads[i] = ReadArmourData(fs, i);
-		return ads;
-	}
-	public static ArmourData ReadArmourData(Stream fs, int i)
-	{
-		ArmourData ad = new ArmourData();
-		ad.Protection = fs.ReadByte();
-		ad.Durability = fs.ReadByte();
-		ad.Unk1 = fs.ReadByte();
-		ad.Type = fs.ReadByte();
-		return ad;
-	}
-	public static ContainerData[] ReadContainerDatas(Stream fs)
-	{
-		ContainerData[] cds = new ContainerData[16];
-		for (int i = 0; i < 16; i++)
-			cds[i] = ReadContainerData(fs, i);
-		return cds;
-	}
-	public static ContainerData ReadContainerData(Stream fs, int i)
-	{
-		ContainerData cd = new ContainerData();
-		cd.Capacity = fs.ReadByte();
-		cd.Type = fs.ReadByte();
-		cd.Slots = fs.ReadByte();
-		return cd;
-	}
-	public static LightData[] ReadLightDatas(Stream fs)
-	{
-		LightData[] lds = new LightData[8];
-		for (int i = 0; i < 8; i++)
-			lds[i] = ReadLightData(fs, i);
-		return lds;
-	}
-	public static LightData ReadLightData(Stream fs, int i)
-	{
-		LightData ld = new LightData();
-		ld.Duration = fs.ReadByte();
-		ld.Brightness = fs.ReadByte();
-		return ld;
-	}
-	public static MonsterData[] ReadMonsterDatas(Stream fs)
-	{
-		MonsterData[] mds = new MonsterData[64];
-		for (int i = 0; i < 64; i++)
-			mds[i] = ReadMonsterData(fs, i);
-		return mds;
-	}
-	public static MonsterData ReadMonsterData(Stream fs, int i)
-	{
-		MonsterData md = new MonsterData();
-		md.Level = fs.ReadByte();
-		md.Unk0_1 = fs.ReadByte();
-		md.Unk0_2 = fs.ReadByte();
-		md.Unk0_3 = fs.ReadByte();
-		md.Health = fs.ReadByte() + fs.ReadByte() * 256;
-		md.Attack = fs.ReadByte();
-		md.Unk1 = fs.ReadByte();
-		int rem = fs.ReadByte();
-		md.Remains = (rem & 0xF0) >> 4;
-		md.HitDecal = rem & 0x0F;
-		md.OwnerType = fs.ReadByte();
-		md.Passiveness = fs.ReadByte();
-		md.Unk2 = fs.ReadByte();
-		md.Speed = fs.ReadByte();
-		md.Unk3 = fs.ReadByte() + fs.ReadByte() * 256;
-		md.Poison = fs.ReadByte();
-		md.MonsterType = fs.ReadByte();
-		md.EquipmentDamage = fs.ReadByte();
-		md.Unk4 = fs.ReadByte();
-		md.Attack1Value = fs.ReadByte();
-		md.Attack1Damage = fs.ReadByte();
-		md.Attack1Chance = fs.ReadByte();
-		md.Attack2Value = fs.ReadByte();
-		md.Attack2Damage = fs.ReadByte();
-		md.Attack2Chance = fs.ReadByte();
-		md.Attack3Value = fs.ReadByte();
-		md.Attack3Damage = fs.ReadByte();
-		md.Attack3Chance = fs.ReadByte();   //28
-
-		//Debug.LogFormat("Monster {0} has remains {1} and hit type {2}", StaticObject.GetName(i + 64), md.Remains, md.HitDecal);
-
-		md.Inv_Unk1 = fs.ReadByte() + fs.ReadByte() * 256 + fs.ReadByte() * 256 * 256 + fs.ReadByte() * 256 * 256 * 256; 
-
-		int inv1 = fs.ReadByte();
-		int inv2 = fs.ReadByte();
-		int inv3 = fs.ReadByte() + fs.ReadByte() * 256;
-		int inv4 = fs.ReadByte() + fs.ReadByte() * 256; //38
-		md.Inventory = new int[4];
-		md.InventoryInfo = new int[4];
-		// Bit 0 present, bits 1-7 the item (uw2 critter.h arms[]). The item is kept when the
-		// bit is clear: UW2 reads arms[0].item as the missile a critter fires either way, and
-		// two of its creatures have an item without the bit.
-		md.Inventory[0] = inv1 >> 1;
-		md.InventoryInfo[0] = inv1 & 1;
-		md.Inventory[1] = inv2 >> 1;
-		md.InventoryInfo[1] = inv2 & 1;
-		if (inv3 != 0)
-		{
-			md.Inventory[2] = inv3 >> 4;
-			md.InventoryInfo[2] = inv3 & 0x0F;
-			//Debug.LogFormat("Monster <b>{0}</b> has inventory <b>{1}</b> and chance ? <b>{2}</b>", StaticObject.GetMonsterName(i), StaticObject.GetName(md.Inventory[2]), md.InventoryInfo[2]);
-		}
-		if (inv4 != 0)
-		{
-			md.Inventory[3] = inv4 >> 4;
-			md.InventoryInfo[3] = inv4 & 0x0F;
-			//Debug.LogFormat("Monster <b>{0}</b> has inventory <b>{1}</b> and chance ? <b>{2}</b>", StaticObject.GetMonsterName(i), StaticObject.GetName(md.Inventory[3]), md.InventoryInfo[3]);
-		}
-
-		md.Inv_Unk2 = fs.ReadByte() + fs.ReadByte() * 256;
-
-
-		md.Experience = fs.ReadByte() + fs.ReadByte() * 256;
-		md.Unk5 = fs.ReadByte();
-		md.Unk6 = fs.ReadByte();
-		md.Unk7 = fs.ReadByte();
-		md.Unk8 = fs.ReadByte();
-		md.Unk9 = fs.ReadByte();
-		md.Unk10 = fs.ReadByte();
-
-		return md;
-	}
+	public static WeaponData ReadWeaponData(Stream fs, int i) { return ObjectDataCodec.ReadWeaponData(fs, i); }
+	public static ProjectileData[] ReadProjectileDatas(Stream fs) { return ObjectDataCodec.ReadProjectileDatas(fs); }
+	public static ProjectileData ReadProjectileData(Stream fs, int i) { return ObjectDataCodec.ReadProjectileData(fs, i); }
+	public static RangedData[] ReadRangedDatas(Stream fs) { return ObjectDataCodec.ReadRangedDatas(fs); }
+	public static RangedData ReadRangedData(Stream fs, int i) { return ObjectDataCodec.ReadRangedData(fs, i); }
+	public static ArmourData[] ReadArmourDatas(Stream fs) { return ObjectDataCodec.ReadArmourDatas(fs); }
+	public static ArmourData ReadArmourData(Stream fs, int i) { return ObjectDataCodec.ReadArmourData(fs, i); }
+	public static ContainerData[] ReadContainerDatas(Stream fs) { return ObjectDataCodec.ReadContainerDatas(fs); }
+	public static ContainerData ReadContainerData(Stream fs, int i) { return ObjectDataCodec.ReadContainerData(fs, i); }
+	public static LightData[] ReadLightDatas(Stream fs) { return ObjectDataCodec.ReadLightDatas(fs); }
+	public static LightData ReadLightData(Stream fs, int i) { return ObjectDataCodec.ReadLightData(fs, i); }
+	public static MonsterData[] ReadMonsterDatas(Stream fs) { return ObjectDataCodec.ReadMonsterDatas(fs); }
+	public static MonsterData ReadMonsterData(Stream fs, int i) { return ObjectDataCodec.ReadMonsterData(fs, i); }
 
 	#endregion
 

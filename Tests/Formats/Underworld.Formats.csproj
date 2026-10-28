@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Assets/Scripts/Formats on its own: no UnityEngine, no editor code, .NET Standard 2.0 and
+       C# 8, the same rules Unity's Underworld.Formats.asmdef (noEngineReferences) applies.
+       If this builds, the asmdef builds in Unity. The mod manager uses this project too. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Underworld.Formats</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ScriptsDir)/Formats/**/*.cs" />
+  </ItemGroup>
+</Project>

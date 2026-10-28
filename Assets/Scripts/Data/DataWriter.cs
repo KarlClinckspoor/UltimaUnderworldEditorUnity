@@ -582,28 +582,7 @@ public static class DataWriter {
 		fs.Close();
 	}
 
-	public static void SaveTexture(Stream fs, string fileName, int offset, int[] rawTex, AdditionalTextureInfo ati)
-	{
-		if (rawTex == null)
-		{
-			Debug.LogWarningFormat("Trying to save null texture, type : {0}, offset : {1}", fileName, offset);
-			return;
-		}
-		//string path = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + fileName);
-		//FileStream fs = new FileStream(path, FileMode.Open);
-		fs.Position = offset;
-		if(ati.Write)
-		{
-			fs.WriteByte(4);
-			fs.WriteByte((byte)ati.Width);
-			fs.WriteByte((byte)ati.Height);
-			fs.WriteByte((byte)ati.SizeA);
-			fs.WriteByte((byte)ati.SizeB);
-		}		
-		for (int i = 0; i < rawTex.Length; i++)
-			fs.WriteByte((byte)rawTex[i]);
-		//fs.Close();
-	}
+	public static void SaveTexture(Stream fs, string fileName, int offset, int[] rawTex, AdditionalTextureInfo ati) { GraphicsCodec.SaveTexture(fs, fileName, offset, rawTex, ati); }
 
 	public static void SaveObjectGraphics(TextureContainer objects)
 	{
@@ -688,17 +667,7 @@ public static class DataWriter {
 		fs.Close();
 	}
 
-	public static void SaveNibbles(Stream fs, long offset, List<int> nibbles)
-	{
-		fs.Position = offset;
-		for (int i = 0; i < nibbles.Count; i+=2)
-		{
-			int nib_a = nibbles[i] << 4;
-			int nib_b = (i + 1) == nibbles.Count ? 0 : nibbles[i + 1];
-			byte b = (byte)(nib_a + nib_b);
-			fs.WriteByte(b);
-		}
-	}
+	public static void SaveNibbles(Stream fs, long offset, List<int> nibbles) { GraphicsCodec.SaveNibbles(fs, offset, nibbles); }
 	private static bool compareRaw(int[] A, int[] B)
 	{
 		if (A.Length != B.Length)
@@ -956,178 +925,9 @@ public static class DataWriter {
 		newTex.Apply();
 		return newTex;
 	}
-	public static List<int> CompressToRLE(int[] rawTex)
-	{
-		List<int> nibbles = new List<int>();
-		int ptr = 0;
-		int cur = 0;
-		int state = 0;
-		List<Tuple<int, int>> counts = getCounts(rawTex, ref ptr);
-		int safe = 1000;
-		while(cur < counts.Count)
-		{
-			//Debug.LogFormat("CUR : {0}", cur);
-			if(state == 0)
-			{
-				//Debug.Log("State : 0");
-				int repeats = getRepeats(counts, cur);
-				//Debug.LogFormat("repeats : {0}", repeats);
-				if (repeats == 0)
-				{
-					//Debug.LogError("Repeats == 0");
-					nibbles.Add(1);
-				}
-				else if (repeats == 1)
-				{
-					int count = counts[cur].Item1;
-					int val = counts[cur].Item2;
-					//Debug.LogFormat("<b>One repeat, writing count {0} and val {1}</b>", count, val);
-					nibbles.AddRange(getCount(count));
-					nibbles.Add(val);
-				}
-				else if (repeats > 1)
-				{
-					nibbles.Add(2);
-					nibbles.AddRange(getCount(repeats));
-					//Debug.LogFormat("<b>{0} repeats, writing 2 and {0}</b>", repeats);
-					for (int i = cur; i < cur+repeats; i++)
-					{
-						int count = counts[i].Item1;
-						int val = counts[i].Item2;
-						//Debug.LogFormat("Repeat, writing count {0} and val {1}", count, val);
-						nibbles.AddRange(getCount(count));
-						nibbles.Add(val);
-					}
-				}
-				cur += repeats;
-				state = 1;
-			}
-			else if (state == 1)
-			{
-				//Debug.Log("State : 1");
-				int small = getSmall(counts, cur);
-				//Debug.LogFormat("small : {0}", small);
-				int sum = 0;
-				for (int i = cur; i < cur+small; i++)
-				{
-					sum += counts[i].Item1;
-				}
-				nibbles.AddRange(getCount(sum));
-				//Debug.LogFormat("<b>Writing count {0}</b>", sum);
-				for (int i = cur; i < cur + small; i++)
-				{
-					for (int j = 0; j < counts[i].Item1; j++)
-					{
-						nibbles.Add(counts[i].Item2);
-						//Debug.LogFormat("Writing val {0}", counts[i].Item2);
-					}
-				}
-				cur += small;
-				state = 0;
-			}
-			safe--;
-			if(safe==0)
-			{
-				Debug.LogError("Fail");
-				break;
-			}
-		}
-
-		//if(nibbles.Count % 2 == 0)
-		if(state == 1)
-		{
-			nibbles[nibbles.Count - 2]++;
-			nibbles.Add(1);
-			nibbles.Add(0);
-		}
-		return nibbles;
-	}
-	private static int getRepeats(List<Tuple<int, int>> counts, int ptr)
-	{
-		int repeats = 0;
-		for (int i = ptr; i < counts.Count; i++)
-		{
-			if (counts[i].Item1 > 2)
-				repeats++;
-			else
-				return repeats;
-		}
-		return repeats;
-	}
-	private static int getSmall(List<Tuple<int, int>> counts, int ptr)
-	{
-		int small = 0;
-		for (int i = ptr; i < counts.Count; i++)
-		{
-			if (counts[i].Item1 < 3)
-				small++;
-			else
-				return small;
-		}
-		return small;
-	}
-	private static List<int> getCount(int count)
-	{
-		List<int> counts = new List<int>();
-
-		if (count > 255)
-		{
-			counts.Add(0);
-			counts.Add(0);
-			counts.Add(0);
-			int r1 = count / 256;
-			count -= (r1 * 256);
-			int r2 = count / 16;
-			count -= (r2 * 16);
-			counts.Add(r1);
-			counts.Add(r2);
-			counts.Add(count);
-		}
-		else if (count > 15)
-		{
-			counts.Add(0);
-			int rest = count / 16;
-			counts.Add(rest);
-			count -= (16 * rest);
-			counts.Add(count);
-		}
-		else
-			counts.Add(count);
+	public static List<int> CompressToRLE(int[] rawTex) { return GraphicsCodec.CompressToRLE(rawTex); }
+	public static List<Tuple<int, int>> getCounts(int[] rawTex, ref int ptr) { return GraphicsCodec.getCounts(rawTex, ref ptr); }
 	
-		return counts;
-	}
-	public static List<Tuple<int, int>> getCounts(int[] rawTex, ref int ptr)
-	{
-		List<Tuple<int, int>> counts = new List<Tuple<int, int>>();
-
-		int count = 1;
-		int cur = rawTex[ptr];
-		while(ptr < rawTex.Length - 1)
-		{
-			ptr++;
-			int next = rawTex[ptr];
-			if(cur == next)
-			{
-				count++;
-			}
-			else
-			{
-				counts.Add(new Tuple<int, int>(count, cur));
-				count = 1;
-				cur = next;
-			}
-		}
-		counts.Add(new Tuple<int, int>(count, cur));
-		return counts;
-	}
-	
-	private static List<int> getValsFromTo(int[] rawTex, int start, int end)
-	{
-		List<int> vals = new List<int>();
-		for (int i = start; i < end; i++)
-			vals.Add(rawTex[i]);
-		return vals;
-	}
 
 	public static void ExportDefaultTextures()
 	{
@@ -1186,171 +986,15 @@ public static class DataWriter {
 
 	#region Strings
 
-	public static List<int> ConvertString(string str, HuffmanNode[] nodes)
-	{
-		List<bool> curBits = new List<bool>();
-		List<bool> bits = new List<bool>();
+	public static List<int> ConvertString(string str, HuffmanNode[] nodes) { return StringsPak.ConvertString(str, nodes); }
 
-		for (int i = 0; i < str.Length + 1; i++)
-		{
-			char c;
-			if(i == str.Length)
-				c = '|';
-			else
-				c = str[i];
-			HuffmanNode node = GetNode(nodes, c);
-			if(node == null)
-			{
-				Debug.LogErrorFormat("Couldn't get node for char {0}, string \n{1}\ni : {2}", c, str, i);
-				return null;
-			}
-			int current = node.Current;
-			int nextParent = node.Parent;
 
-			do
-			{
-				node = nodes[nextParent];
-				nextParent = node.Parent;
+	public static HuffmanNode GetNode(HuffmanNode[] nodes, char c) { return StringsPak.GetNode(nodes, c); }
 
-				if (current == node.Right)
-					curBits.Add(true);
-				else
-					curBits.Add(false);
+	public static int SaveStringBlock(Stream fs, StringBlock block, int blockPos, HuffmanNode[] nodes) { return StringsPak.SaveStringBlock(fs, block, blockPos, nodes); }
 
-				current = node.Current;
-			}
-			while (nextParent != 255);
-			for (int j = curBits.Count - 1; j > -1; j--)
-				bits.Add(curBits[j]);
-			curBits = new List<bool>();
-		}
-		return ConvertString(nodes, bits);
-	}
-
-	private static List<int> ConvertString(HuffmanNode[] nodes, List<bool> bits)
-	{
-		int bit = 0;
-		int cur = 0;
-		List<int> convString = new List<int>();
-		for (int i = 0; i < bits.Count; i++)
-		{
-			if (bit == 0)
-			{
-				if (i > 0)
-					convString.Add(cur);
-				bit = 8;
-				cur = 0;
-			}
-			if (bits[i])
-				cur |= 1 << (bit - 1);
-			bit--;
-		}
-		convString.Add(cur);
-		return convString;
-	}
-
-	public static HuffmanNode GetNode(HuffmanNode[] nodes, char c)
-	{
-		int i = HuffmanNode.GetNumber(c);
-		if (i == -1)
-			return null;
-
-		return nodes[i];
-	}
-
-	/// <summary>
-	/// Returns string block size
-	/// </summary>
-	public static int SaveStringBlock(Stream fs, StringBlock block, int blockPos, HuffmanNode[] nodes)
-	{
-		fs.Position = blockPos;
-		//First, write string count (int16)
-		byte count_a = (byte)(block.StringCount & 0xFF);
-		byte count_b = (byte)((block.StringCount & 0xFF00) >> 8);
-
-		fs.WriteByte(count_a);
-		fs.WriteByte(count_b);
-
-		int currentOffset = 0;
-		int firstStringOffset = 2 + (2 * block.StringCount);
-		for (int i = 0; i < block.StringCount; i++)
-		{
-			//Debug.LogFormat("Saving string : {0}", block.Strings[i]);
-			fs.Position = blockPos + 2 + i * 2;
-			byte offset_a = (byte)(currentOffset & 0xFF);
-			byte offset_b = (byte)((currentOffset & 0xFF00) >> 8);
-			fs.WriteByte(offset_a);
-			fs.WriteByte(offset_b);
-			fs.Position = blockPos + firstStringOffset + currentOffset;
-			List<int> rawString = ConvertString(block.Strings[i], nodes);
-			if (rawString == null)
-				break;
-			for (int j = 0; j < rawString.Count; j++)
-				fs.WriteByte((byte)rawString[j]);
-			currentOffset += rawString.Count;
-		}
-		int offset = firstStringOffset + currentOffset;
-		//Debug.LogFormat("Block {0} offset {1}", block.BlockNumber, offset);
-		//if ((offset % 2) == 1)
-		//{
-		//	fs.WriteByte(0);
-		//	offset++;
-		//}
-		return offset;
-	}
-
-	public static void SaveStringBlocks(Stream fs, List<StringBlock> blocks, HuffmanNode[] nodes, long tableStart)
-	{
-		// The block table follows the node table (GAMESTRN.C): 2 + 4 * node count. It was
-		// hard-coded as 726, right only for the shipped tree of 181 nodes.
-		int start = (int)tableStart;
-		fs.Position = start;
-
-		//Write block count - int16
-		byte count_a = (byte)(blocks.Count & 0xFF);
-		byte count_b = (byte)((blocks.Count & 0xFF00) >> 8);
-
-		fs.WriteByte(count_a);
-		fs.WriteByte(count_b);
-
-		//Next, get the length of the block "table"
-		int firstBlock = 2 + (6 * blocks.Count);
-		int currentOffset = start + firstBlock;
-		for (int i = 0; i < blocks.Count; i++)
-		{
-			//Debug.LogFormat("Saving string block {0}, cur offset : {1}", blocks[i].BlockNumber, currentOffset);
-			fs.Position = start + 2 + i * 6;
-			byte strings_a = (byte)(blocks[i].BlockNumber & 0xFF);
-			byte strings_b = (byte)((blocks[i].BlockNumber & 0xFF00) >> 8);
-			byte offset_a = (byte)(currentOffset & 0xFF);
-			byte offset_b = (byte)((currentOffset & 0xFF00) >> 8);
-			byte offset_c = (byte)((currentOffset & 0xFF0000) >> 16);
-			byte offset_d = (byte)((currentOffset & 0xFF000000) >> 24);
-
-			fs.WriteByte(strings_a); fs.WriteByte(strings_b);
-			fs.WriteByte(offset_a); fs.WriteByte(offset_b); fs.WriteByte(offset_c); fs.WriteByte(offset_d);
-
-			int blockOffset = SaveStringBlock(fs, blocks[i], currentOffset, nodes);
-			currentOffset += blockOffset;
-			
-		}
-	}
-	public static long SaveHuffmanNodes(Stream fs, HuffmanNode[] nodes)
-	{
-		fs.Position = 0;
-		byte len_a = (byte)(nodes.Length & 0xFF);
-		byte len_b = (byte)((nodes.Length & 0xFF00) >> 8);
-		fs.WriteByte(len_a);
-		fs.WriteByte(len_b);
-		foreach (var node in nodes)
-		{
-			fs.WriteByte((byte)node.Char);
-			fs.WriteByte((byte)node.Parent);
-			fs.WriteByte((byte)node.Left);
-			fs.WriteByte((byte)node.Right);
-		}
-		return fs.Position;
-	}
+	public static void SaveStringBlocks(Stream fs, List<StringBlock> blocks, HuffmanNode[] nodes, long tableStart) { StringsPak.SaveStringBlocks(fs, blocks, nodes, tableStart); }
+	public static long SaveHuffmanNodes(Stream fs, HuffmanNode[] nodes) { return StringsPak.SaveHuffmanNodes(fs, nodes); }
 	#endregion
 
 	#region Conversations
@@ -1502,219 +1146,23 @@ public static class DataWriter {
 	{
 		string file = "COMOBJ.DAT";
 		BackupData(file);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
-		byte start_b_a = (byte)(objDat.CommonStart & 0xFF);
-		byte start_b_b = (byte)((objDat.CommonStart & 0xFF00) >> 8);
-		fs.WriteByte(start_b_a);
-		fs.WriteByte(start_b_b);
-		for (int i = 0; i < 512; i++)
-		{
-			CommonData com = objDat.CommonData[i];
-			fs.WriteByte((byte)com.Height);
-			byte b2_a = (byte)(com.Radius + (com.Type << 3) + (com.Mass << 4) & 0xFF);
-			byte b2_b = (byte)((com.Mass >> 4) & 0xFF);
-			fs.WriteByte(b2_a);
-			fs.WriteByte(b2_b);
-			byte b3 = (byte)(com.Flag0 + (com.Flag1 << 1) + (com.Flag2 << 2) + (com.Flag3 << 3) + (com.Flag4 << 4) + (com.Pickable << 5) + (com.Flag6 << 6) + (com.Container << 7));
-			fs.WriteByte(b3);
-			byte b4_a = (byte)(com.Value & 0xFF);
-			byte b4_b = (byte)((com.Value & 0xFF00) >> 8);
-			fs.WriteByte(b4_a);
-			fs.WriteByte(b4_b);
-			byte b6 = (byte)((com.RawData[6] & 0xF3) + (com.QualityClass << 2));
-			fs.WriteByte(b6);
-			byte b7 = (byte)((com.RawData[7] & 0x01) + (com.ObjectType << 1) + (com.Ownable << 7) + (com.UnkFlag1 << 6) + (com.PickupFlag << 5));
-			fs.WriteByte(b7);
-			fs.WriteByte((byte)com.RawData[8]);
-			fs.WriteByte((byte)com.RawData[9]);
-			byte bA = (byte)((com.RawData[10] & 0xE0) + com.QualityType + (com.LookDescription << 4));
-			fs.WriteByte(bA);
-		}
-		fs.Close();
+		ObjectDataCodec.SaveCommonData(objDat, GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file));
 	}
 
 	public static void SaveObjectData(ObjectData objDat)
 	{
 		string file = "OBJECTS.DAT";
 		BackupData(file);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
-
-		byte start_b_a = (byte)(objDat.StartValue & 0xFF);
-		byte start_b_b = (byte)((objDat.StartValue & 0xFF00) >> 8);
-		fs.WriteByte(start_b_a);
-		fs.WriteByte(start_b_b);
-
-		for (int i = 0; i < 16; i++)		
-			SaveWeaponData(objDat.WeaponData[i], fs);
-		for (int i = 0; i < 8; i++)		
-			SaveProjectileData(objDat.ProjectileData[i], fs);		
-		for (int i = 0; i < 8; i++)		
-			SaveRangedData(objDat.RangedData[i], fs);
-		for (int i = 0; i < 32; i++)		
-			SaveArmourData(objDat.ArmourData[i], fs);
-		for (int i = 0; i < 64; i++)		
-			SaveMonsterData(objDat.MonsterData[i], fs);
-		for (int i = 0; i < 16; i++)		
-			SaveContainerData(objDat.ContainerData[i], fs);
-		for (int i = 0; i < 8; i++)		
-			SaveLightData(objDat.LightData[i], fs);
-		for (int i = 0; i < 112; i++)		
-			fs.WriteByte((byte)objDat.UnknownData[i]);		
-		fs.Close();
+		ObjectDataCodec.SaveObjectData(objDat, GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file));
 	}
-	public static void SaveWeaponData(WeaponData wd, Stream fs)
-	{
-		fs.WriteByte((byte)wd.Slash);
-		fs.WriteByte((byte)wd.Bash);
-		fs.WriteByte((byte)wd.Stab);
-		fs.WriteByte((byte)wd.Unk1);
-		fs.WriteByte((byte)wd.Unk2);
-		fs.WriteByte((byte)wd.Unk3);
-		fs.WriteByte((byte)wd.Skill);
-		fs.WriteByte((byte)wd.Durability);
-	}
-	public static void SaveProjectileData(ProjectileData pd, Stream fs)
-	{
-		fs.WriteByte((byte)pd.Damage);
-		fs.WriteByte((byte)pd.Unk1);
-		fs.WriteByte((byte)pd.Unk2);
-	}
-	public static void SaveRangedData(RangedData rd, Stream fs)
-	{
-		fs.WriteByte((byte)rd.Unk1);
-		fs.WriteByte((byte)rd.Type);
-		fs.WriteByte((byte)rd.Ammo);
-	}
-	public static void SaveArmourData(ArmourData ad, Stream fs)
-	{
-		fs.WriteByte((byte)ad.Protection);
-		fs.WriteByte((byte)ad.Durability);
-		fs.WriteByte((byte)ad.Unk1);
-		fs.WriteByte((byte)ad.Type);
-	}
-	public static void SaveContainerData(ContainerData cd, Stream fs)
-	{
-		fs.WriteByte((byte)cd.Capacity);
-		fs.WriteByte((byte)cd.Type);
-		fs.WriteByte((byte)cd.Slots);
-	}
-	public static void SaveLightData(LightData ld, Stream fs)
-	{
-		fs.WriteByte((byte)ld.Duration);
-		fs.WriteByte((byte)ld.Brightness);
-	}
-	public static void SaveMonsterData(MonsterData md, Stream fs)
-	{
-		fs.WriteByte((byte)md.Level);
-		fs.WriteByte((byte)md.Unk0_1);
-		fs.WriteByte((byte)md.Unk0_2);
-		fs.WriteByte((byte)md.Unk0_3);
-		byte health_a = (byte)(md.Health & 0xFF);
-		byte health_b = (byte)((md.Health & 0xFF00) >> 8);
-		fs.WriteByte(health_a);
-		fs.WriteByte(health_b);
-		fs.WriteByte((byte)md.Attack);
-		fs.WriteByte((byte)md.Unk1);
-		fs.WriteByte((byte)(md.HitDecal + (md.Remains << 4)));
-		fs.WriteByte((byte)md.OwnerType);
-		fs.WriteByte((byte)md.Passiveness);
-		fs.WriteByte((byte)md.Unk2);
-		fs.WriteByte((byte)md.Speed);
-		byte unk3_a = (byte)(md.Unk3 & 0xFF);
-		byte unk3_b = (byte)((md.Unk3 & 0xFF00) >> 8);
-		fs.WriteByte(unk3_a);
-		fs.WriteByte(unk3_b);
-		fs.WriteByte((byte)md.Poison);
-		fs.WriteByte((byte)md.MonsterType);
-		fs.WriteByte((byte)md.EquipmentDamage);
-		fs.WriteByte((byte)md.Unk4);
-		fs.WriteByte((byte)md.Attack1Value);
-		fs.WriteByte((byte)md.Attack1Damage);
-		fs.WriteByte((byte)md.Attack1Chance);
-		fs.WriteByte((byte)md.Attack2Value);
-		fs.WriteByte((byte)md.Attack2Damage);
-		fs.WriteByte((byte)md.Attack2Chance);
-		fs.WriteByte((byte)md.Attack3Value);
-		fs.WriteByte((byte)md.Attack3Damage);
-		fs.WriteByte((byte)md.Attack3Chance);
-		byte inv_unk1_a = (byte)(md.Inv_Unk1 & 0xFF);
-		byte inv_unk1_b = (byte)((md.Inv_Unk1 & 0xFF00) >> 8);
-		byte inv_unk1_c = (byte)((md.Inv_Unk1 & 0xFF0000) >> 16);
-		byte inv_unk1_d = (byte)((md.Inv_Unk1 & 0xFF000000) >> 24);
-		fs.WriteByte(inv_unk1_a);
-		fs.WriteByte(inv_unk1_b);
-		fs.WriteByte(inv_unk1_c);
-		fs.WriteByte(inv_unk1_d);
-		fs.WriteByte((byte)((md.Inventory[0] << 1) | (md.InventoryInfo[0] > 0 ? 1 : 0)));
-		fs.WriteByte((byte)((md.Inventory[1] << 1) | (md.InventoryInfo[1] > 0 ? 1 : 0)));
-		if(md.Inventory[2] > 0)
-		{			
-			byte i2_a = (byte)(((md.Inventory[2] & 0x0F) << 4) + md.InventoryInfo[2]);
-			byte i2_b = (byte)(md.Inventory[2] >> 4);
-			fs.WriteByte(i2_a);
-			fs.WriteByte(i2_b);
-		}
-		else
-		{
-			fs.WriteByte(0);
-			fs.WriteByte(0);
-		}
-		if (md.Inventory[3] > 0)
-		{
-			byte i2_a = (byte)(((md.Inventory[3] & 0x0F) << 4) + md.InventoryInfo[3]);
-			byte i2_b = (byte)(md.Inventory[3] >> 4);
-			fs.WriteByte(i2_a);
-			fs.WriteByte(i2_b);
-		}
-		else
-		{
-			fs.WriteByte(0);
-			fs.WriteByte(0);
-		}
-		byte inv_unk2_a = (byte)(md.Inv_Unk2 & 0xFF);
-		byte inv_unk2_b = (byte)((md.Inv_Unk2 & 0xFF00) >> 8);
-		fs.WriteByte(inv_unk2_a);
-		fs.WriteByte(inv_unk2_b);
-		byte exp_a = (byte)(md.Experience & 0xFF);
-		byte exp_b = (byte)((md.Experience & 0xFF00) >> 8);
-		fs.WriteByte(exp_a);
-		fs.WriteByte(exp_b);
-		fs.WriteByte((byte)md.Unk5);
-		fs.WriteByte((byte)md.Unk6);
-		fs.WriteByte((byte)md.Unk7);
-		fs.WriteByte((byte)md.Unk8);
-		fs.WriteByte((byte)md.Unk9);
-		fs.WriteByte((byte)md.Unk10);
-	}
-	public static void SaveMonsterSpriteInfo(ObjectData objDat)
-	{
-		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
-		{
-			// UW2: CRIT\AS.AN, 64 entries of (page, palette), nothing else in the file
-			string asan = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/AS.AN");
-			if (!File.Exists(asan + ".BKP")) File.Copy(asan, asan + ".BKP");
-			byte[] b = File.ReadAllBytes(asan);
-			for (int i = 0; i < 64 && 2 * i + 1 < b.Length; i++)
-			{
-				b[2 * i] = (byte)objDat.MonsterData[i].SpriteID;
-				b[2 * i + 1] = (byte)objDat.MonsterData[i].AuxPalette;
-			}
-			File.WriteAllBytes(asan, b);
-			return;
-		}
-		string file = GameFiles.Resolve(FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)) + "/CRIT/ASSOC.ANM");
-		string backupFile = file + ".BKP";
-		if (!File.Exists(backupFile))
-			File.Copy(file, backupFile);
-		FileStream fs = new FileStream(file, FileMode.Open);
-		fs.Position = 256;
-		for (int i = 0; i < 64; i++)
-		{
-			fs.WriteByte((byte)objDat.MonsterData[i].SpriteID);
-			fs.WriteByte((byte)objDat.MonsterData[i].AuxPalette);
-		}
-		fs.Close();
-	}
+	public static void SaveWeaponData(WeaponData wd, Stream fs) { ObjectDataCodec.SaveWeaponData(wd, fs); }
+	public static void SaveProjectileData(ProjectileData pd, Stream fs) { ObjectDataCodec.SaveProjectileData(pd, fs); }
+	public static void SaveRangedData(RangedData rd, Stream fs) { ObjectDataCodec.SaveRangedData(rd, fs); }
+	public static void SaveArmourData(ArmourData ad, Stream fs) { ObjectDataCodec.SaveArmourData(ad, fs); }
+	public static void SaveContainerData(ContainerData cd, Stream fs) { ObjectDataCodec.SaveContainerData(cd, fs); }
+	public static void SaveLightData(LightData ld, Stream fs) { ObjectDataCodec.SaveLightData(ld, fs); }
+	public static void SaveMonsterData(MonsterData md, Stream fs) { ObjectDataCodec.SaveMonsterData(md, fs); }
+	public static void SaveMonsterSpriteInfo(ObjectData objDat) { ObjectDataCodec.SaveMonsterSpriteInfo(objDat, LevArk.Game.Kind, FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath))); }
 
 	#endregion
 

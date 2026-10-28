@@ -10,3 +10,8 @@
 /.vs/
 /.vscode/
 /.idea/
+
+# Test projects (Tests/): build output and the legacy sources taken from git
+/Tests/**/bin/
+/Tests/**/obj/
+/Tests/**/TestResults/
