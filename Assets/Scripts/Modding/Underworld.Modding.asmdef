@@ -1,0 +1,16 @@
+{
+    "name": "Underworld.Modding",
+    "rootNamespace": "",
+    "references": [
+        "Underworld.Formats"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

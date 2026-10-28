@@ -109,6 +109,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Character in a save (PLAYER.DAT, position)...", () => PlayerWindow.Show(), false);
 			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
+			Entry(root, "Export as mod (.uwmod package)...", () => ModExportWindow.Show(), false);
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
 			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);

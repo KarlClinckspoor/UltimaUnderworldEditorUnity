@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="../UnityStubs/UnityStubs.csproj" />
     <ProjectReference Include="../Formats/Underworld.Formats.csproj" />
+    <ProjectReference Include="../Modding/Underworld.Modding.csproj" />
     <!-- Same type names in both: the old editor is legacy::, today's editor is current:: -->
     <ProjectReference Include="../EditorBuild/EditorBuild.csproj" Aliases="current" />
     <ProjectReference Include="../Legacy/Legacy.csproj" Aliases="legacy" />

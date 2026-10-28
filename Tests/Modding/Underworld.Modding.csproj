@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Assets/Scripts/Modding on its own (mod packages: diff, apply, executables), on top of
+       the Formats assembly, under the rules of the Underworld.Modding asmdef. The mod manager
+       builds this project too. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Underworld.Modding</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ScriptsDir)/Modding/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Formats/Underworld.Formats.csproj" />
+  </ItemGroup>
+</Project>

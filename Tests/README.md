@@ -7,9 +7,10 @@ Unity does not use them (they are outside `Assets`).
 |---|---|
 | `UnityStubs` | Compile-only stand-ins for `UnityEngine`, `UnityEngine.UI`, the event system, unity-ui-extensions, FlexibleColorPicker and Newtonsoft.Json. `Texture2D` keeps its pixels and `Color`↔`Color32` rounds as Unity does; everything else does nothing. |
 | `Formats` | `Assets/Scripts/Formats` alone, as .NET Standard 2.0 and C# 8: no UnityEngine and no editor code, the rules the `Underworld.Formats` asmdef (`noEngineReferences`) applies in Unity. The mod manager builds this project too. |
+| `Modding` | `Assets/Scripts/Modding` alone (mod packages: diff, apply, executables, saves), on top of `Formats`, under the rules of the `Underworld.Modding` asmdef. The mod manager builds this project too. |
 | `EditorBuild` | All of `Assets/Scripts` except those two folders, built against the stand-ins: a build error here is one in Unity. |
 | `Legacy` | `Assets/Scripts` as it was before the formats moved (commit `b61e96a` on `uw2-support`), taken from git at build time. |
-| `Formats.Tests` | xUnit tests: parity of the old and the moved code. |
+| `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), and the mod packages (`Modding/`). |
 
 ## Running
 
@@ -45,3 +46,23 @@ assembly) run side by side on every file of both games:
   CMB.DAT, SHADES.DAT, BABGLOBS.DAT and the PLAYER.DAT ciphers.
 
 A deliberate change to the moved picture, string or object code makes these tests fail.
+
+## What the mod package tests check (`Formats.Tests/Modding`)
+
+Each test changes a copy of a game the way the editor would, exports the difference with
+`ModDiff`/`ModBuilder`, writes the `.uwmod` and reads it back, applies it to the untouched
+copy and requires the changed files back byte for byte (`ModBuilder.Verify`):
+
+- a level edit is one `ark-blocks` block, a level mod needing a new game, made from the GOG set;
+- string edits (changed, added, a new block), a same-size `.TR` picture, a smaller `OBJECTS.GR`
+  picture and an OBJECTS.DAT byte are `strings`, `images` and `bytes`: a content mod;
+- new, removed and resized files are `file` components;
+- the start square is an `exe-param`, another byte an `exe-bytes` patch; a patch inside an
+  overlay follows the overlay when it is moved to the end of the file as UltimaHacks moves
+  one, and is refused where the hack wrote;
+- a conversation whose variable count changed is flagged as breaking saves;
+- a mod refuses files it was not made from;
+- a saved game exports, checks against DATA (and catches a changed CNV.ARK) and installs.
+
+Also: the zip writer against `System.IO.Compression`, every picture file and STRINGS.PAK
+rebuilding byte for byte, the executable's MZ/FBOV layout, and the hack file parser.
