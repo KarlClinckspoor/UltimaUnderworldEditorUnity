@@ -83,9 +83,12 @@ namespace UltimateEditor.Modding
 		{
 			Directory.CreateDirectory(slotDir);
 			var folder = new GameFolder(slotDir);
+			var names = new List<string>(Uw1Files); names.AddRange(Uw2Files);
+			foreach (var f in c.Files)
+				if (f.Name == null || names.IndexOf(f.Name.ToUpperInvariant()) < 0) throw new ModApplyException("a saved game has no file " + f.Name);
 			foreach (var f in c.Files)
 			{
-				string p = folder.Resolve(f.Name) ?? Path.Combine(slotDir, f.Name);
+				string p = GameFolder.Inside(slotDir, folder.Resolve(f.Name) ?? Path.Combine(slotDir, f.Name.ToUpperInvariant()));
 				string tmp = p + ".uwmod-tmp";
 				File.WriteAllBytes(tmp, pkg.Payload(f.Data));
 				if (File.Exists(p)) File.Delete(p);

@@ -97,6 +97,35 @@ namespace UltimateEditor.Modding.Exe
 			return cur;
 		}
 
+		/// <summary>True when <paramref name="exe"/> already has the hack (it was hacked before the
+		/// manager saw it): the hacked length, and the bytes of every overwrite that no later edit moves.</summary>
+		public bool IsAppliedTo(byte[] exe)
+		{
+			if (exe == null || TargetLength <= 0) return false;
+			int len = TargetLength;
+			foreach (var e in Edits) if (e.Kind == EditKind.Insert) len += e.Length;
+			if (exe.Length != len) return false;
+			int checkedAny = 0;
+			for (int i = 0; i < Edits.Count; i++)
+			{
+				var e = Edits[i];
+				if (e.Kind != EditKind.Overwrite) continue;
+				bool later = false;
+				for (int j = i + 1; j < Edits.Count && !later; j++)
+				{
+					var f = Edits[j];
+					if (f.Kind == EditKind.Insert) later = f.Start <= e.Start + e.Data.Length;
+					else if (f.Kind == EditKind.Copy) later = f.Destination < e.Start + e.Data.Length && f.Destination + f.Length > e.Start;
+					else later = f.Start < e.Start + e.Data.Length && f.Start + f.Data.Length > e.Start;
+				}
+				if (later) continue;
+				if (e.Start + e.Data.Length > exe.Length) return false;
+				for (int k = 0; k < e.Data.Length; k++) if (exe[e.Start + k] != e.Data[k]) return false;
+				checkedAny++;
+			}
+			return checkedAny > 0;
+		}
+
 		/// <summary>The file ranges [start, end) of the hacked executable whose bytes the hack itself
 		/// writes (its overwrites: its code and the changed headers). Inserts and copies only make
 		/// room and move an overlay's code, which stays the game's: a mod may patch it there.</summary>

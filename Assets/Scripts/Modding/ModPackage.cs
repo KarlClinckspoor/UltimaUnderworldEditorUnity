@@ -53,6 +53,8 @@ namespace UltimateEditor.Modding
 				else p.Files[name] = e.Data;
 			}
 			if (p.Manifest == null) throw new InvalidDataException("the package has no mod.json");
+			var bad = p.PathProblems();
+			if (bad.Count > 0) throw new InvalidDataException("unsafe package: " + string.Join("; ", bad));
 			return p;
 		}
 
@@ -64,10 +66,36 @@ namespace UltimateEditor.Modding
 			if (string.IsNullOrEmpty(m.Id)) r.Add("the mod has no id");
 			if (string.IsNullOrEmpty(m.Name)) r.Add("the mod has no name");
 			if (m.Components.Count == 0) r.Add("the mod changes nothing");
+			r.AddRange(PathProblems());
 			foreach (var c in m.Components)
 				foreach (var path in PayloadOf(c))
 					if (!Files.ContainsKey(path)) r.Add(c.Summary + ": the package lacks " + path);
 			foreach (var s in m.Screenshots) if (!Files.ContainsKey(s)) r.Add("the package lacks the screenshot " + s);
+			return r;
+		}
+
+		/// <summary>Files the manifest names that a mod may not write: anything that is not a game
+		/// file (with no way out of the game folder), an executable change to another file, a
+		/// saved game's file that is not one of a save's.</summary>
+		public List<string> PathProblems()
+		{
+			var r = new List<string>();
+			string exe = Manifest.Game == "uw2" ? "UW2.EXE" : "UW.EXE";
+			var saveNames = new List<string>(SaveMods.Uw1Files);
+			saveNames.AddRange(SaveMods.Uw2Files);
+			foreach (var c in Manifest.Components)
+			{
+				if (c is ExeParamComponent || c is ExeBytesComponent)
+				{
+					if (!string.IsNullOrEmpty(c.File) && GameFolder.Normalize(c.File) != exe) r.Add("an executable change to " + c.File);
+				}
+				else if (c is SaveComponent)
+				{
+					foreach (var f in ((SaveComponent)c).Files)
+						if (f.Name == null || saveNames.IndexOf(f.Name.ToUpperInvariant()) < 0) r.Add("a saved game with the file " + f.Name);
+				}
+				else if (!GameFolder.IsModFile(c.File)) r.Add("a change to " + (c.File ?? "(no file)") + ", which is not a game file");
+			}
 			return r;
 		}
 

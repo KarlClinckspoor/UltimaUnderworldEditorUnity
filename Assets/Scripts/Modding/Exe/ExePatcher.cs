@@ -76,6 +76,8 @@ namespace UltimateEditor.Modding.Exe
 			foreach (var p in c.Patches)
 			{
 				byte[] b = Hashing.FromHex(p.Base), d = Hashing.FromHex(p.Data);
+				if (b.Length == 0 || b.Length != d.Length)
+					throw new ModApplyException(string.Format("{0}: a patch at {1}:{2:X} has {3} original and {4} new bytes", c.File, p.Segment, p.Offset, b.Length, d.Length));
 				var loc = new MzExe.Location { Segment = p.Segment, Offset = p.Offset };
 				int at = mz.FileOffset(loc);
 				if (at < 0 || !Matches(exe, at, b))

@@ -28,6 +28,7 @@ namespace UltimateEditor.Modding
 			foreach (var c in m.Components)
 			{
 				if (c is ExeParamComponent || c is ExeBytesComponent || c is SaveComponent) continue;
+				if (!GameFolder.IsModFile(c.File)) throw new ModApplyException("the mod changes " + c.File + ", which is not a game file");
 				string rel = GameFolder.Normalize(c.File);
 				byte[] cur = outp.ContainsKey(rel) ? outp[rel] : original(rel);
 				try { outp[rel] = ApplyOne(c, cur, pkg, game); }

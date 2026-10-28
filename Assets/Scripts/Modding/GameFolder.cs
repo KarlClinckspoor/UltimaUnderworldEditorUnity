@@ -31,10 +31,39 @@ namespace UltimateEditor.Modding
 		{
 			rel = Normalize(rel);
 			string name = rel.Substring(rel.LastIndexOf('/') + 1);
-			if (name.EndsWith(".BKP") || name.EndsWith(".TMP") || name == "UW.CFG") return false;
+			if (name.EndsWith(".BKP") || name.EndsWith(".TMP") || name.EndsWith(".UWMM-TMP") || name.EndsWith(".UWMOD-TMP") || name == "UW.CFG") return false;
 			if (rel.IndexOf('/') < 0) return name == "UW.EXE" || name == "UW2.EXE";
 			string top = rel.Substring(0, rel.IndexOf('/'));
 			return Array.IndexOf(Folders, top) >= 0;
+		}
+
+		/// <summary>A relative path a package may name: not rooted, no drive, no empty, "." or ".."
+		/// part, no characters a file name cannot have. Paths in mod.json are untrusted.</summary>
+		public static bool IsSafeRelative(string rel)
+		{
+			if (string.IsNullOrEmpty(rel)) return false;
+			rel = rel.Replace('\\', '/');
+			if (rel.StartsWith("/")) return false;
+			foreach (var part in rel.Split('/'))
+			{
+				if (part.Length == 0 || part == "." || part == ".." || part.Trim() != part || part.EndsWith(".")) return false;
+				foreach (char ch in part)
+					if (ch < 32 || "<>:\"|?*".IndexOf(ch) >= 0) return false;
+			}
+			return true;
+		}
+
+		/// <summary>A game file a mod may write: a safe relative path that is a game file.</summary>
+		public static bool IsModFile(string rel) { return IsSafeRelative(rel) && IsGameFile(rel); }
+
+		/// <summary>The full path of <paramref name="path"/> when it is inside <paramref name="root"/>,
+		/// else an exception: the last guard before writing where a package says.</summary>
+		public static string Inside(string root, string path)
+		{
+			string r = Path.GetFullPath(root).TrimEnd('/', '\\') + Path.DirectorySeparatorChar;
+			string p = Path.GetFullPath(path);
+			if (!p.StartsWith(r, StringComparison.OrdinalIgnoreCase)) throw new ModApplyException("refused to write outside " + root + ": " + path);
+			return p;
 		}
 
 		public virtual IEnumerable<string> List()
@@ -117,14 +146,16 @@ namespace UltimateEditor.Modding
 			{
 				string dir = Resolve(d);
 				if (dir == null) continue;
-				foreach (var f in Directory.GetFiles(dir, "*.BKP", SearchOption.AllDirectories))
+				foreach (var f in Directory.GetFiles(dir, "*", SearchOption.AllDirectories))
 				{
+					if (!f.EndsWith(".BKP", StringComparison.OrdinalIgnoreCase)) continue;
 					string rel = Normalize(f.Substring(Root.Length).TrimStart('/', '\\'));
 					set.Add(rel.Substring(0, rel.Length - 4));
 				}
 			}
-			foreach (var f in Directory.GetFiles(Root, "*.BKP"))
+			foreach (var f in Directory.GetFiles(Root))
 			{
+				if (!f.EndsWith(".BKP", StringComparison.OrdinalIgnoreCase)) continue;
 				string rel = Normalize(Path.GetFileName(f));
 				rel = rel.Substring(0, rel.Length - 4);
 				if (IsGameFile(rel)) set.Add(rel);
