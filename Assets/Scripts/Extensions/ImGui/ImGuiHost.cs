@@ -18,7 +18,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 	{
 		const BindingFlags Fields = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
-		public static UImGui.UImGui Create(Camera camera, float fontSize, Action<UImGui.UImGui> layout)
+		public static UImGui.UImGui Create(Camera camera, float fontSize, bool segoe, Action<UImGui.UImGui> layout)
 		{
 			var go = new GameObject("Dear ImGui");
 			go.SetActive(false);

@@ -25,7 +25,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 	/// </summary>
 	public sealed partial class ImGuiShell : MonoBehaviour
 	{
-		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize";
+		const string PrefClassic = "imgui.classic", PrefFontSize = "imgui.fontsize", PrefSegoe = "imgui.segoe", PrefTrial = "imgui.fonttrial";
 		static readonly float[] FontSizes = { 14f, 16f, 18f, 20f, 24f };
 
 		static bool hooked;
@@ -34,6 +34,7 @@ namespace UltimateEditor.Uw1.ImGuiUI
 		UImGui.UImGui host;
 		bool classic;
 		float fontSize;
+		bool segoe;
 		float pendingFontSize = -1;
 		bool styleDirty = true;
 		GameKind? styledFor;
@@ -63,9 +64,21 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			ui = GetComponent<UIManager>();
 			classic = PlayerPrefs.GetInt(PrefClassic, 0) == 1;
 			fontSize = PlayerPrefs.GetFloat(PrefFontSize, 16f);
+			// building a TrueType font atlas crashed the Unity editor natively on one machine; a flag
+			// is saved before trying it, and still being set at the next start means it crashed
+			if (PlayerPrefs.GetInt(PrefTrial, 0) == 1)
+			{
+				PlayerPrefs.SetInt(PrefTrial, 0);
+				PlayerPrefs.SetInt(PrefSegoe, 0);
+				PlayerPrefs.Save();
+				Debug.LogWarning("Dear ImGui: the last start with the Segoe UI font did not finish; using the built-in font from now on (View > Text size > Segoe UI to retry).");
+			}
+			segoe = PlayerPrefs.GetInt(PrefSegoe, 0) == 1;
 			try
 			{
-				host = ImGuiHost.Create(Camera.main, fontSize, OnLayout);
+				if (segoe) { PlayerPrefs.SetInt(PrefTrial, 1); PlayerPrefs.Save(); }
+				host = ImGuiHost.Create(Camera.main, fontSize, segoe, OnLayout);
+				if (segoe) { PlayerPrefs.SetInt(PrefTrial, 0); PlayerPrefs.Save(); }
 			}
 			catch (Exception e)
 			{
@@ -103,8 +116,13 @@ namespace UltimateEditor.Uw1.ImGuiUI
 				fontSize = pendingFontSize;
 				pendingFontSize = -1;
 				PlayerPrefs.SetFloat(PrefFontSize, fontSize);
-				ImGuiHost.SetFont(host, fontSize);
-				host.Reload();
+				if (segoe)
+				{
+					PlayerPrefs.SetInt(PrefTrial, 1); PlayerPrefs.Save();
+					ImGuiHost.SetFont(host, fontSize);
+					host.Reload();
+					PlayerPrefs.SetInt(PrefTrial, 0); PlayerPrefs.Save();
+				}
 				styleDirty = true;
 			}
 			ApplyClassicVisibility();
@@ -163,6 +181,8 @@ namespace UltimateEditor.Uw1.ImGuiUI
 			else io.ConfigFlags &= ~ImGuiConfigFlags.NoMouse;
 			// arrow keys move the map; ImGui's keyboard navigation would take them too
 			io.ConfigFlags &= ~ImGuiConfigFlags.NavEnableKeyboard;
+			// the built-in font is 13 px: the text size menu scales it (the Segoe atlas is rebuilt instead)
+			io.FontGlobalScale = segoe ? 1f : fontSize / 13f;
 			try
 			{
 				ApplyStyle();
@@ -360,6 +380,12 @@ namespace UltimateEditor.Uw1.ImGuiUI
 					if (ImGui.MenuItem(s.ToString("0") + " px", "", Math.Abs(s - fontSize) < 0.1f))
 						pendingFontSize = s;
 			});
+			bool segoeNext = PlayerPrefs.GetInt(PrefSegoe, 0) == 1;
+			if (ImGui.MenuItem("Segoe UI font (next start)", "", segoeNext))
+			{
+				PlayerPrefs.SetInt(PrefSegoe, segoeNext ? 0 : 1);
+				PlayerPrefs.Save();
+			}
 			if (ImGui.MenuItem("Classic interface", "F11", false)) SetClassic(true);
 			ImGui.Separator();
 			ImGui.MenuItem("Dear ImGui demo", "", ref showDemo);
