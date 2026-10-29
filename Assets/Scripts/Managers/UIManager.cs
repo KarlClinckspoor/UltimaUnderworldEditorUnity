@@ -443,6 +443,11 @@ public class UIManager : MonoBehaviour {
 			SpawnPopupMessage("Data is not loaded.");
 			return;
 		}
+		if (saving)
+		{
+			SpawnPopupMessage("Already saving.");
+			return;
+		}
 		StartCoroutine(Save());
 	}
 
@@ -484,6 +489,8 @@ public class UIManager : MonoBehaviour {
 
 	IEnumerator saveThen(Action after)
 	{
+		while (saving)
+			yield return null;
 		yield return StartCoroutine(Save());
 		if (!lastSaveOk)
 			yield break;
@@ -501,68 +508,109 @@ public class UIManager : MonoBehaviour {
 		UltimateEditor.Uw1.UI.UiKit.Button(row, "Stay here", w.Close, 100, 22);
 	}
 
-	private IEnumerator Save()
+	bool saving;
+	/// <summary>True while Save runs (it takes several frames).</summary>
+	public bool IsSaving { get { return saving; } }
+	/// <summary>The frame a save started on, so a click during a save is not taken as saved
+	/// (Extensions/UI/Autosave.cs).</summary>
+	public int SaveStartFrame { get; private set; }
+	/// <summary>Raised when a save wrote everything: File > Save, "Save, then open" or an autosave.</summary>
+	public event Action Saved;
+
+	/// <summary>An autosave (Extensions/UI/Autosave.cs): the same Save as File > Save, without its
+	/// progress messages; a failure is still shown. done gets whether everything was written.
+	/// Returns false, doing nothing, while the data is not loaded or a load or save runs.</summary>
+	public bool AutoSave(Action<bool> done)
 	{
+		if (!MapCreator.IsInitialized || loading || saving)
+			return false;
+		StartCoroutine(autoSave(done));
+		return true;
+	}
+
+	IEnumerator autoSave(Action<bool> done)
+	{
+		yield return StartCoroutine(Save(true));
+		if (done != null)
+			done(lastSaveOk);
+	}
+
+	/// <summary>Writes every file. quiet (an autosave) leaves out the progress messages and the
+	/// closing popup; failures are shown either way.</summary>
+	private IEnumerator Save(bool quiet = false)
+	{
+		if (saving)
+			yield break;
+		saving = true;
+		SaveStartFrame = Time.frameCount;
 		lastSaveOk = false;
-		SpawnPopupMessage("Saving level data", null, false, true);
-		yield return null;
 		try
 		{
-			DataWriter.SaveLevelData(MapCreator.LevelData);
+			if (!quiet) SpawnPopupMessage("Saving level data", null, false, true);
+			yield return null;
+			try
+			{
+				DataWriter.SaveLevelData(MapCreator.LevelData);
+			}
+			catch(Exception e)
+			{
+				SpawnPopupMessage("Failed to save level data\n" + e.Message);
+				yield break;
+			}
+			if (!quiet) SpawnPopupMessage("Saving texture data", null, false, true);
+			yield return null;
+			try
+			{
+				DataWriter.SaveTextureData(MapCreator.TextureData);
+			}
+			catch(Exception e)
+			{
+				SpawnPopupMessage("Failed to save texture data\n"+e.Message);
+				yield break;
+			}
+			if (!quiet) SpawnPopupMessage("Saving strings", null, false, true);
+			yield return null;
+			try
+			{
+				DataWriter.SaveStringData(MapCreator.StringData);
+			}
+			catch(Exception e)
+			{
+				SpawnPopupMessage("Failed to save string data\n" + e.Message);
+				yield break;
+			}
+			if (!quiet) SpawnPopupMessage("Saving conversations", null, false, true);
+			yield return null;
+			try
+			{
+				DataWriter.SaveConversationData(MapCreator.ConversationData);
+			}
+			catch(Exception e)
+			{
+				SpawnPopupMessage("Failed to save conversation data\n" + e.Message);
+				yield break;
+			}
+			if (!quiet) SpawnPopupMessage("Saving object data", null, false, true);
+			yield return null;
+			try
+			{
+				DataWriter.SaveObjectDatas(MapCreator.ObjectData);
+			}
+			catch(Exception e)
+			{
+				SpawnPopupMessage("Failed to save object data\n" + e.Message);
+				yield break;
+			}
+			if (!quiet) Destroy(popup);
+			lastSaveOk = true;
+			if (Saved != null) Saved();
+			if (!quiet && Uw2Graphics.Problems.Count > 0)
+				SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), null, true);
 		}
-		catch(Exception e)
+		finally
 		{
-			SpawnPopupMessage("Failed to save level data\n" + e.Message);
-			yield break;
+			saving = false;
 		}
-		SpawnPopupMessage("Saving texture data", null, false, true);
-		yield return null;
-		try
-		{
-			DataWriter.SaveTextureData(MapCreator.TextureData);
-		}
-		catch(Exception e)
-		{
-			SpawnPopupMessage("Failed to save texture data\n"+e.Message);
-			yield break;
-		}
-		SpawnPopupMessage("Saving strings", null, false, true);
-		yield return null;
-		try
-		{
-			DataWriter.SaveStringData(MapCreator.StringData);
-		}
-		catch(Exception e)
-		{
-			SpawnPopupMessage("Failed to save string data\n" + e.Message);
-			yield break;
-		}
-		SpawnPopupMessage("Saving conversations", null, false, true);
-		yield return null;
-		try
-		{
-			DataWriter.SaveConversationData(MapCreator.ConversationData);
-		}
-		catch(Exception e)
-		{
-			SpawnPopupMessage("Failed to save conversation data\n" + e.Message);
-			yield break;
-		}
-		SpawnPopupMessage("Saving object data", null, false, true);
-		yield return null;
-		try
-		{
-			DataWriter.SaveObjectDatas(MapCreator.ObjectData);
-		}
-		catch(Exception e)
-		{
-			SpawnPopupMessage("Failed to save object data\n" + e.Message);
-			yield break;
-		}
-		Destroy(popup);
-		lastSaveOk = true;
-		if (Uw2Graphics.Problems.Count > 0)
-			SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), null, true);
 	}
 
 	#endregion

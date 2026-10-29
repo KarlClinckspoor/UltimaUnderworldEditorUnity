@@ -110,6 +110,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
 			Entry(root, "Export as mod (.uwmod package)...", () => ModExportWindow.Show(), false);
+			EntryAlways(root, "Autosave (" + (Autosave.Minutes == 0 ? "off" : "every " + Autosave.Minutes + " min") + ")...", () => AutosaveWindow.Show());
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
 			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
@@ -122,6 +123,19 @@ namespace UltimateEditor.Uw1.UI
 		{
 			var c = ui.GetComponentInParent<Canvas>();
 			return c ? c.scaleFactor : 1f;
+		}
+
+		/// <summary>An entry that works with or without a game open (settings).</summary>
+		void EntryAlways(Transform parent, string label, Action act)
+		{
+			var b = UiKit.Button(parent, label, () =>
+			{
+				Destroy(popup);
+				try { act(); }
+				catch (Exception e) { ui.SpawnPopupMessage("Error: " + e.Message); Debug.LogException(e); }
+			}, 300, 22);
+			var t = b.GetComponentInChildren<Text>();
+			if (t) t.alignment = TextAnchor.MiddleLeft;
 		}
 
 		void Entry(Transform parent, string label, Action act, bool needsLevels)
