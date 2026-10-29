@@ -46,6 +46,7 @@ namespace UltimateEditor.Uw1.UI
 		{
 			ui = GetComponent<UIManager>();
 			CreateTopBarButton();
+			RandomizerToggle.Apply(ui);
 		}
 
 		void CreateTopBarButton()
@@ -114,8 +115,19 @@ namespace UltimateEditor.Uw1.UI
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
 			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
-			Entry(root, "Zones (randomizer logic)...", () => ZoneWindow.Show(), true);
-			Entry(root, "Zone graph...", () => ZoneGraphWindow.Show(), true);
+			// The randomizer tools are a work in progress: shown only on request (RandomizerToggle)
+			if (RandomizerToggle.Shown)
+			{
+				Entry(root, "Zones (randomizer logic)...", () => ZoneWindow.Show(), true);
+				Entry(root, "Zone graph...", () => ZoneGraphWindow.Show(), true);
+			}
+			EntryAlways(root, RandomizerToggle.Shown ? "Hide the randomizer tools" : "Show the randomizer tools (work in progress)", () =>
+			{
+				RandomizerToggle.Shown = !RandomizerToggle.Shown;
+				ui.SpawnPopupMessage(RandomizerToggle.Shown
+					? "Randomizer tools shown: Sector mode in the mode list, and Tools > Zones and Zone graph. They are a work in progress."
+					: "Randomizer tools hidden.");
+			});
 			root.SetAsLastSibling();
 		}
 
