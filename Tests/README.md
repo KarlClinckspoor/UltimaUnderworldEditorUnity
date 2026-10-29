@@ -10,7 +10,7 @@ Unity does not use them (they are outside `Assets`).
 | `Modding` | `Assets/Scripts/Modding` alone (mod packages: diff, apply, executables, saves), on top of `Formats`, under the rules of the `Underworld.Modding` asmdef. The mod manager builds this project too. |
 | `EditorBuild` | All of `Assets/Scripts` except those two folders, built against the stand-ins: a build error here is one in Unity. |
 | `Legacy` | `Assets/Scripts` as it was before the formats moved (commit `b61e96a` on `uw2-support`), taken from git at build time. |
-| `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), and the mod packages (`Modding/`). |
+| `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), the built-in 3D models (`ExeModelTests`), and the mod packages (`Modding/`). |
 
 ## Running
 
@@ -42,10 +42,17 @@ assembly) run side by side on every file of both games:
   and `SaveObjectDatas` writes the same files.
 - **Archives and levels:** every block of every `.ARK` reads the same, rewrites the same (and
   as the original file), LZSS encodes the same, and every level builds the same block.
-- **Small files:** `.GR` decode and rebuild, the start square and UW.EXE's models, SKILLS.DAT,
+- **Small files:** `.GR` decode and rebuild, the start square, SKILLS.DAT,
   CMB.DAT, SHADES.DAT, BABGLOBS.DAT and the PLAYER.DAT ciphers.
 
 A deliberate change to the moved picture, string or object code makes these tests fail.
+
+## What the model tests check (`ExeModelTests`)
+
+`Uw1ExeModels` changed after the move, so it has tests of its own instead of parity, on both
+executables: every face's triangles cover it exactly (their areas, seen along the face's normal,
+add up to the face's), the ankh's concave faces would be overfilled by a fan, the compact quads
+(nodes A0h, A2h) take point numbers, and every other face is as the old decoder read it.
 
 ## What the mod package tests check (`Formats.Tests/Modding`)
 

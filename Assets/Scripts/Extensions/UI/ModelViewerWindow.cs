@@ -10,11 +10,13 @@ namespace UltimateEditor.Uw1.UI
 	/// Shows the 3D models built into UW.EXE (see <see cref="Uw1ExeModels"/>), drawn by a
 	/// small software renderer into a texture so it needs no camera, layer or shader set-up.
 	/// Faces use the model's palette colours (palette 0 of PALS.DAT); textured faces are drawn
-	/// grey. Drag the picture or use the buttons to turn it; Export writes a Wavefront OBJ.
+	/// grey. Concave faces are filled through their triangles and hidden surfaces are removed
+	/// per pixel (see RenderPixels). Drag the picture or use the buttons to turn it; Export
+	/// writes a Wavefront OBJ.
 	/// </summary>
 	public static class ModelViewerWindow
 	{
-		const int Size = 320;
+		public const int Size = 320;
 
 		public static void Show()
 		{
@@ -117,6 +119,17 @@ namespace UltimateEditor.Uw1.UI
 
 		static void Render(State s, Uw1ExeModels.Model m)
 		{
+			Upload(s.Texture, RenderPixels(m, s.Palette, s.Yaw, s.Pitch, s.Zoom));
+		}
+
+		/// <summary>
+		/// Draws the model into Size x Size pixels, top row first. Each face is filled through
+		/// its triangles (Uw1ExeModels.Face.Triangles), which follow concave outlines, against a
+		/// depth buffer, so faces hide one another per pixel whatever their order; then its outline
+		/// is drawn where it is not hidden. Faces are lit by how squarely they face the viewer.
+		/// </summary>
+		public static Color32[] RenderPixels(Uw1ExeModels.Model m, Color32[] palette, float yawDegrees, float pitchDegrees, float zoom)
+		{
 			var px = new Color32[Size * Size];
 			var bg = new Color32(24, 26, 30, 255);
 			for (int i = 0; i < px.Length; i++) px[i] = bg;
@@ -130,56 +143,56 @@ namespace UltimateEditor.Uw1.UI
 				minY = Math.Min(minY, v[1]); maxY = Math.Max(maxY, v[1]);
 				minZ = Math.Min(minZ, v[2]); maxZ = Math.Max(maxZ, v[2]);
 			}
-			if (minX == float.MaxValue) { Upload(s.Texture, px); return; }
+			if (minX == float.MaxValue) return px;
 			float cx = (minX + maxX) / 2, cy = (minY + maxY) / 2, cz = (minZ + maxZ) / 2;
 			float radius = Math.Max(1e-3f, (float)Math.Sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY) + (maxZ - minZ) * (maxZ - minZ)) / 2);
-			float scale = Size * 0.45f / radius * s.Zoom;
-			float yaw = s.Yaw * Mathf.Deg2Rad, pitch = s.Pitch * Mathf.Deg2Rad;
+			float scale = Size * 0.45f / radius * zoom;
+			float yaw = yawDegrees * Mathf.Deg2Rad, pitch = pitchDegrees * Mathf.Deg2Rad;
 			float cyw = (float)Math.Cos(yaw), syw = (float)Math.Sin(yaw), cp = (float)Math.Cos(pitch), sp = (float)Math.Sin(pitch);
+			// x across the screen, y down it, z the depth away from the viewer
+			Func<float, float, float, float[]> view = (x, y, z) =>
+			{
+				float x1 = x * cyw - y * syw, y1 = x * syw + y * cyw;          // turn about the vertical (z is up)
+				float y2 = y1 * cp - z * sp, z2 = y1 * sp + z * cp;            // tilt
+				return new[] { x1, -z2, y2 };
+			};
 
 			var proj = new float[m.Vertices.Count][];
 			for (int i = 0; i < m.Vertices.Count; i++)
 			{
 				var v = m.Vertices[i];
 				if (v == null) continue;
-				float x = v[0] - cx, y = v[1] - cy, z = v[2] - cz;          // z is up
-				float x1 = x * cyw - y * syw, y1 = x * syw + y * cyw;          // turn about the vertical
-				float y2 = y1 * cp - z * sp, z2 = y1 * sp + z * cp;            // tilt
-				proj[i] = new[] { Size / 2f + x1 * scale, Size / 2f - z2 * scale, y2 };
+				var p = view(v[0] - cx, v[1] - cy, v[2] - cz);
+				proj[i] = new[] { Size / 2f + p[0] * scale, Size / 2f + p[1] * scale, p[2] };
 			}
 
-			var order = new List<int>();
-			for (int i = 0; i < m.Faces.Count; i++) order.Add(i);
-			Func<int, float> depth = fi =>
+			var depth = new float[Size * Size];
+			for (int i = 0; i < depth.Length; i++) depth[i] = float.MaxValue;
+			var edges = new List<KeyValuePair<Color32, int[]>>();
+			foreach (var f in m.Faces)
 			{
-				float d = 0; var f = m.Faces[fi];
-				foreach (int vi in f.Vertices) d += proj[vi][2];
-				return d / Math.Max(1, f.Vertices.Length);
-			};
-			order.Sort((a, b) => depth(b).CompareTo(depth(a)));    // far first
-
-			foreach (int fi in order)
-			{
-				var f = m.Faces[fi];
 				if (f.Vertices.Length < 3) continue;
-				Color32 baseColor = f.Color >= 0 ? s.Palette[f.Color] : new Color32(150, 150, 150, 255);
+				Color32 baseColor = f.Color >= 0 ? palette[f.Color] : new Color32(150, 150, 150, 255);
 				if (f.Textured) baseColor = new Color32(170, 160, 140, 255);
-				// Light by the projected normal: faces turned to the viewer are brighter.
-				var a = proj[f.Vertices[0]]; var b = proj[f.Vertices[1]]; var c = proj[f.Vertices[2]];
-				float nz = Math.Abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
-				float area = Math.Max(1e-3f, Dist(a, b) * Dist(a, c));
-				float light = 0.45f + 0.55f * Math.Min(1f, nz / area);
+				var n = Uw1ExeModels.Normal(m, f.Vertices);
+				var nv = view((float)n[0], (float)n[1], (float)n[2]);
+				double len = Math.Sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+				float facing = len > 0 ? (float)(Math.Abs(nv[2]) / len) : 0;
+				float light = 0.45f + 0.55f * facing;
 				var col = new Color32((byte)(baseColor.r * light), (byte)(baseColor.g * light), (byte)(baseColor.b * light), 255);
-				for (int k = 1; k + 1 < f.Vertices.Length; k++)
-					FillTriangle(px, proj[f.Vertices[0]], proj[f.Vertices[k]], proj[f.Vertices[k + 1]], col);
-				var edge = new Color32((byte)(col.r / 2), (byte)(col.g / 2), (byte)(col.b / 2), 255);
-				for (int k = 0; k < f.Vertices.Length; k++)
-					Line(px, proj[f.Vertices[k]], proj[f.Vertices[(k + 1) % f.Vertices.Length]], edge);
+				var tris = f.Triangles ?? new int[0][];
+				foreach (var t in tris)
+					FillTriangle(px, depth, proj[t[0]], proj[t[1]], proj[t[2]], col);
+				edges.Add(new KeyValuePair<Color32, int[]>(new Color32((byte)(col.r / 2), (byte)(col.g / 2), (byte)(col.b / 2), 255), f.Vertices));
 			}
-			Upload(s.Texture, px);
+			// outlines after every fill, each where nothing nearer covers it (the bias lets a
+			// face's own edge win over the face)
+			float bias = radius * 0.02f;
+			foreach (var e in edges)
+				for (int k = 0; k < e.Value.Length; k++)
+					Line(px, depth, proj[e.Value[k]], proj[e.Value[(k + 1) % e.Value.Length]], e.Key, bias);
+			return px;
 		}
-
-		static float Dist(float[] a, float[] b) { float dx = a[0] - b[0], dy = a[1] - b[1]; return (float)Math.Sqrt(dx * dx + dy * dy); }
 
 		static void Upload(Texture2D t, Color32[] px)
 		{
@@ -191,7 +204,7 @@ namespace UltimateEditor.Uw1.UI
 			t.Apply();
 		}
 
-		static void FillTriangle(Color32[] px, float[] a, float[] b, float[] c, Color32 col)
+		static void FillTriangle(Color32[] px, float[] depth, float[] a, float[] b, float[] c, Color32 col)
 		{
 			int minX = Math.Max(0, (int)Math.Floor(Math.Min(a[0], Math.Min(b[0], c[0]))));
 			int maxX = Math.Min(Size - 1, (int)Math.Ceiling(Math.Max(a[0], Math.Max(b[0], c[0]))));
@@ -206,18 +219,26 @@ namespace UltimateEditor.Uw1.UI
 					float w0 = (b[0] - px0) * (c[1] - py0) - (b[1] - py0) * (c[0] - px0);
 					float w1 = (c[0] - px0) * (a[1] - py0) - (c[1] - py0) * (a[0] - px0);
 					float w2 = (a[0] - px0) * (b[1] - py0) - (a[1] - py0) * (b[0] - px0);
-					if ((w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0))
-						px[y * Size + x] = col;
+					if (!((w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0))) continue;
+					// the weights are twice the sub-areas: divided by the area they sum to one
+					float z = (w0 * a[2] + w1 * b[2] + w2 * c[2]) / area;
+					int i = y * Size + x;
+					if (z >= depth[i]) continue;
+					depth[i] = z;
+					px[i] = col;
 				}
 		}
 
-		static void Line(Color32[] px, float[] a, float[] b, Color32 col)
+		static void Line(Color32[] px, float[] depth, float[] a, float[] b, Color32 col, float bias)
 		{
 			int steps = (int)Math.Max(1, Math.Ceiling(Math.Max(Math.Abs(b[0] - a[0]), Math.Abs(b[1] - a[1]))));
 			for (int i = 0; i <= steps; i++)
 			{
-				int x = (int)(a[0] + (b[0] - a[0]) * i / steps), y = (int)(a[1] + (b[1] - a[1]) * i / steps);
-				if (x >= 0 && x < Size && y >= 0 && y < Size) px[y * Size + x] = col;
+				float t = (float)i / steps;
+				int x = (int)(a[0] + (b[0] - a[0]) * t), y = (int)(a[1] + (b[1] - a[1]) * t);
+				if (x < 0 || x >= Size || y < 0 || y >= Size) continue;
+				float z = a[2] + (b[2] - a[2]) * t;
+				if (z - bias <= depth[y * Size + x]) px[y * Size + x] = col;
 			}
 		}
 	}

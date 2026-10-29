@@ -17,7 +17,8 @@ namespace Formats.Tests
 		{
 			foreach (var f in new[] { "Archive", "Automap", "BGlobals", "EnchantmentEffects", "GameFiles", "GameProfile", "GrFile", "LevelBlock", "Lzss", "PlayerDat", "StartPosition" })
 				yield return new object[] { "Games/" + f + ".cs", "Extensions/Core/Games/" + f + ".cs" };
-			foreach (var f in new[] { "Uw1ExeModels", "Uw1Fields", "Uw1Schemas", "Uw1SmallFiles" })
+			// Uw1ExeModels changed after the move (concave faces, compact quads): ExeModelTests
+			foreach (var f in new[] { "Uw1Fields", "Uw1Schemas", "Uw1SmallFiles" })
 				yield return new object[] { "Uw1/" + f + ".cs", "Extensions/Core/" + f + ".cs" };
 			yield return new object[] { "Json/MiniJson.cs", "Extensions/Core/Zoning/MiniJson.cs" };
 		}

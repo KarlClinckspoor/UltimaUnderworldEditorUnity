@@ -37,7 +37,7 @@ namespace Formats.Tests
 		}
 
 		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
-		public void Exe_start_square_and_models_are_the_same(string game)
+		public void Exe_start_square_is_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
 			if (dir == null) return;
@@ -50,8 +50,6 @@ namespace Formats.Tests
 			Assert.Equal(r1, r2); Assert.Equal(x1, x2); Assert.Equal(y1, y2);
 			if (kind == GameKind.UW1) Assert.Equal((0x20, 2), (x2, y2));
 			else Assert.Equal((0x13, 0x30), (x2, y2));
-			if (kind == GameKind.UW1)
-				Same.Assert(LU.Uw1ExeModels.Load(exe), Uw1ExeModels.Load(exe), "UW.EXE models");
 		}
 
 		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]

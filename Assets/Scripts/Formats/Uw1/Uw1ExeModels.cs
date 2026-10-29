@@ -31,6 +31,11 @@ namespace UltimateEditor.Uw1
 			public int[] Vertices;
 			public int Color;          // palette index, -1 when unknown
 			public bool Textured;
+			/// <summary>The face cut into triangles (vertex numbers, three at a time) that cover
+			/// exactly the polygon, concave or not (see <see cref="Triangulate"/>).</summary>
+			public int[][] Triangles;
+			/// <summary>False when the polygon has a notch (the ankh's outline, for one).</summary>
+			public bool Convex;
 		}
 
 		public sealed class Model
@@ -179,7 +184,104 @@ namespace UltimateEditor.Uw1
 		void AddFace(Model m, int[] verts, int color, bool textured)
 		{
 			foreach (int v in verts) Get(m, v);
-			m.Faces.Add(new Face { Vertices = verts, Color = color, Textured = textured });
+			bool convex;
+			var tris = Triangulate(m, verts, out convex);
+			m.Faces.Add(new Face { Vertices = verts, Color = color, Textured = textured, Triangles = tris, Convex = convex });
+		}
+
+		/// <summary>The face's normal (Newell's method: sound for any planar polygon, concave or
+		/// with collinear corners), not normalised; zero for a degenerate face.</summary>
+		public static double[] Normal(Model m, int[] verts)
+		{
+			double nx = 0, ny = 0, nz = 0;
+			for (int i = 0; i < verts.Length; i++)
+			{
+				var a = m.Vertices[verts[i]]; var b = m.Vertices[verts[(i + 1) % verts.Length]];
+				nx += (a[1] - b[1]) * (a[2] + b[2]);
+				ny += (a[2] - b[2]) * (a[0] + b[0]);
+				nz += (a[0] - b[0]) * (a[1] + b[1]);
+			}
+			return new[] { nx, ny, nz };
+		}
+
+		/// <summary>
+		/// Cuts a polygon into triangles by ear clipping in its own plane. The game fills its
+		/// polygons by scanlines, so a face may be concave: the ankh's front and back are each
+		/// one outline of more than twenty corners. A fan from the first corner, the usual short
+		/// cut, fills the notches of such a face (it joined the ankh's arms to its foot).
+		/// Corners in a straight line are dropped without a triangle. A polygon that is not
+		/// simple, where no ear can be found, gets a fan for what is left.
+		/// </summary>
+		public static int[][] Triangulate(Model m, int[] verts, out bool convex)
+		{
+			int n = verts.Length;
+			convex = true;
+			var result = new List<int[]>();
+			if (n < 3) return result.ToArray();
+			// project onto the plane of the two axes the normal is least along
+			var nrm = Normal(m, verts);
+			int drop = Math.Abs(nrm[0]) >= Math.Abs(nrm[1]) && Math.Abs(nrm[0]) >= Math.Abs(nrm[2]) ? 0 : Math.Abs(nrm[1]) >= Math.Abs(nrm[2]) ? 1 : 2;
+			int ua = drop == 0 ? 1 : 0, va = drop == 2 ? 1 : 2;
+			var u = new double[n]; var v = new double[n];
+			double minU = double.MaxValue, maxU = double.MinValue, minV = double.MaxValue, maxV = double.MinValue, area = 0;
+			for (int i = 0; i < n; i++)
+			{
+				var p = m.Vertices[verts[i]];
+				u[i] = p[ua]; v[i] = p[va];
+				minU = Math.Min(minU, u[i]); maxU = Math.Max(maxU, u[i]); minV = Math.Min(minV, v[i]); maxV = Math.Max(maxV, v[i]);
+			}
+			for (int i = 0; i < n; i++) { int j = (i + 1) % n; area += u[i] * v[j] - u[j] * v[i]; }
+			double size = Math.Max(maxU - minU, maxV - minV);
+			double eps = 1e-9 * size * size;
+			double sign = area < 0 ? -1 : 1;     // make the polygon counter-clockwise in (u, v)
+			Func<int, int, int, double> cross = (a, b, c) => sign * ((u[b] - u[a]) * (v[c] - v[a]) - (v[b] - v[a]) * (u[c] - u[a]));
+			for (int i = 0; i < n; i++)
+				if (cross((i + n - 1) % n, i, (i + 1) % n) < -eps) { convex = false; break; }
+
+			var left = new List<int>();
+			for (int i = 0; i < n; i++) left.Add(i);
+			while (left.Count > 3)
+			{
+				bool cut = false;
+				int c = left.Count;
+				// corners in a straight line first: they need no triangle
+				for (int k = 0; k < c && !cut; k++)
+				{
+					int a = left[(k + c - 1) % c], b = left[k], d = left[(k + 1) % c];
+					if (Math.Abs(cross(a, b, d)) <= eps) { left.RemoveAt(k); cut = true; }
+				}
+				for (int k = 0; k < c && !cut; k++)
+				{
+					int a = left[(k + c - 1) % c], b = left[k], d = left[(k + 1) % c];
+					if (cross(a, b, d) <= eps) continue;          // a reflex corner is no ear
+					bool empty = true;
+					foreach (int q in left)
+					{
+						if (q == a || q == b || q == d) continue;
+						if (Same(u, v, q, a, eps) || Same(u, v, q, b, eps) || Same(u, v, q, d, eps)) continue;
+						if (cross(a, b, q) >= -eps && cross(b, d, q) >= -eps && cross(d, a, q) >= -eps) { empty = false; break; }
+					}
+					if (!empty) continue;
+					result.Add(new[] { verts[a], verts[b], verts[d] });
+					left.RemoveAt(k);
+					cut = true;
+				}
+				if (!cut)
+				{
+					for (int k = 1; k + 1 < left.Count; k++)
+						result.Add(new[] { verts[left[0]], verts[left[k]], verts[left[k + 1]] });
+					return result.ToArray();
+				}
+			}
+			if (left.Count == 3 && Math.Abs(cross(left[0], left[1], left[2])) > eps)
+				result.Add(new[] { verts[left[0]], verts[left[1]], verts[left[2]] });
+			return result.ToArray();
+		}
+
+		static bool Same(double[] u, double[] v, int a, int b, double eps)
+		{
+			double du = u[a] - u[b], dv = v[a] - v[b];
+			return du * du + dv * dv <= eps;
 		}
 
 		void ParseList(Reader r, Model m, int[] colors, ref int color, HashSet<long> visited, int depth)
@@ -222,7 +324,7 @@ namespace UltimateEditor.Uw1
 					}
 					case 0x0082:
 					{
-						int n = r.U16(), first = r.U16();
+						int n = r.U16(), first = r.Vert();   // a point offset (times 8), as in every other node
 						for (int i = 0; i < n; i++)
 						{
 							float x = r.Fixed(), y = r.Fixed(), z = r.Fixed();
@@ -239,10 +341,22 @@ namespace UltimateEditor.Uw1
 					}
 					case 0x008C:
 					{
-						int refv = r.Vert(); r.U16(); int nv = r.Vert();
+						// do_addres (INTERP.ASM): destination = point a + point b. The shipped models
+						// (door frame, pillar) always add point 256, which no model defines: the
+						// renderer's, reaching up to the ceiling. Drawn up to one square's height
+						// here: the door frame's lintel and the pillar stand 1.0 high.
+						int refv = r.Vert(); int add = r.Vert(); int nv = r.Vert();
 						var p = Get(m, refv);
-						// Reaches up to the ceiling in the game; shown at the model's height here.
-						Store(m, nv, p[0], p[1], Math.Max(p[2], m.ExtentZ));
+						var q = add < m.Vertices.Count ? m.Vertices[add] : null;
+						if (q != null) Store(m, nv, p[0] + q[0], p[1] + q[1], p[2] + q[2]);
+						else Store(m, nv, p[0], p[1], Math.Max(p[2], 1f));   // one square up (a square is 1.0)
+						break;
+					}
+					case 0x00C6:
+					{
+						// do_subres (INTERP.ASM): destination = point a - point b
+						var p = Get(m, r.Vert()); var q = Get(m, r.Vert());
+						Store(m, r.Vert(), p[0] - q[0], p[1] - q[1], p[2] - q[2]);
 						break;
 					}
 					case 0x0090: case 0x0092: case 0x0094:
@@ -269,11 +383,14 @@ namespace UltimateEditor.Uw1
 						AddFace(m, v, color, true);
 						break;
 					}
-					case 0x00A0: case 0x00D2:
+					case 0x00A0: case 0x00A2: case 0x00D2:
 					{
-						if (cmd == 0x00A0) r.U16();
+						// do_compact_tmap / _wtmap / _map (TMAPOPS.ASM): a bitmap slot (UW2's
+						// do_compact_map takes the context's instead), then four point NUMBERS as
+						// bytes, not offsets: the handler multiplies them by 8 itself.
+						if (cmd != 0x00D2 || !uw2) r.U16();
 						var v = new int[4];
-						for (int i = 0; i < 4; i++) v[i] = r.U8() >> 3;
+						for (int i = 0; i < 4; i++) v[i] = r.U8();
 						AddFace(m, v, color, true);
 						break;
 					}
@@ -318,9 +435,14 @@ namespace UltimateEditor.Uw1
 			}
 			foreach (var f in m.Faces)
 			{
-				sb.Append("f");
-				foreach (int v in f.Vertices) sb.Append(' ').Append(map[v]);
-				sb.Append('\n');
+				// A concave face goes out as its triangles: many programs would fan an n-gon.
+				var polys = f.Convex || f.Triangles == null ? new[] { f.Vertices } : f.Triangles;
+				foreach (var poly in polys)
+				{
+					sb.Append("f");
+					foreach (int v in poly) sb.Append(' ').Append(map[v]);
+					sb.Append('\n');
+				}
 			}
 			return sb.ToString();
 		}
