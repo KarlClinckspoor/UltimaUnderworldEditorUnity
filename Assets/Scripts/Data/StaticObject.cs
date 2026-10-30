@@ -843,12 +843,27 @@ public class StaticObject {
 	public int GetTerrainTrapHeight() { return ZPos >> 3; }
 	public void SetTerrainTrapHeight(int height) { ZPos = height > MaxTerrainHeight ? KeepTerrainHeight : System.Math.Max(0, height) << 3; }
 
-	/// <summary>Damage trap (0x180): Quality is the damage; a non-zero Owner heals instead.</summary>
-	public bool GetDamageTrapHeals() { return Owner != 0; }
-	public void SetDamageTrapHeals(bool heals) { Owner = heals ? 1 : 0; }
+	/// <summary>Damage trap (0x180): Quality is the damage; a non-zero Owner poisons the player at
+	/// strength Quality instead (4-bit poison, so 1-15), others still taking plain damage. It never
+	/// heals, in either game (event/WORLDEV.C whack_thing).</summary>
+	public bool GetDamageTrapPoisons() { return Owner != 0; }
+	public void SetDamageTrapPoisons(bool poisons) { Owner = poisons ? 1 : 0; }
 
-	/// <summary>Set and check variable traps: Z is the variable, 1-63 (0: the quest bits for the
-	/// set variable trap); the player record has 64 game variables.</summary>
+	/// <summary>A trap's trigger count (event/TRIGGER.C delete_trap): OBJ_FLAGS, id bits 9-12, so
+	/// 0-15. Flags holds bits 9-11 and IsEnchanted bit 12, so counts of 8 or more set the
+	/// enchanted bit.</summary>
+	public const int MaxTrapTriggerCount = 15;
+	public int GetTrapTriggerCount() { return Flags | (IsEnchanted ? 8 : 0); }
+	public void SetTrapTriggerCount(int count)
+	{
+		count = System.Math.Max(0, System.Math.Min(MaxTrapTriggerCount, count));
+		Flags = count & 7;
+		IsEnchanted = (count & 8) != 0;
+	}
+
+	/// <summary>Set and check variable traps: Z is the variable; the player record has 64 game
+	/// variables, 0-63. The set variable trap takes Z 0 for the quest bits (so it cannot set
+	/// variable 0); the check variable trap reads variable 0 at Z 0 (event/TRIGGER.C).</summary>
 	public const int MaxTrapVariable = 63;
 
 	public float GetMovementStep()

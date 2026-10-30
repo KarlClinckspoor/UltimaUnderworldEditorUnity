@@ -1566,10 +1566,11 @@ public class MapCreator : MonoBehaviour {
 				trigger.Owner = tile.Position.y;
 			}
 		}
-		// A trap's flags count the triggers pointing at it (delete_trap uses the count).
-		// The create menus already set 1, so recount instead of adding.
+		// A trap's flags count the triggers pointing at it (delete_trap uses the count; 4 bits,
+		// the enchanted bit being the 8s). The create menus already set 1, so recount instead
+		// of adding.
 		if (so.IsTrigger() && trigger.IsTrap())
-			trigger.Flags = Math.Min(7, Math.Max(1, CountTriggersTo(trigger)));
+			trigger.SetTrapTriggerCount(Math.Max(1, CountTriggersTo(trigger)));
 		return true;
 	}
 

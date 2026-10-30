@@ -111,9 +111,13 @@ namespace Formats.Tests
 			for (int h = 0; h <= CObj.MaxTerrainHeight; h++) { t.SetTerrainTrapHeight(h); Assert.Equal(h, t.GetTerrainTrapHeight()); }
 			t.SetTerrainTrapHeight(99);
 			Assert.True(t.GetTerrainTrapHeight() > CObj.MaxTerrainHeight);
-			// damage trap: a non-zero owner heals
-			t.SetDamageTrapHeals(true); Assert.True(t.GetDamageTrapHeals());
-			t.SetDamageTrapHeals(false); Assert.Equal(0, t.Owner);
+			// damage trap: a non-zero owner poisons the player (event/WORLDEV.C whack_thing)
+			t.SetDamageTrapPoisons(true); Assert.True(t.GetDamageTrapPoisons());
+			t.SetDamageTrapPoisons(false); Assert.Equal(0, t.Owner);
+			// trigger count: 4 bits, the enchanted bit is the 8s
+			t.SetTrapTriggerCount(15); Assert.Equal(7, t.Flags); Assert.True(t.IsEnchanted); Assert.Equal(15, t.GetTrapTriggerCount());
+			t.SetTrapTriggerCount(3); Assert.Equal(3, t.Flags); Assert.False(t.IsEnchanted);
+			t.SetTrapTriggerCount(20); Assert.Equal(15, t.GetTrapTriggerCount());
 			// variable traps: the value spreads over quality, owner and fine Y
 			t.SetVarTrapValue(0x2A5); Assert.Equal(0x2A5, t.GetVarTrapValue());
 		}

@@ -153,22 +153,29 @@ namespace UltimateEditor.Games
 			{
 				case 1: what = string.Format("{0}: goal {1}, target {2}", Critters(Word(5), npcName, raceName), Bytes[7], Bytes[8]); break;
 				case 2:
-					what = string.Format("{0}: teleport to ({1}, {2}) of level {3}{4}{5}{6}", Critters(Word(7), npcName, raceName), Bytes[5], Bytes[6], Bytes[9],
-						Bytes[10] != 0 ? ", even if seen" : ", only unseen", Bytes[11] != 0 ? ", there is its new home" : "", Bytes[12] != 0 ? ", retry after " + Bytes[12] + " steps" : "");
+					// byte 9 is passed to teleport_critter as "how", which it never reads
+					// (critter/CRITTIME.C): a schedule moves critters on the current level only
+					what = string.Format("{0}: teleport to ({1}, {2}) on the current level{3}{4}{5}", Critters(Word(7), npcName, raceName), Bytes[5], Bytes[6],
+						Bytes[10] != 0 ? ", even if seen" : ", only if the player sees neither it nor the destination", Bytes[11] != 0 ? ", there is its new home" : "",
+						Bytes[12] != 0 ? ", if it fails retry in block 0 " + Bytes[12] + " steps later (time of day + " + Bytes[12] + ", mod 72)" : "");
+					if (Bytes[9] != 0) what += " (byte 9 = " + Bytes[9] + " is unused)";
 					break;
 				case 3: what = string.Format("{0}: kill{1}", Critters(Word(5), npcName, raceName), Bytes[7] == 0 ? " (not the one talking)" : ""); break;
-				case 4: what = string.Format("quest bit {0} of quest {1} := {2}", Bytes[5] & 3, Bytes[5] >> 2, Bytes[6]); break;
-				case 5: what = string.Format("fire the scheduled triggers on square ({0}, {1})", Bytes[5], Bytes[6]); break;
+				// ev_set_qbit adds the value unmasked: other than 0 or 1 spills into the next flags
+				case 4: what = string.Format("quest flag {0} := {1}{2}{3}", Bytes[5], Bytes[6], Bytes[6] > 1 ? " (not 0 or 1: spills into the next flags)" : "", Bytes[5] >= 128 ? " (128 or more is past the 128 quest flags)" : ""); break;
+				case 5: what = string.Format("fire the scheduled triggers (0x1AC, 0x1BC; as nobody, so they need flag 9) on square ({0}, {1}) of the current level", Bytes[5], Bytes[6]); break;
 				case 7:
 				{
 					int h = Bytes[5];
 					string hn = h < hackNames.Length ? hackNames[h] : "no handler";
 					switch (h)
 					{
-						case 1: what = string.Format("hack 1, {0}: {1} on ({2}, {3}): {4} {5} {6}", hn, Critters(Word(6), npcName, raceName), Bytes[8], Bytes[9], Uw2Traps.VariableName(Word(10)), ops[Bytes[12] & 7], Word(13)); break;
+						case 1: what = string.Format("hack 1, {0}: {1} on ({2}, {3}): {4}: {5}", hn, Critters(Word(6), npcName, raceName), Bytes[8], Bytes[9], Uw2Traps.VariableName(Word(10)), Uw2Traps.Operation(Word(10), Bytes[12], Word(13))); break;
 						case 2: what = string.Format("hack 2, {0}: {1}{2} to ({3}, {4})-({5}, {6})", hn, Critters(Word(8), npcName, raceName), Bytes[6] != 0 || Bytes[7] != 0 ? " at (" + Bytes[6] + ", " + Bytes[7] + ")" : "", Bytes[10], Bytes[11], Bytes[12], Bytes[13]); break;
 						case 3: what = string.Format("hack 3, {0}: about half the floors {1} become {2}, height + {3}", hn, Bytes[6], Bytes[7], Word(8)); break;
-						case 4: what = string.Format("hack 4, {0}: argument {1}", hn, Bytes[6]); break;
+						// TRIGGER.C DoClosingDoors and check_alert: each open door (not on a tile
+						// with door bit 1) closes with chance 3 in 10
+						case 4: what = string.Format("hack 4, {0}: {1}", hn, Bytes[6] != 0 ? "doors 8 or more squares from the player may close (" + Bytes[6] + ")" : "all doors may close (0), then 8 animation and timer ticks"); break;
 						case 6: what = string.Format("hack 6, {0}: {1} faces heading {2}", hn, Critters(Word(6), npcName, raceName), Bytes[8]); break;
 						case 7: what = string.Format("hack 7, {0}: {1} to ({2}, {3})-({4}, {5})", hn, Critters(Word(6), npcName, raceName), Bytes[8], Bytes[9], Bytes[10], Bytes[11]); break;
 						default: what = "hack " + h + ", " + hn; break;
@@ -176,17 +183,19 @@ namespace UltimateEditor.Games
 					break;
 				}
 				case 8: what = string.Format("{0}: attitude {1}", Critters(Word(5), npcName, raceName), Bytes[7]); break;
-				case 9: what = string.Format("{0} {1} {2}", Uw2Traps.VariableName(Word(5)), ops[Bytes[7] & 7], Word(8)); break;
+				case 9: what = string.Format("{0}: {1}", Uw2Traps.VariableName(Word(5)), Uw2Traps.Operation(Word(5), Bytes[7], Word(8))); break;
 				case 10:
 				{
 					int count = Bytes[7];
 					string vars = count <= 1 ? Uw2Traps.VariableName(Word(5)) : Uw2Traps.VariableName(Word(5)) + " and the next " + (count - 1) + " combined by " + ops[Bytes[8] & 7];
-					what = string.Format("if {0} {1} {2}: run the disabled rows that follow", vars, Bytes[9] != 0 ? "is not" : "is", (short)Word(10));
+					what = string.Format("if {0} {1} {2}: run the disabled rows that follow, up to the next row that is not disabled, or up to and including the next disabled test (-10)", vars, Bytes[9] != 0 ? "is not" : "is", (short)Word(10));
 					break;
 				}
 				case 11: what = string.Format("{0}: remove from the map", Critters(Word(5), npcName, raceName)); break;
 				case 0: case 6: what = "nothing"; break;
-				default: what = "unknown event " + ev + " (the game skips it)"; break;
+				// SCDEVENT.C Sched_DoEvent returns 6 for 12 or more: FindSCDRowsToExecute stops on
+				// the row and Sched_SetAllClocks gives up on every later block, every time
+				default: what = "unknown event " + ev + (ev < 12 ? "" : disabled ? " (skipped while disabled; run by a test, it halts this block and every later schedule)" : " (halts this block and every later schedule, each time it is reached)"); break;
 			}
 			sb.Append(what);
 			return sb.ToString();

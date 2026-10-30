@@ -56,9 +56,10 @@ namespace UltimateEditor.Uw1.UI
 			}, 110, 22, UiKit.AccentColor);
 			UiKit.Button(tools, "Reload", () => { w.Close(); Show(); }, 70, 22);
 			UiKit.Paragraph(w.Toolbar,
-				"Time is in the block's clock (block 0: 72 steps a day). Level: a level number, 255 any level, 246 + n world n. " +
-				"Event: 1 goal, 2 teleport, 3 kill, 4 quest bit, 5 scheduled triggers, 7 special case, 8 attitude, 9 set variable, 10 test variables, 11 remove; " +
-				"negative is disabled (a test row runs the disabled rows after it when it passes). Parameters are row bytes 5-15 in hex. " +
+				"Time is in the block's clock (block n follows X clock n; block 0: 72 steps a day, so times 0-71). Level: a level number, 255 any level, 246 + n world n. " +
+				"Event: 1 goal, 2 teleport (current level only), 3 kill, 4 quest flag, 5 scheduled triggers, 7 special case, 8 attitude, 9 set variable, 10 test variables, 11 remove; " +
+				"negative is disabled (a test row runs the disabled rows after it when it passes). An event of 12 or more halts this block and every later one, each time. " +
+				"Block 15 re-runs all its due rows whenever X clock 15 changes; an X clock moving back re-runs every remaining row from row 0 up to the new time. Parameters are row bytes 5-15 in hex. " +
 				"New games copy this file into SAVE0; a saved game keeps its own.", 10);
 			Fill(w, blocks);
 		}

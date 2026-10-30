@@ -1175,15 +1175,16 @@ public partial class UIManager
 		createMenuGO = Instantiate(CreateObjectPrefab, transform);
 		createMenuGO.transform.Find("TopBar/Title").gameObject.GetComponent<Text>().text = "Create damage trap";
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
-		// TRIGGER.C, TRAP_DAMAGE: quality is the damage, and a non-zero owner heals instead (as
-		// the properties panel shows it; this menu offered "Health / Poison", and Poison healed)
-		Slider quality = addSliderToCreateMenu("Damage (or healing)", mainPanelGO.transform, 0, 63.0f);
-		Toggle heals = addToggleToCreateMenu("Heals instead of hurting", mainPanelGO.transform, false);
+		// TRIGGER.C TRAP_DAMAGE, WORLDEV.C whack_thing: quality is the damage; a non-zero owner
+		// poisons the player at strength quality instead (4-bit poison: 1-15), others still
+		// take plain damage. It never heals, in either game.
+		Slider quality = addSliderToCreateMenu("Damage (or poison strength)", mainPanelGO.transform, 0, 63.0f);
+		Toggle poisons = addToggleToCreateMenu("Poisons the player (strength 1-15) instead of damaging", mainPanelGO.transform, false);
 		Action createDamageTrapAct = () =>
 		{
 			StaticObject damTrap = MapCreator.AddObject(tile, tilePos, level, id);
 			damTrap.SetProperties(false, true, true, false, 1, (int)quality.value, 0, 0);
-			damTrap.SetDamageTrapHeals(heals.isOn);
+			damTrap.SetDamageTrapPoisons(poisons.isOn);
 			Destroy(createMenuGO);
 			afterCreatingAct?.Invoke(damTrap);
 		};

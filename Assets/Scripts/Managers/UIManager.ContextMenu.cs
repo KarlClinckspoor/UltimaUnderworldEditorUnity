@@ -213,13 +213,14 @@ public partial class UIManager
 			start.Owner = end.Tile.Position.y;
 		}
 		start.IsQuantity = true;
-		// A trap's flags count the triggers pointing at it (event/TRIGGER.C delete_trap).
+		// A trap's flags count the triggers pointing at it (event/TRIGGER.C delete_trap; 4 bits,
+		// the enchanted bit being the 8s).
 		if (start.IsTrigger())
 		{
 			if (end.IsTrap())
-				end.Flags = Math.Min(7, MapCreator.CountTriggersTo(end));
+				end.SetTrapTriggerCount(MapCreator.CountTriggersTo(end));
 			if (oldTarget != null && oldTarget != end && oldTarget.IsTrap())
-				oldTarget.Flags = Math.Min(7, MapCreator.CountTriggersTo(oldTarget));
+				oldTarget.SetTrapTriggerCount(MapCreator.CountTriggersTo(oldTarget));
 		}
 	}
 
