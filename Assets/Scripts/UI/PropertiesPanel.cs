@@ -1219,7 +1219,9 @@ public class PropertiesPanel : MonoBehaviour {
 		Action createUseTrigger = () =>
 		{
 			StaticObject use = MapCreator.AddObject(so.Tile, new Vector2Int(3, 3), so.CurrentLevel, 418, null, true);
-			use.SetProperties(false, true, true, true, 1, 0, 0, 0);
+			// flags 6: the player can set it off (bit 11) and it keeps its trap (bit 10), as the
+			// shipped levers' use triggers are; flags 1 (bit 9 only) let no player use it
+			use.SetProperties(false, true, true, true, 6, 0, 0, 0);
 			so.Special = use.CurrentAdress;
 			use.PrevAdress = so.CurrentAdress;
 			uiManager.SelectObject(use, false);
