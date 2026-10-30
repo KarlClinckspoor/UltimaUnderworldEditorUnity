@@ -235,6 +235,30 @@ public class MapCreator : MonoBehaviour {
 
 	public static bool IsLevelBuilt(int level) { return builtLevels.Contains(level); }
 
+	/// <summary>Puts a level's data in place of the current one (undo, UI/Command.cs): the old
+	/// level's tiles and objects leave the scene, the new one's animations are attached and,
+	/// if the level had been built, it is built again.</summary>
+	public static void ReplaceLevel(int level, LevelData ld)
+	{
+		var old = LevelData[level - 1];
+		if (old != null)
+		{
+			foreach (var so in old.Objects)
+				if (so != null) ObjectToGO.Remove(so);
+			foreach (var t in old.MapTiles)
+				if (t != null) MapTileToGO.Remove(t);
+		}
+		foreach (var anim in ld.AnimationOverlays)
+			if (anim && ld.Objects[anim.Adress] != null)
+				ld.Objects[anim.Adress].Animation = anim;
+		LevelData[level - 1] = ld;
+		if (levelParents == null || level > levelParents.Length || !builtLevels.Remove(level)) return;
+		var parent = levelParents[level - 1].transform;
+		for (int i = parent.childCount - 1; i >= 0; i--)
+			Destroy(parent.GetChild(i).gameObject);
+		EnsureLevelBuilt(level);
+	}
+
 	public GameObject SpawnStartGO()
 	{
 		return SpawnStartGO(transform, GameStart);

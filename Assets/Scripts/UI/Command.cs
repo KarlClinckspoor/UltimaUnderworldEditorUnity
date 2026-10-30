@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,157 +10,104 @@ public class Command {
 	public virtual void Undo() { }
 }
 
-public class MoveObjectCommand : Command
+/// <summary>
+/// An undoable edit of a level's objects (moving, deleting, putting in or taking out of a
+/// container), kept as snapshots instead of a hand-written inverse: the level block as it
+/// would be saved (tiles, objects, free lists, active critters, UW2's overlays), UW1's overlay
+/// block, and the text string blocks a deleted book or writing clears. The old commands undid
+/// each action by hand and left the lists wrong (a restored bag could contain itself).
+///
+/// Undo is a three-way merge: each byte (and text string) that is still as the action left it
+/// goes back to how it was before; anything edited since keeps that edit. The level is then
+/// read back from the merged block as at load and rebuilt in the scene (MapCreator.ReplaceLevel),
+/// so every object is a fresh one: selections and open panels on that level are closed.
+/// </summary>
+public class SnapshotCommand : Command
 {
-	private StaticObject staticObject;
-	private MapTile oldTile;
-	private MapTile newTile;
-	private Vector2Int oldOffsets;
-	private Vector2Int newOffsets;
-	private int oldZ;
+	readonly int level;
+	readonly Action action;
+	State before, after;
 
-	public MoveObjectCommand(StaticObject so, MapTile ot, MapTile nt, Vector2Int oo, Vector2Int no)
+	sealed class State
 	{
-		staticObject = so;
-		oldTile = ot;
-		newTile = nt;
-		oldOffsets = oo;
-		newOffsets = no;
-		oldZ = so.ZPos;
+		public byte[] Block, Overlay;
+		public Dictionary<int, List<string>> Texts;
+	}
 
-		Description = string.Format("Move {0} from tile {1} to {2}", so.Name, ot.Position, nt.Position);
+	public SnapshotCommand(int level, string description, Action action)
+	{
+		this.level = level;
+		this.action = action;
+		Description = description;
 	}
 
 	public override void Do()
 	{
-		if (!staticObject)
+		before = Capture(level);
+		action();
+		after = Capture(level);
+	}
+
+	public override void Undo()
+	{
+		if (before == null || after == null || MapCreator.LevelData == null || level < 1 || level > MapCreator.LevelData.Count)
 			return;
-		MapCreator.SetNewPosition(staticObject, oldTile, newTile, newOffsets);
-	}
-	public override void Undo()
-	{
-		if (!staticObject)
-			return;
-		MapCreator.SetNewPosition(staticObject, newTile, oldTile, oldOffsets);
-		// back exactly where it was, height included
-		staticObject.XPos = oldOffsets.x;
-		staticObject.YPos = oldOffsets.y;
-		staticObject.ZPos = oldZ;
-		MapCreator.SetGOPosition(staticObject);
-	}
-}
+		var now = Capture(level);
+		byte[] block = Merge(before.Block, after.Block, now.Block);
+		byte[] overlay = Merge(before.Overlay, after.Overlay, now.Overlay);
+		MergeTexts(before.Texts, after.Texts);
 
-public class AddToContainerCommand : Command
-{
-	private StaticObject staticObject;
-	private StaticObject container;
-
-	private MapTile oldTile;
-	private Vector2Int oldOffsets;
-
-	public AddToContainerCommand(StaticObject so, StaticObject con, MapTile t, Vector2Int oo)
-	{
-		staticObject = so;
-		container = con;
-		oldTile = t;
-		oldOffsets = oo;
-
-		Description = string.Format("Add {0} to {1} inventory", so.Name, con.Name);
+		var old = MapCreator.LevelData[level - 1];
+		var ld = LevArk.LevelFrom(level, block, overlay, old.SourceTextureBlock);
+		// what the snapshot does not cover stays as it is now
+		ld.FloorTextures = old.FloorTextures;
+		ld.WallTextures = old.WallTextures;
+		ld.DoorTextures = old.DoorTextures;
+		ld.Present = old.Present;
+		ld.SourceBlock = old.SourceBlock;
+		ld.SourceTextureBlock = old.SourceTextureBlock;
+		ld.SourceOverlayBlock = old.SourceOverlayBlock;
+		ld.Sectors = old.Sectors;
+		MapCreator.ReplaceLevel(level, ld);
 	}
 
-	public override void Do()
+	static State Capture(int level)
 	{
-		bool added = container.AddToContainer(staticObject);
-		if (!added)
-			return;
-		oldTile.RemoveObjectFromTile(staticObject);		
-		GameObject toDestroy = MapCreator.ObjectToGO[staticObject];
-		MapCreator.ObjectToGO.Remove(staticObject);
-		Object.Destroy(toDestroy);
+		var ld = MapCreator.LevelData[level - 1];
+		var s = new State();
+		s.Block = LevArk.BuildLevelBlock(ld, level);
+		s.Overlay = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW1 ? LevArk.BuildUw1OverlayBlock(ld) : null;
+		s.Texts = new Dictionary<int, List<string>>();
+		var sd = MapCreator.StringData;
+		if (sd != null)
+			foreach (var b in sd.Blocks)
+				if (b.BlockNumber < 0x0E00)   // the game's own blocks (books, writings, text traps...), not conversations
+					s.Texts[b.BlockNumber] = new List<string>(b.Strings);
+		return s;
 	}
 
-	public override void Undo()
+	/// <summary>Each byte still as after takes its value from before; the rest stay as now.</summary>
+	static byte[] Merge(byte[] before, byte[] after, byte[] now)
 	{
-		oldTile.AddObjectToTile(staticObject);
-		container.RemoveFromContainer(staticObject);
-		GameObject go = MapCreator.SpawnGO(staticObject, MapCreator.MapTileToGO[oldTile]);
-	}
-}
-
-public class RemoveFromContainerCommand : Command
-{
-	private StaticObject container;
-	private StaticObject removed;
-
-	private MapTile newTile;
-	
-	public RemoveFromContainerCommand(StaticObject so, StaticObject con, MapTile tile)
-	{
-		container = con;
-		removed = so;
-		newTile = tile;
-
-		Description = string.Format("Remove {0} from inventory {1}", removed.Name, container.Name);
+		if (now == null) return before;
+		if (before == null || after == null || before.Length != now.Length || after.Length != now.Length) return now;
+		var r = (byte[])now.Clone();
+		for (int i = 0; i < r.Length; i++)
+			if (now[i] == after[i]) r[i] = before[i];
+		return r;
 	}
 
-	public override void Do()
+	/// <summary>The same merge for the text strings, in place in StringData.</summary>
+	static void MergeTexts(Dictionary<int, List<string>> before, Dictionary<int, List<string>> after)
 	{
-		container.RemoveFromContainer(removed);
-		newTile.AddObjectToTile(removed, container);		
-		GameObject go = MapCreator.SpawnGO(removed, MapCreator.MapTileToGO[newTile]);
-	}
-
-	public override void Undo()
-	{
-		newTile.RemoveObjectFromTile(removed);
-		container.AddToContainer(removed);
-		Object.Destroy(MapCreator.ObjectToGO[removed]);
-	}
-}
-public class RemoveObjectCommand : Command
-{
-	private StaticObject toRemove;
-
-	public RemoveObjectCommand(StaticObject so)
-	{
-		toRemove = so;
-
-		Description = string.Format("Remove {0}", so.Name);
-	}
-
-	public override void Do()
-	{
-		MapCreator.RemoveObject(toRemove, true);
-	}
-
-	public override void Undo()
-	{
-		MapCreator.AddObject(toRemove.Tile, toRemove.CurrentLevel, toRemove);
-	}
-}
-
-public class AddObjectCommand : Command
-{
-	private StaticObject toAdd;
-	private int level;
-	private MapTile tile;
-
-	public AddObjectCommand(StaticObject so, int l, MapTile t)
-	{
-		toAdd = so;
-		level = l;
-		tile = t;
-
-		Description = string.Format("Add {0} at {1} in level {2}", toAdd, tile.Position, level);
-	}
-
-	public override void Do()
-	{
-		MapCreator.AddObject(tile, level, toAdd);
-	}
-
-	public override void Undo()
-	{
-		MapCreator.RemoveObject(toAdd, true);
+		var sd = MapCreator.StringData;
+		if (sd == null) return;
+		foreach (var b in sd.Blocks)
+		{
+			List<string> was, then;
+			if (!before.TryGetValue(b.BlockNumber, out was) || !after.TryGetValue(b.BlockNumber, out then)) continue;
+			for (int i = 0; i < b.Strings.Count && i < was.Count && i < then.Count; i++)
+				if (b.Strings[i] == then[i]) b.Strings[i] = was[i];
+		}
 	}
 }

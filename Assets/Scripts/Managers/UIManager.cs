@@ -765,9 +765,14 @@ public class UIManager : MonoBehaviour {
 			StaticObject container = toRemove.GetContainer();
 			if(container)
 			{
-				RemoveFromContainerCommand rfcc = new RemoveFromContainerCommand(toRemove, container, container.Tile);
-				rfcc.Do();
-				InputManager.Commands.Add(rfcc);
+				MapTile tile = container.Tile;
+				Undoable(toRemove.CurrentLevel, "Take " + toRemove.Name + " out of " + container.Name, () =>
+				{
+					if (!container.RemoveFromContainer(toRemove)) return false;
+					tile.AddObjectToTile(toRemove, container);
+					MapCreator.SpawnGO(toRemove, MapCreator.MapTileToGO[tile]);
+					return true;
+				});
 			}
 			else
 			{
@@ -783,9 +788,9 @@ public class UIManager : MonoBehaviour {
 
 		//StaticObject so = InputManager.SelectedObject.GetComponent<StaticObjectScript>().StaticObject;
 		StaticObject so = ObjectProperties.GetComponent<PropertiesPanel>().SelectedObject;
-		RemoveObjectCommand roc = new RemoveObjectCommand(so);
-		InputManager.Commands.Add(roc);
-		roc.Do();
+		if (!so)
+			return;
+		Undoable(so.CurrentLevel, "Delete " + so.Name, () => MapCreator.RemoveObject(so, true));
 		ObjectProperties.SetActive(false);
 	}
 
@@ -2278,7 +2283,7 @@ public class UIManager : MonoBehaviour {
 		createButton("Copy", () => copyObject = so, getContextMenuContent(), contextMenu, 0);
 		Action remove = () =>
 		{
-			MapCreator.RemoveObject(so, true);
+			Undoable(so.CurrentLevel, "Delete " + so.Name, () => MapCreator.RemoveObject(so, true));
 			StaticObjectPanelObject.SetActive(false);
 			ObjectProperties.GetComponent<PropertiesPanel>().DeselectObject();
 			ObjectProperties.SetActive(false);
@@ -5152,6 +5157,7 @@ public class UIManager : MonoBehaviour {
 			foreach (var level in levels)
 				Destroy(level);
 			MapCreator.ClearLevels();
+			InputManager.Commands = new CommandList<Command>(30);   // the undo steps were for the levels just cleared
 			if (clearConvsTog.isOn)
 				MapCreator.ClearConversations();
 			levels = MapCreator.CreateLevels();
@@ -5279,13 +5285,33 @@ public class UIManager : MonoBehaviour {
 		fileExplorer.GetComponent<FileExplorer>().InitFileReader(UltimateEditor.Uw1.UI.GameOpener.Slashes(folder));
 	}
 
+	/// <summary>Runs an edit of a level's objects as an undoable step (UI/Command.cs,
+	/// SnapshotCommand). Returns what the edit returned; a refused edit (false) is not kept.</summary>
+	public bool Undoable(int level, string description, Func<bool> edit)
+	{
+		bool ok = false;
+		var c = new SnapshotCommand(level, description, () => ok = edit());
+		c.Do();
+		if (ok)
+			InputManager.Commands.Add(c);
+		return ok;
+	}
+
 	public void Undo()
 	{
 		if (!MapCreator.IsInitialized)
 			return;
 		Command last = InputManager.PopLastCommand();
-		if(last != null)
-			last.Undo();
+		if (last == null)
+		{
+			SpawnPopupMessage("Nothing to undo.");
+			return;
+		}
+		// the level is read back afresh: what was selected on it is gone
+		InputManager.DeselectObject();
+		ObjectProperties.SetActive(false);
+		last.Undo();
+		SpawnPopupMessage("Undone: " + last.Description);
 	}
 
 

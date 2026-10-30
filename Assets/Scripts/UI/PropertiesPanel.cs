@@ -890,7 +890,7 @@ public class PropertiesPanel : MonoBehaviour {
 	}
 	private void destroyContainedObject(StaticObject parent, StaticObject target)
 	{
-		MapCreator.RemoveObject(target, true);
+		uiManager.Undoable(target.CurrentLevel, "Delete " + target.Name + " from " + parent.Name, () => MapCreator.RemoveObject(target, true));
 		SetBasicPanel(parent);
 	}
 	/// <summary>A UW2 trap's fields decoded (Uw2Traps.Decode), with block 9 for the text string trap.</summary>

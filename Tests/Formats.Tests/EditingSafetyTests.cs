@@ -180,6 +180,41 @@ namespace Formats.Tests
 			Assert.Same(to, trap.Tile);
 		}
 
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		public void Undo_of_a_delete_puts_the_objects_back_and_keeps_later_edits(string game)
+		{
+			if (!GameData.Has(game)) return;
+			string dir;
+			var levels = Load(game, out dir);
+			typeof(CMap).GetProperty("StringData").SetValue(null, C.LoadStrings());
+			foreach (var l in levels)
+				foreach (var anim in l.AnimationOverlays)
+					if (anim && l.Objects[anim.Adress] != null) l.Objects[anim.Adress].Animation = anim;
+			int level = 1;
+			var ld = levels[level - 1];
+			// a container holding something, on a tile
+			var bag = ld.Objects.First(o => o != null && o.CurrentAdress >= 256 && !o.IsQuantity && o.Special > 0 && o.Tile != null && o.GetContainer() == null && o.GetContainedObjects().Count > 0);
+			byte[] before = current::LevArk.BuildLevelBlock(ld, level);
+			var c = new current::SnapshotCommand(level, "delete", () => CMap.RemoveObject(bag, true));
+			c.Do();
+			Assert.NotEqual(before, current::LevArk.BuildLevelBlock(ld, level));
+			// a tile edited after the delete
+			var tile = levels[level - 1].MapTiles[10, 10];
+			int height = tile.FloorHeight;
+			tile.FloorHeight = (height + 3) % 16;
+			c.Undo();
+			var back = CMap.LevelData[level - 1];
+			Assert.NotSame(ld, back);
+			byte[] after = current::LevArk.BuildLevelBlock(back, level);
+			Assert.Equal((height + 3) % 16, back.MapTiles[10, 10].FloorHeight);   // the later edit stays
+			back.MapTiles[10, 10].FloorHeight = height;
+			after = current::LevArk.BuildLevelBlock(back, level);
+			Same.Bytes(before, after, game + " level block after undo");
+			var again = back.Objects[bag.CurrentAdress];
+			Assert.NotNull(again);
+			Assert.NotEmpty(again.GetContainedObjects());
+		}
+
 		[GameFact("UW")]
 		public void The_item_cleaner_keeps_garamons_bones_and_the_talismans()
 		{

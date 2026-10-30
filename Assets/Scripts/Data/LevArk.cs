@@ -62,6 +62,15 @@ public static class LevArk
 	static LevelData ReadLevel(int l)
 	{
 		byte[] block = Archive.Read(Game.LevelBlock(l));
+		byte[] overlayBlock = Game.Kind == GameKind.UW2 ? null : Archive.Read(Game.OverlayBlock(l));
+		byte[] tex = Archive.Read(Game.TextureBlock(l));
+		return LevelFrom(l, block, overlayBlock, tex);
+	}
+
+	/// <summary>A level read from its blocks (the level block, UW1's overlay block, the texture
+	/// block), as at load. Undo uses it to put a level back as it was (UI/Command.cs).</summary>
+	public static LevelData LevelFrom(int l, byte[] block, byte[] overlayBlock, byte[] tex)
+	{
 		bool present = block != null && block.Length >= LevelBlock.MagicAt + 2;
 		byte[] data = present ? block : EmptyBlock(Game);
 		var ms = new MemoryStream(data, false);
@@ -77,17 +86,14 @@ public static class LevArk
 		StaticObject[] objects = DataReader.ReadStaticObjects(ms, tiles, 0, l, mobList, mobCount);
 
 		AnimationOverlay[] anims;
-		byte[] overlayBlock = null;
 		if (Game.Kind == GameKind.UW2)
 			anims = data.Length >= LevelBlock.Uw2OverlaysAt + 0x180 ? DataReader.ReadAnimationOverlays(l, LevelBlock.Uw2OverlaysAt, ms) : new AnimationOverlay[64];
 		else
 		{
-			overlayBlock = Archive.Read(Game.OverlayBlock(l));
 			// Anim_Load: a block of another length loads as no overlays
 			anims = overlayBlock != null && overlayBlock.Length == 0x180 ? DataReader.ReadAnimationOverlays(l, 0, new MemoryStream(overlayBlock, false)) : new AnimationOverlay[64];
 		}
 
-		byte[] tex = Archive.Read(Game.TextureBlock(l));
 		int[] floors, walls, doors;
 		ReadTextureBlock(tex, out floors, out walls, out doors);
 
@@ -381,7 +387,7 @@ public static class LevArk
 	/// UW1's overlay block (0x180): unchanged set, unchanged bytes. Otherwise written in object
 	/// order, zeroing only the entry after the list, as UW1's Anim_Save does (stale entries after it stay).
 	/// </summary>
-	static byte[] BuildUw1OverlayBlock(LevelData ld)
+	public static byte[] BuildUw1OverlayBlock(LevelData ld)
 	{
 		var src = ld.SourceOverlayBlock;
 		var live = LiveOverlays(ld);

@@ -44,7 +44,7 @@ public class InputManager : MonoBehaviour {
 	public LineRenderer triggerLink { get; private set; }
 	//private GameObject[] triggerArrows;
 
-	public CommandList<Command> Commands = new CommandList<Command>(10);
+	public CommandList<Command> Commands = new CommandList<Command>(30);
 
 	private void Start()
 	{
@@ -266,7 +266,7 @@ public class InputManager : MonoBehaviour {
 				// Dropping onto a container, a critter, a door or a lever puts the object in it.
 				// Not onto traps and triggers: they lie on the floor under other objects, and what
 				// they hold is data (a create-object trap's template); use their panel for that.
-				if(!MapCreator.IsTrapOrTrigger(other) && other.CanBeInserted(so) && MapCreator.AddToContainer(so, other))
+				if(!MapCreator.IsTrapOrTrigger(other) && other.CanBeInserted(so) && UIManager.Undoable(so.CurrentLevel, "Put " + so.Name + " in " + other.Name, () => MapCreator.AddToContainer(so, other)))
 				{
 					if (shadowObject)
 						Destroy(shadowObject);
@@ -309,9 +309,8 @@ public class InputManager : MonoBehaviour {
 			else if (newOffsets.y == 7 && Convert.ToInt32(shadowObject.transform.position.y / tileSize) == tile.Position.y)
 				newOffsets.y = 0;
 			//Debug.LogFormat("newOffsets : {0}", newOffsets);
-			MoveObjectCommand mic = new MoveObjectCommand(so, draggedFromTile, tile, oldOffsets, newOffsets);
-			Commands.Add(mic);
-			mic.Do();
+			MapTile from = draggedFromTile;
+			UIManager.Undoable(so.CurrentLevel, "Move " + so.Name, () => { MapCreator.SetNewPosition(so, from, tile, newOffsets); return true; });
 			
 			
 			//MapCreator.SetNewPosition(so, draggedFromTile, tile, MapCreator.GetOffsetsFromWorldPos(mousePos));
