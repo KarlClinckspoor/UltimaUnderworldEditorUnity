@@ -47,7 +47,7 @@ namespace UltimateEditor.Uw1.UI
 				var b = File.ReadAllBytes(exe);
 				if (!StartPosition.Patch(b, game, x, y)) { w.Status.text = "The call was not found any more."; return; }
 				GameWrite.Write(exe, b);
-				StartPosition.ExeX = x; StartPosition.ExeY = y;
+				MapCreator.ExeStart = new Vector2Int(x, y);
 				w.Status.text = string.Format("New games now start at ({0}, {1}) of level 1.", x, y);
 			}, 170, 22, UiKit.AccentColor);
 			UiKit.Button(row2, "Original", () =>

@@ -294,102 +294,21 @@ public static class DataReader {
 		MobileObject obj = new MobileObject();
 		obj.CurrentAdress = index;
 		obj.CurrentLevel = level;
-		ReadStaticObject(fs, obj);
-		ReadMobileObject(fs, obj);
+		var b = new byte[ObjectRecord.MobileSize];
+		fs.Read(b, 0, b.Length);
+		ObjectRecord.Read(obj, b, 0, true);
 
 		return obj;
 	}
 
+	/// <summary>Reads an object's 8 static bytes (ObjectRecord, the one field table).</summary>
 	private static void ReadStaticObject(Stream fs, StaticObject obj, bool log = false)
 	{
-		int b0 = fs.ReadByte();
-		int b1 = fs.ReadByte();
-		int b2 = fs.ReadByte();
-		int b3 = fs.ReadByte();
-		int b4 = fs.ReadByte();
-		int b5 = fs.ReadByte();
-		int b6 = fs.ReadByte();
-		int b7 = fs.ReadByte();
-
-
-		int id = b0 + ((b1 & 0x01) << 8);
-		obj.SetID(id);
-		obj.Flags = ((b1 & 0x0E) >> 1);
-		obj.IsEnchanted = ((b1 & 0x10) >> 4) == 1;
-		obj.IsDoorOpen = ((b1 & 0x20) >> 5) == 1;
-		obj.IsInvisible = ((b1 & 0x40) >> 6) == 1;
-		obj.IsQuantity = ((b1 & 0x80) >> 7) == 1;
-
-		//Debug.LogFormat("fs.position : {5}, a : {0}, b : {1}, (b & 0x01) : {2}, (b & 0x01) << 8 : {3}, a + ((b & 0x01) << 8 : {4}", ToHex(a), ToHex(b), ToHex(b & 0x01), ToHex((b & 0x01) << 8), ToHex(a + ((b & 0x01) << 8)), fs.Position);
-		obj.Name = StaticObject.GetName(obj.ObjectID);
-		obj.ZPos = (b2 & 0x7F);
-		obj.Direction = ((b2 & 0x80) >> 7) + ((b3 & 0x03) << 1);
-		obj.YPos = (b3 & 0x1C) >> 2;
-		obj.XPos = (b3 & 0xE0) >> 5;
-		obj.Quality = (b4 & 0x3F);
-		//obj.NextAdress = ((b4 & 0xC0) >> 4) + (b5 << 4);
-		obj.NextAdress = ((b4 & 0xC0) >> 6) + (b5 << 2);
-		//obj.NextAdress = (((b4 & 0xC0) >> 6) * 16 * 16) + b5;
-		obj.Owner = (b6 & 0x3F);
-		//obj.Quantity_Link_Special = ((b6 & 0xC0) >> 4) + (b7 << 4);
-		obj.Special = ((b6 & 0xC0) >> 6) + (b7 << 2);
-		//obj.Quantity_Link_Special = (((b6 & 0xC0) >> 6) * 16 * 16) + b7;
+		var b = new byte[ObjectRecord.StaticSize];
+		fs.Read(b, 0, b.Length);
+		ObjectRecord.Read(obj, b, 0, true);
 		if (log)
-			Debug.LogFormat("[{0}][{1}][{2}][{3}][{4}][{5}][{6}][{7}]", ToHex(b0), ToHex(b1), ToHex(b2), ToHex(b3), ToHex(b4), ToHex(b5), ToHex(b6), ToHex(b7));
-	}
-	private static void ReadMobileObject(Stream fs, MobileObject obj)
-	{
-		int b8 = fs.ReadByte();
-		int b9 = fs.ReadByte();
-		int bA = fs.ReadByte();
-		int bB = fs.ReadByte();
-		int bC = fs.ReadByte();
-		int bD = fs.ReadByte();
-		int bE = fs.ReadByte();
-		int bF = fs.ReadByte();
-		int b10 = fs.ReadByte();
-		int b11 = fs.ReadByte();
-		int b12 = fs.ReadByte();
-		int b13 = fs.ReadByte();
-		int b14 = fs.ReadByte();
-		int b15 = fs.ReadByte();
-		int b16 = fs.ReadByte();
-		int b17 = fs.ReadByte();
-		int b18 = fs.ReadByte();
-		int b19 = fs.ReadByte();
-		int b1A = fs.ReadByte();
-
-
-		obj.HP = b8;
-		obj.Goal = (bB & 0x0F);
-		obj.GTarg = ((bB & 0xF0) >> 4) + ((bC & 0x0F) << 4);
-		obj.Level = (bD & 0x0F);
-		obj.Attitude = (bE & 0xC0) >> 6;
-		obj.MobHeight = ((bF & 0xC0) >> 6) + ((b10 & 0x1F) << 2);
-		obj.YHome = ((b16 & 0xF0) >> 4) + ((b17 & 0x03) << 4);
-		obj.XHome = ((b17 & 0xFC) >> 2);
-		obj.Heading = (b18 & 0x0F);
-		obj.Hunger = (b19 & 0x3F);
-		obj.Whoami = b1A;
-
-		obj.B9 = b9;
-		obj.BA = bA;    //Animation state ?
-		obj.BB = bB;    //Goal + GTarg
-		obj.BC = bC;    //GTarg
-		obj.BD = bD;
-		obj.BE = bE;    //Attitude
-		obj.BF = bF;
-		obj.B10 = b10;
-		obj.B11 = b11;
-		obj.B12 = b12;
-		obj.B13 = b13;  //? 1 (0)
-		obj.B14 = b14;  //? 2 (132)
-		obj.B15 = b15;  //? 3 (0 / 32)
-		obj.B16 = b16;  //YHome
-		obj.B17 = b17;  //XHome + YHome
-		obj.B18 = b18;
-		obj.B19 = b19;  //Hunger?
-		obj.B1A = b1A;
+			Debug.LogFormat("[{0}]", System.BitConverter.ToString(b));
 	}
 
 	public static int[] ReadFreeObjectIndexes(int level, int offset, Stream fs)
@@ -620,7 +539,9 @@ public static class DataReader {
 		// The game decides the texture files (Extensions/Core/Games/GameProfile.cs).
 		var game = UltimateEditor.Games.GameProfile.For(LevArk.DetectFor(FilePath));
 		LevArk.Game = game;
-		UltimateEditor.Games.StartPosition.Load(FileExplorer.GetUpperPath(FilePath), game.Kind);
+		int startX, startY;
+		MapCreator.ExeStart = UltimateEditor.Games.StartPosition.Load(FileExplorer.GetUpperPath(FilePath), game.Kind, out startX, out startY)
+			? new Vector2Int(startX, startY) : (Vector2Int?)null;
 		TextureContainer floors, walls;
 		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
@@ -996,6 +917,7 @@ public static class DataReader {
 		}
 		fs.Close();
 		StringData strData = new StringData(pair.Item1, blockPair.Item1, blockPair.Item2);
+		HuffmanNode.SetTree(pair.Item1);   // the tree typed strings are checked against
 		strData.TakeSnapshot();
 		return strData;
 	}

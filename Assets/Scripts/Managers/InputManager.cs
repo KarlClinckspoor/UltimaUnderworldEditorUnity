@@ -266,7 +266,7 @@ public class InputManager : MonoBehaviour {
 				// Dropping onto a container, a critter, a door or a lever puts the object in it.
 				// Not onto traps and triggers: they lie on the floor under other objects, and what
 				// they hold is data (a create-object trap's template); use their panel for that.
-				if(!MapCreator.IsTrapOrTrigger(other) && other.CanBeInserted(so) && UIManager.Undoable(so.CurrentLevel, "Put " + so.Name + " in " + other.Name, () => MapCreator.AddToContainer(so, other)))
+				if(!MapCreator.IsTrapOrTrigger(other) && other.CanBeInserted(so) && UIManager.Undoable(so.CurrentLevel, "Put " + so.Name + " in " + other.Name, () => ObjectList.PutIn(so, other)))
 				{
 					if (shadowObject)
 						Destroy(shadowObject);
@@ -310,7 +310,7 @@ public class InputManager : MonoBehaviour {
 				newOffsets.y = 0;
 			//Debug.LogFormat("newOffsets : {0}", newOffsets);
 			MapTile from = draggedFromTile;
-			UIManager.Undoable(so.CurrentLevel, "Move " + so.Name, () => { MapCreator.SetNewPosition(so, from, tile, newOffsets); return true; });
+			UIManager.Undoable(so.CurrentLevel, "Move " + so.Name, () => ObjectList.Move(so, from, tile, newOffsets));
 			
 			
 			//MapCreator.SetNewPosition(so, draggedFromTile, tile, MapCreator.GetOffsetsFromWorldPos(mousePos));

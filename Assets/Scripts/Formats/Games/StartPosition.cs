@@ -14,9 +14,6 @@ namespace UltimateEditor.Games
 	/// </summary>
 	public static class StartPosition
 	{
-		/// <summary>The x, y read from the executable at load, if found (MapCreator.GameStart uses it).</summary>
-		public static int? ExeX, ExeY;
-
 		/// <summary>Offset of the three pushes in the executable, or -1 (not found or not unique).
 		/// Any x and y are accepted, so an already patched executable is found too.</summary>
 		public static int Find(byte[] exe, GameKind game)
@@ -82,18 +79,17 @@ namespace UltimateEditor.Games
 			return File.Exists(p) ? p : null;
 		}
 
-		/// <summary>Reads the start square from the executable next to DATA into ExeX/ExeY.</summary>
-		public static void Load(string dataFolder, GameKind game)
+		/// <summary>Reads the start square from the executable next to DATA; false when there is
+		/// none, it cannot be read or the call is not found (the default start applies).</summary>
+		public static bool Load(string dataFolder, GameKind game, out int x, out int y)
 		{
-			ExeX = ExeY = null;
+			x = y = 0;
 			try
 			{
 				string p = ExePath(dataFolder, game);
-				if (p == null) return;
-				int x, y;
-				if (Read(File.ReadAllBytes(p), game, out x, out y)) { ExeX = x; ExeY = y; }
+				return p != null && Read(File.ReadAllBytes(p), game, out x, out y);
 			}
-			catch (Exception) { }   // unreadable executable: the default start is shown
+			catch (Exception) { return false; }
 		}
 	}
 }

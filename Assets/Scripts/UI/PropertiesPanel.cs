@@ -604,7 +604,7 @@ public class PropertiesPanel : MonoBehaviour {
 				// Quality is the damage; a non-zero owner makes it heal instead (it was shown
 				// as a "health/poison" damage type).
 				createSliderProperty("Damage (or healing)", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => changeObjectQuality(so, (int)f));
-				createToggleProperty("Heals instead of hurting", BasicPanel.transform, so.Owner != 0, (b) => changeObjectOwner(so, b ? 1 : 0));
+				createToggleProperty("Heals instead of hurting", BasicPanel.transform, so.GetDamageTrapHeals(), (b) => { so.SetDamageTrapHeals(b); Owner.text = so.Owner.ToString(); });
 			}
 			else if (so.ObjectID == 385)    //Teleport
 			{
@@ -689,8 +689,8 @@ public class PropertiesPanel : MonoBehaviour {
 				createSliderProperty("Size Y", BasicPanel.transform, so.YPos, 0, 7.0f, (f) => changeObjectY(so, (int)f));
 				// event/WORLDEV.C change_terrain: the new height is Z >> 3 (0-13); above 13 keeps
 				// the tile's height. It was shown as Z / 16, which only reached even heights.
-				bool useTriggerHeight = (so.ZPos >> 3) > 13;
-				GameObject heightSlider = createSliderProperty("New floor height", BasicPanel.transform, Math.Min(13, so.ZPos >> 3), 0, 13.0f, (f) => changeObjectZPos(so, (int)f << 3));
+				bool useTriggerHeight = so.GetTerrainTrapHeight() > StaticObject.MaxTerrainHeight;
+				GameObject heightSlider = createSliderProperty("New floor height", BasicPanel.transform, Math.Min(StaticObject.MaxTerrainHeight, so.GetTerrainTrapHeight()), 0, StaticObject.MaxTerrainHeight, (f) => { so.SetTerrainTrapHeight((int)f); changeObjectZPos(so, so.ZPos); });
 				if (useTriggerHeight)
 				{
 					//Debug.Log($"{heightSlider.transform.parent.gameObject.name}");
@@ -698,10 +698,8 @@ public class PropertiesPanel : MonoBehaviour {
 				}
 				Action<bool> useTriggerHeightAct = (b) =>
 				{
-					if (b)
-						changeObjectZPos(so, 120);
-					else
-						changeObjectZPos(so, 0);
+					so.SetTerrainTrapHeight(b ? StaticObject.KeepTerrainHeight : 0);
+					changeObjectZPos(so, so.ZPos);
 					heightSlider.SetActive(!b);
 				};
 				createToggleProperty("Keep the tile's height", BasicPanel.transform, useTriggerHeight, useTriggerHeightAct);
@@ -835,7 +833,7 @@ public class PropertiesPanel : MonoBehaviour {
 			{
 				// Z 0: quest bit; 1-63: game variable (the player record has 64).
 				bool isSetQuest = so.ZPos == 0 ? true : false;
-				GameObject varIndexGO = createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, 63.0f, (f) => changeObjectZPos(so, (int)f));
+				GameObject varIndexGO = createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, StaticObject.MaxTrapVariable, (f) => changeObjectZPos(so, (int)f));
 				if (isSetQuest)
 					varIndexGO.SetActive(false);
 				Action<bool> setQuestAct = (b) =>
@@ -862,7 +860,7 @@ public class PropertiesPanel : MonoBehaviour {
 			}
 			else if (so.ObjectID == 398) //Check var trap
 			{
-				createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, 63.0f, (f) => changeObjectZPos(so, (int)f));
+				createSliderProperty("Variable index", BasicPanel.transform, Math.Max(1, so.ZPos), 1.0f, StaticObject.MaxTrapVariable, (f) => changeObjectZPos(so, (int)f));
 				bool shiftInstead = so.XPos == 0 ? true : false;
 				createSliderProperty("Check range", BasicPanel.transform, (int)so.Direction, 0, 7.0f, (f) => changeObjectDir(so, (int)f));
 				Action<bool> shiftInsteadAct = (b) =>
@@ -895,7 +893,7 @@ public class PropertiesPanel : MonoBehaviour {
 	}
 	private void destroyContainedObject(StaticObject parent, StaticObject target)
 	{
-		uiManager.Undoable(target.CurrentLevel, "Delete " + target.Name + " from " + parent.Name, () => MapCreator.RemoveObject(target, true));
+		uiManager.Undoable(target.CurrentLevel, "Delete " + target.Name + " from " + parent.Name, () => ObjectList.Delete(target));
 		SetBasicPanel(parent);
 	}
 	/// <summary>A UW2 trap's fields decoded (Uw2Traps.Decode), with block 9 for the text string trap.</summary>
@@ -1348,12 +1346,13 @@ public class PropertiesPanel : MonoBehaviour {
 		GameObject buttonGO = createButtonProperty(text, BasicPanel.transform);
 		System.Action removeFromContainerAct = () =>
 		{
-			container.RemoveFromContainer(so);
-			container.Tile.AddObjectToTile(so, container);
-			GameObject go = MapCreator.SpawnGO(so, MapCreator.MapTileToGO[container.Tile]);
+			GameObject go = null;
+			if (!uiManager.Undoable(so.CurrentLevel, "Take " + so.Name + " out of " + container.Name, () => ObjectList.TakeOut(so, out go)))
+				return;
+			if (!go) { Destroy(buttonGO); return; }
 			uiManager.OnSelectObject(go);
-			GameObject col = go.GetComponentInChildren<Collider>().gameObject;
-			uiManager.SetSpriteOutline(col, true, Color.green);
+			var col = go.GetComponentInChildren<Collider>();
+			if (col) uiManager.SetSpriteOutline(col.gameObject, true, Color.green);
 			Destroy(buttonGO);
 		};
 		buttonGO.GetComponentInChildren<Button>().onClick.AddListener(() => removeFromContainerAct());
@@ -1385,11 +1384,10 @@ public class PropertiesPanel : MonoBehaviour {
 		System.Action removeAct = () =>
 		{
 			int val = dropdown.value;
-			StaticObject so = invDict[val];
-
-			container.RemoveFromContainer(so);
-			container.Tile.AddObjectToTile(so, container);
-			GameObject go = MapCreator.SpawnGO(so, MapCreator.MapTileToGO[container.Tile]);
+			StaticObject so;
+			if (!invDict.TryGetValue(val, out so)) return;
+			if (!uiManager.Undoable(so.CurrentLevel, "Take " + so.Name + " out of " + container.Name, () => ObjectList.TakeOut(so)))
+				return;
 
 			invDict = new Dictionary<int, StaticObject>();
 			List<StaticObject> newInv = container.GetContainedObjects();

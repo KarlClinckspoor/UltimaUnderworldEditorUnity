@@ -819,6 +819,38 @@ public class StaticObject {
 		int qual = ((Quality & 0x0F) << 5);
 		return qual + (Owner & 0x1F);
 	}
+	// The trap fields below are the one encoding the create menus, the properties panel and the
+	// string code share (event/TRIGGER.C, event/WORLDEV.C).
+
+	/// <summary>Text string trap (0x190): string quality &lt;&lt; 5 | owner of block 9 (event/TRIGGER.C).
+	/// UW1 ORs the whole owner in (an owner of 32 or more overlaps the quality's low bit, as older
+	/// editor versions wrote); UW2 uses the owner's low five bits, its bit 5 making the text show
+	/// only while a player flag is set.</summary>
+	public int GetTextTrapIndex()
+	{
+		int owner = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? Owner & 0x1F : Owner & 0x3F;
+		return ((Quality & 0x3F) << 5) | owner;
+	}
+	public void SetTextTrapIndex(int index)
+	{
+		Quality = (index >> 5) & 0x3F;
+		Owner = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? (Owner & 0x20) | (index & 0x1F) : index & 0x1F;
+	}
+
+	/// <summary>Change terrain trap (0x185): the new floor height is Z >> 3, 0-13; above 13
+	/// the tile keeps its height (KeepTerrainHeight).</summary>
+	public const int MaxTerrainHeight = 13, KeepTerrainHeight = 120;
+	public int GetTerrainTrapHeight() { return ZPos >> 3; }
+	public void SetTerrainTrapHeight(int height) { ZPos = height > MaxTerrainHeight ? KeepTerrainHeight : System.Math.Max(0, height) << 3; }
+
+	/// <summary>Damage trap (0x180): Quality is the damage; a non-zero Owner heals instead.</summary>
+	public bool GetDamageTrapHeals() { return Owner != 0; }
+	public void SetDamageTrapHeals(bool heals) { Owner = heals ? 1 : 0; }
+
+	/// <summary>Set and check variable traps: Z is the variable, 1-63 (0: the quest bits for the
+	/// set variable trap); the player record has 64 game variables.</summary>
+	public const int MaxTrapVariable = 63;
+
 	public float GetMovementStep()
 	{
 		return 7.0f;

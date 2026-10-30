@@ -10,7 +10,7 @@ Unity does not use them (they are outside `Assets`).
 | `Modding` | `Assets/Scripts/Modding` alone (mod packages: diff, apply, executables, saves), on top of `Formats`, under the rules of the `Underworld.Modding` asmdef. The mod manager builds this project too. |
 | `EditorBuild` | All of `Assets/Scripts` except those two folders, built against the stand-ins: a build error here is one in Unity. |
 | `Legacy` | `Assets/Scripts` as it was before the formats moved (commit `b61e96a` on `uw2-support`), kept in `Legacy/legacy-src.zip` so a shallow clone builds it. |
-| `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), saving only what changed (`SaveChangedOnlyTests`), the built-in 3D models (`ExeModelTests`), and the mod packages (`Modding/`). |
+| `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), saving only what changed (`SaveChangedOnlyTests`), the built-in 3D models (`ExeModelTests`), the mod packages (`Modding/`), and the code review's fixes (below). |
 
 ## Running
 
@@ -94,3 +94,26 @@ copy and requires the changed files back byte for byte (`ModBuilder.Verify`):
 
 Also: the zip writer against `System.IO.Compression`, every picture file and STRINGS.PAK
 rebuilding byte for byte, the executable's MZ/FBOV layout, and the hack file parser.
+
+## What the code review tests check
+
+The October 2026 code review's work packages each came with tests:
+
+- **`EditingSafetyTests`** (packages 1 and 8): fields out of range don't reach the next field;
+  an emptied UW1 block is deleted; a level whose chain loops loads; contents of any length;
+  deleting a critter template; triggers refused on stacks; a moved trap keeps its height; undo
+  of a delete puts the objects back and keeps later edits; the item cleaner keeps quest items.
+- **`ConversationSafetyTests`** (packages 2 and 3): a failed conversion leaves the conversation,
+  its strings and the NPC name as they were; the size limits; the built-ins push their
+  arguments as the game reads them.
+- **`SavingTests`** (package 4): a file is written only when its bytes change, through a
+  temporary file, with the `.BKP` original and dated versions in `Editor backups`; a saved
+  game's `.BKP` follows the game; an autosave writes a copy and leaves the game alone.
+- **`GameFactsTests`** (packages 6 and 9): map notes on their tile, NPC names, object roles,
+  schedules whose level clocks move with the rows.
+- **`RestructureTests`** (package 10): every object record of both games reads and writes back
+  through the one field table (`ObjectRecord`), the panel's ranges are the field widths, the
+  trap fields have one encoding, the object-list service; and the tools that write data:
+  PLAYER.DAT edits, a save's BGLOBALS.DAT, map notes, the level fixes and the start square.
+- **`Modding/PackagingTests`** also checks that two STRINGS.PAK files open at once each encode
+  with their own tree.

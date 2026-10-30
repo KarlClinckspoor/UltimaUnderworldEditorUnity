@@ -202,8 +202,7 @@ namespace UltimateEditor.Uw1.UI
 			Uw2T64.Reset();
 			GrPictures.Reset();
 			Uw1TrFiles.Reset();
-			StartPosition.ExeX = null;
-			StartPosition.ExeY = null;
+			MapCreator.ExeStart = null;
 			HuffmanNode.SetTree(null);
 			TilePanel.LastTile = null;
 			TilePanel.LastTileLevel = 0;

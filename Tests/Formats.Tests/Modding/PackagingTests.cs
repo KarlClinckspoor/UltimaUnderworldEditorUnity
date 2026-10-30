@@ -83,6 +83,23 @@ namespace Formats.Tests.Modding
 				if (blk.Number != 4) Assert.Equal(blk.Raw, g.Find(blk.Number).Raw);
 		}
 
+		[GameFact("UW2")]
+		public void Two_strings_files_open_at_once_each_encode_with_their_own_tree()
+		{
+			if (!GameData.Has("UW")) return;
+			var uw1 = StringsPakFile.Parse(File.ReadAllBytes(GameData.InData(GameData.Copy("UW"), "STRINGS.PAK")));
+			var uw2 = StringsPakFile.Parse(File.ReadAllBytes(GameData.InData(GameData.Copy("UW2"), "STRINGS.PAK")));
+			Assert.False(uw1.SameTree(uw2));
+			// alternate between the trees: each string comes back through its own file
+			for (int round = 0; round < 2; round++)
+				foreach (var f in new[] { uw1, uw2 })
+				{
+					f.Find(4).Strings[1] = "a sharper knife " + round;
+					var back = StringsPakFile.Parse(f.Build(new[] { 4 }));
+					Assert.Equal("a sharper knife " + round, back.Find(4).Strings[1]);
+				}
+		}
+
 		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Executable_layout_locates_and_finds_relocations(string game)
 		{

@@ -17,26 +17,42 @@ public class HuffmanNode  {
 
 
 
-	/// <summary>Leaf node by character, from the tree STRINGS.PAK was read with. UW2's tree
-	/// has other characters (and another leaf order) than UW1's, which the table below lists.</summary>
-	static System.Collections.Generic.Dictionary<char, int> leaves;
+	/// <summary>Leaf node by character, worked out once per tree. UW2's tree has other
+	/// characters (and another leaf order) than UW1's, which the table in GetNumber lists. Kept
+	/// per tree, so two STRINGS.PAK files open at once (the mod tools) each encode with their own.</summary>
+	static readonly System.Runtime.CompilerServices.ConditionalWeakTable<HuffmanNode[], System.Collections.Generic.Dictionary<char, int>> leafTables
+		= new System.Runtime.CompilerServices.ConditionalWeakTable<HuffmanNode[], System.Collections.Generic.Dictionary<char, int>>();
 
-	public static void SetTree(HuffmanNode[] nodes)
+	static System.Collections.Generic.Dictionary<char, int> Leaves(HuffmanNode[] nodes)
 	{
-		leaves = new System.Collections.Generic.Dictionary<char, int>();
-		if (nodes == null) return;
-		for (int i = 0; i < nodes.Length; i++)
-			if (nodes[i] != null && (nodes[i].Left == 255 || nodes[i].Right == 255) && !leaves.ContainsKey((char)nodes[i].Char))
-				leaves[(char)nodes[i].Char] = i;
+		return leafTables.GetValue(nodes, t =>
+		{
+			var leaves = new System.Collections.Generic.Dictionary<char, int>();
+			for (int i = 0; i < t.Length; i++)
+				if (t[i] != null && (t[i].Left == 255 || t[i].Right == 255) && !leaves.ContainsKey((char)t[i].Char))
+					leaves[(char)t[i].Char] = i;
+			return leaves;
+		});
 	}
+
+	/// <summary>The leaf for a character in this tree, or -1.</summary>
+	public static int LeafOf(HuffmanNode[] nodes, char c)
+	{
+		if (nodes == null || nodes.Length == 0) return GetNumber(c);
+		int n;
+		return Leaves(nodes).TryGetValue(c, out n) ? n : -1;
+	}
+
+	/// <summary>The tree of the game open in the editor, which new strings typed in the editor
+	/// are checked against. Set by the editor when it loads STRINGS.PAK (not by every reader).</summary>
+	static HuffmanNode[] editorTree;
+
+	public static void SetTree(HuffmanNode[] nodes) { editorTree = nodes; }
 
 	public static int GetNumber(char c)
 	{
-		if (leaves != null && leaves.Count > 0)
-		{
-			int n;
-			return leaves.TryGetValue(c, out n) ? n : -1;
-		}
+		if (editorTree != null && editorTree.Length > 0)
+			return LeafOf(editorTree, c);
 		switch (c)
 		{
 			case '\a': return 0;

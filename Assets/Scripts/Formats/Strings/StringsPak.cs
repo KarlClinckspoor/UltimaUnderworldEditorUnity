@@ -36,7 +36,6 @@ namespace UltimateEditor.Games
 				nodes[i] = new HuffmanNode(_char, i, parent, left, right);
 				//Debug.LogFormat("Node {0} : {1}", i, nodes[i]);
 			}
-			HuffmanNode.SetTree(nodes);
 			Tuple<HuffmanNode[], long> pair = new Tuple<HuffmanNode[], long>(nodes, fs.Position);
 			return pair;
 		}
@@ -181,15 +180,12 @@ namespace UltimateEditor.Games
 			public HuffmanNode[] Nodes;
 			public readonly Dictionary<char, KeyValuePair<ulong, int>> Codes = new Dictionary<char, KeyValuePair<ulong, int>>();
 		}
-		static CodeTable codes;
+		static readonly System.Runtime.CompilerServices.ConditionalWeakTable<HuffmanNode[], CodeTable> codes
+			= new System.Runtime.CompilerServices.ConditionalWeakTable<HuffmanNode[], CodeTable>();
 
 		static CodeTable Codes(HuffmanNode[] nodes)
 		{
-			var t = codes;
-			if (t != null && ReferenceEquals(t.Nodes, nodes)) return t;
-			t = new CodeTable { Nodes = nodes };
-			codes = t;
-			return t;
+			return codes.GetValue(nodes, n => new CodeTable { Nodes = n });
 		}
 
 		/// <summary>The code of a character (bits, length), or length -1 when the tree has no leaf
@@ -324,8 +320,8 @@ namespace UltimateEditor.Games
 		}
 		public static HuffmanNode GetNode(HuffmanNode[] nodes, char c)
 		{
-			int i = HuffmanNode.GetNumber(c);
-			if (i == -1)
+			int i = HuffmanNode.LeafOf(nodes, c);
+			if (i < 0 || nodes == null || i >= nodes.Length)
 				return null;
 
 			return nodes[i];

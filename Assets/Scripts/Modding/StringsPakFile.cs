@@ -69,7 +69,6 @@ namespace UltimateEditor.Modding
 		/// </summary>
 		public byte[] Build(ICollection<int> changed)
 		{
-			HuffmanNode.SetTree(Nodes);   // the encoder looks leaves up in the tree set last
 			var ms = new MemoryStream();
 			ms.Write(NodeTable, 0, NodeTable.Length);
 			int n = Blocks.Count;

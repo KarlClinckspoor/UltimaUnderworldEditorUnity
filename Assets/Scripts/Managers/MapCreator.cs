@@ -46,12 +46,15 @@ public class MapCreator : MonoBehaviour {
 
 	/// <summary>Where a new game puts the player on level 1: UW1 (32, 2); UW2 (0x13, 0x30), from
 	/// MAINMENU.C's player_setup call after character creation.</summary>
+	/// <summary>The start square read from the open game's executable, if found.</summary>
+	public static Vector2Int? ExeStart;
+
 	public static Vector2Int GameStart
 	{
 		get
 		{
 			// read from the executable at load when found (it may have been patched: Games/StartPosition.cs)
-			if (UltimateEditor.Games.StartPosition.ExeX.HasValue) return new Vector2Int(UltimateEditor.Games.StartPosition.ExeX.Value, UltimateEditor.Games.StartPosition.ExeY.Value);
+			if (ExeStart.HasValue) return ExeStart.Value;
 			return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? new Vector2Int(0x13, 0x30) : new Vector2Int(32, 2);
 		}
 	}
@@ -1446,7 +1449,7 @@ public class MapCreator : MonoBehaviour {
 
 	static string TextKey(StaticObject o)
 	{
-		if (o.ObjectID == 400) return "trap " + (o.Quality * 32 + o.Owner);
+		if (o.ObjectID == 400) return "trap " + o.GetTextTrapIndex();
 		if (o.IsWriting() || o.IsGrave()) return "writing " + o.Special;
 		if ((o.IsBook() || o.IsScroll()) && !o.IsEnchanted) return "scroll " + o.Special;
 		return null;
@@ -1501,7 +1504,7 @@ public class MapCreator : MonoBehaviour {
 		//Debug.LogFormat("New pos for {0} from tile {1} to tile {2}, at pos {3}, removed : {4}, added : {5}", so.Name, oldTile.Position, newTile.Position, offsets, removed, added);
 	}
 
-	public bool AddToContainer(StaticObject so, StaticObject container)
+	public static bool AddToContainer(StaticObject so, StaticObject container)
 	{
 		MapTile oldTile = so.Tile;
 		bool added = container.AddToContainer(so);
@@ -1510,9 +1513,12 @@ public class MapCreator : MonoBehaviour {
 		oldTile.RemoveObjectFromTile(so);
 		var mo = so as MobileObject;
 		if (mo != null && mo.ActiveMob) DeactivateMob(mo, so.CurrentLevel);
-		GameObject toDestroy = ObjectToGO[so];
-		ObjectToGO.Remove(so);
-		Destroy(toDestroy);
+		GameObject toDestroy;
+		if (ObjectToGO.TryGetValue(so, out toDestroy))
+		{
+			ObjectToGO.Remove(so);
+			Destroy(toDestroy);
+		}
 		return true;
 	}
 

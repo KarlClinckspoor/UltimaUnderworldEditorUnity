@@ -285,80 +285,19 @@ public static class DataWriter {
 		//fs.Close();
 	}
 
+	/// <summary>The object's 8 static bytes, every field kept to its width (ObjectRecord), so a
+	/// value out of range can't spill into the next field.</summary>
 	private static void SaveStaticObject(StaticObject so, Stream fs)
 	{
-		// Every field is masked to its width (object.h), so a value out of range can't spill into
-		// the next field: quality into the next link, owner into the link, flags into the
-		// enchanted and door bits, height into the heading.
-		byte a = (byte)(so.ObjectID & 0xFF);
-		byte b = (byte)(((so.ObjectID & 0x100) >> 8) + ((so.Flags & 0x07) << 1) + ((so.IsEnchanted == true ? 1 : 0) << 4) + ((so.IsDoorOpen == true ? 1 : 0) << 5) + ((so.IsInvisible == true ? 1 : 0) << 6) + ((so.IsQuantity == true ? 1 : 0) << 7));
-		byte c = (byte)((so.ZPos & 0x7F) + ((so.Direction & 0x01) << 7));
-		byte d = (byte)(((so.Direction & 0x06) >> 1) + ((so.YPos & 0x07) << 2) + ((so.XPos & 0x07) << 5));
-		//byte e = (byte)(so.Quality + ((so.NextAdress & 0x0F) << 4));
-		//byte f = (byte)((so.NextAdress & 0xFF0) >> 4);
-		byte e = (byte)((so.Quality & 0x3F) + ((so.NextAdress & 0x03) << 6));
-		byte f = (byte)((so.NextAdress & 0xFFC) >> 2);
-		//byte g = (byte)(so.Owner_Special + ((so.Quantity_Link_Special & 0x0F) << 4));
-		//byte h = (byte)((so.Quantity_Link_Special & 0xFF0) >> 4);
-		byte g = (byte)((so.Owner & 0x3F) + ((so.Special & 0x03) << 6));
-		byte h = (byte)((so.Special & 0xFFC) >> 2);
-
-		//Debug.LogFormat("ZPos : {0}, Direction : {1}, Direction & 0x01 : {2}, Direction & 0x01 << 7 : {3}", so.ZPos, so.Direction, so.Direction & 0x01, (so.Direction & 0x01) << 7);
-		fs.WriteByte(a);
-		fs.WriteByte(b);
-		fs.WriteByte(c);
-		fs.WriteByte(d);
-		fs.WriteByte(e);
-		fs.WriteByte(f);
-		fs.WriteByte(g);
-		fs.WriteByte(h);
+		var b = new byte[ObjectRecord.StaticSize];
+		ObjectRecord.Write(so, b, 0);
+		fs.Write(b, 0, b.Length);
 	}
 
 	public static void SaveMobileObject(MobileObject mo, Stream fs)
 	{
-		//FileStream fs = new FileStream(Application.dataPath + "/write.txt", FileMode.OpenOrCreate);
-		SaveStaticObject(mo, fs);
-		byte b8 = (byte)mo.HP;
-		byte b9 = (byte)mo.B9;
-		byte bA = (byte)mo.BA;
-		byte bB = (byte)((mo.Goal & 0x0F) + ((mo.GTarg & 0x0F) << 4));
-		byte bC = (byte)(((mo.GTarg & 0xF0) >> 4) + (mo.BC & 0xF0));
-		byte bD = (byte)mo.BD;
-		byte bE = (byte)(((mo.Attitude & 0x03) << 6) + (mo.BE & 0x03F));
-		byte bF = (byte)mo.BF;
-		byte b10 = (byte)mo.B10;
-		byte b11 = (byte)mo.B11;
-		byte b12 = (byte)mo.B12;
-		byte b13 = (byte)mo.B13;
-		byte b14 = (byte)mo.B14;
-		byte b15 = (byte)mo.B15;
-		byte b16 = (byte)((mo.B16 & 0x0F) + ((mo.YHome & 0x0F) << 4));
-		byte b17 = (byte)(((mo.YHome & 0x30) >> 4) + ((mo.XHome & 0x3F) << 2));
-		byte b18 = (byte)mo.B18;
-		byte b19 = (byte)mo.B19;
-		byte b1A = (byte)mo.Whoami;
-
-		fs.WriteByte(b8);
-		fs.WriteByte(b9);
-		fs.WriteByte(bA);
-		fs.WriteByte(bB);
-		fs.WriteByte(bC);
-		fs.WriteByte(bD);
-		fs.WriteByte(bE);
-		fs.WriteByte(bF);
-		fs.WriteByte(b10);
-		fs.WriteByte(b11);
-		fs.WriteByte(b12);
-		fs.WriteByte(b13);
-		fs.WriteByte(b14);
-		fs.WriteByte(b15);
-		fs.WriteByte(b16);
-		fs.WriteByte(b17);
-		fs.WriteByte(b18);
-		fs.WriteByte(b19);
-		fs.WriteByte(b1A);
-
-		//fs.Close();
+		var b = ObjectRecord.From(mo);
+		fs.Write(b, 0, b.Length);
 	}
 
 

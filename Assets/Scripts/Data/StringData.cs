@@ -109,8 +109,7 @@ public class StringData
 	}
 	public bool ClearTextTrapString(StaticObject so)
 	{
-		int level = so.Quality * 32;
-		int index = level + so.Owner;
+		int index = so.GetTextTrapIndex();
 		StringBlock sb = GetTextTrapBlock();
 		if (index > -1 && index < sb.Strings.Count)
 		{
@@ -123,8 +122,7 @@ public class StringData
 	public bool SetTextTrapString(StaticObject so, string newStr)
 	{
 		newStr += "\n";
-		int level = so.Quality * 32;
-		int index = level + so.Owner;
+		int index = so.GetTextTrapIndex();
 		StringBlock sb = GetTextTrapBlock();
 		if (index > -1 && index < sb.Strings.Count)
 		{
@@ -136,8 +134,7 @@ public class StringData
 	}
 	public string GetTextTrapString(StaticObject so)
 	{
-		int level = so.Quality * 32;
-		int index = level + so.Owner;
+		int index = so.GetTextTrapIndex();
 		StringBlock sb = GetTextTrapBlock();
 		if (index > -1 && index < sb.Strings.Count)
 			return sb.Strings[index];
