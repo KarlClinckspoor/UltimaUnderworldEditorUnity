@@ -160,6 +160,14 @@ public static class DataReader {
 						nextIndex = mainObj.NextAdress;
 						while (nextIndex > 0)
 						{
+							if (staticObjects[nextIndex])
+							{
+								// already read: the chain loops (or two chains join); the game
+								// would walk it forever, so it is cut here
+								Debug.LogWarningFormat("Level {0}, tile {1},{2}: object {3} links back to object {4}, already read; the link is cut", level, x, y, current.CurrentAdress, nextIndex);
+								current.NextAdress = 0;
+								break;
+							}
 							next = ReadObject(fs, nextIndex, levelOffset, next, staticObjects, tile, x, y, level, mobList, mobCount);
 							next.PrevAdress = current.CurrentAdress;
 							if (!next.IsQuantity)
@@ -210,6 +218,16 @@ public static class DataReader {
 		invIndex = container.Special;
 		while (invIndex > 0)
 		{
+			if (staticObjects[invIndex])
+			{
+				// already read: the contents loop back (or are shared); cut, as above
+				Debug.LogWarningFormat("Level {0}: the contents of object {1} link back to object {2}, already read; the link is cut", level, current.CurrentAdress, invIndex);
+				if (current == container)
+					container.Special = 0;
+				else
+					current.NextAdress = 0;
+				break;
+			}
 			inventory = ReadObject(fs, invIndex, offset, inventory, staticObjects, tile, x, y, level, mobList, mobCount);
 			inventory.PrevAdress = current.CurrentAdress;
 			if (!inventory.IsQuantity)

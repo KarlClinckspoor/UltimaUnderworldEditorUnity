@@ -812,73 +812,93 @@ public class UIManager : MonoBehaviour {
 			so.IsDoorOpen = tog.isOn;
 	}
 
+	/// <summary>The range of each field the advanced panel edits: the width it has in the level
+	/// file (uw1/src/include/object.h), so a value can't spill into the next field when saved.</summary>
+	static bool FieldRange(string field, bool mobile, out int min, out int max)
+	{
+		min = 0;
+		switch (field)
+		{
+			case "XPos": case "YPos": case "Direction": case "Flags": max = 7; return true;
+			case "Height": max = 127; return true;
+			case "Quality": case "OwnerSpecial": max = 63; return true;
+			case "QuantityLink": max = 1023; return true;
+		}
+		if (mobile)
+			switch (field)
+			{
+				case "Attitude": max = 3; return true;
+				case "Goal": max = 15; return true;
+				case "HomeX": case "HomeY": max = 63; return true;
+				case "HP": case "NPC": max = 255; return true;
+			}
+		max = 0;
+		return false;
+	}
+
 	public void ChangeObjectProperty(InputField input)
 	{
-		//if (!InputManager.SelectedObject)
-		//	return;
-
-		//StaticObject so = InputManager.SelectedObject.GetComponent<StaticObjectScript>().StaticObject;
 		StaticObject so = ObjectProperties.GetComponent<PropertiesPanel>().SelectedObject;
+		if (!so)
+			return;
+		string field = input.gameObject.name;
 		int value = 0;
-		bool result = int.TryParse(input.text, out value);
-		if (!result)
+		if (!int.TryParse(input.text, out value))
 		{
-			SpawnPopupMessage("Invalid value at " + input.name);
+			SpawnPopupMessage("Invalid value at " + field);
 			return;
 		}
-		if(input.gameObject.name == "XPos")
+		int min, max;
+		if (FieldRange(field, so is MobileObject, out min, out max) && (value < min || value > max))
 		{
-			if (value > 7)
-				value = 7;
-			else if (value < 0)
-				value = 0;
+			value = Mathf.Clamp(value, min, max);
+			SpawnPopupMessage(field + " goes from " + min + " to " + max + "; set to " + value + ".");
+		}
+		input.text = value.ToString();
+
+		if (field == "XPos")
+		{
 			so.XPos = value;
 			MapCreator.SetGOPosition(so);
 		}
-		else if(input.gameObject.name == "YPos")
+		else if (field == "YPos")
 		{
-			if (value > 7)
-				value = 7;
-			else if (value < 0)
-				value = 0;
 			so.YPos = value;
 			MapCreator.SetGOPosition(so);
 		}
-		else if (input.gameObject.name == "Height")
+		else if (field == "Height")
 		{
 			so.ZPos = value;
 			MapCreator.SetGOHeight(so);
 		}
-		else if (input.gameObject.name == "Direction")
+		else if (field == "Direction")
 		{
 			so.Direction = value;
 			MapCreator.SetGODirection(so);
 		}
-		else if (input.gameObject.name == "Flags")
+		else if (field == "Flags")
 			so.Flags = value;
-		else if (input.gameObject.name == "Quality")
+		else if (field == "Quality")
 			so.Quality = value;
-		else if (input.gameObject.name == "OwnerSpecial")
+		else if (field == "OwnerSpecial")
 			so.Owner = value;
-		else if (input.gameObject.name == "QuantityLink")
+		else if (field == "QuantityLink")
 			so.Special = value;
 
-		input.text = value.ToString();
-
-		if(so is MobileObject)
+		if (so is MobileObject)
 		{
 			MobileObject mo = (MobileObject)so;
-			if (input.gameObject.name == "Attitude")
+			if (field == "Attitude")
 				mo.Attitude = value;
-			else if (input.gameObject.name == "Goal")
+			else if (field == "Goal")
 				mo.Goal = value;
-			else if (input.gameObject.name == "HomeX")
+			else if (field == "HomeX")
 				mo.XHome = value;
-			else if (input.gameObject.name == "HomeY")
+			else if (field == "HomeY")
 				mo.YHome = value;
-			else if (input.gameObject.name == "HP")
+			else if (field == "HP")
 				mo.HP = value;
-			else if (input.gameObject.name == "NPC")
+			else if (field == "NPC")
 				mo.Whoami = value;
 		}
 	}
@@ -2255,7 +2275,17 @@ public class UIManager : MonoBehaviour {
 				SpawnPopupMessage("Failed to add trigger");
 			SelectObject(tr, false);
 		};
-		createButton("Add trigger", () => CreateSpecifiedItemList((id) => CreateObject(id, CurrentLevel, new Vector2Int(so.XPos, so.YPos), so.Tile, addTrigger), StaticObject.GetTriggers(), "Trigger list", ""), getContextMenuContent(), contextMenu, 2);
+		Action pickTrigger = () =>
+		{
+			// checked before the trigger is created, so a refusal leaves nothing behind
+			if (so.IsQuantity && so.Special != 0)
+			{
+				SpawnPopupMessage(so.Name + " is a stack or has a special value (" + so.Special + "): its link field holds that, so it can't hold a trigger.");
+				return;
+			}
+			CreateSpecifiedItemList((id) => CreateObject(id, CurrentLevel, new Vector2Int(so.XPos, so.YPos), so.Tile, addTrigger), StaticObject.GetTriggers(), "Trigger list", "");
+		};
+		createButton("Add trigger", pickTrigger, getContextMenuContent(), contextMenu, 2);
 		if(!so.IsQuantity && so.Special > 0)
 		{
 			Action<StaticObject> selectContainedAct = (_so) => DeselectObjectAndSetProperties(_so);
@@ -3297,7 +3327,8 @@ public class UIManager : MonoBehaviour {
 			mo.Direction = dir.value;
 			mo.Attitude = att.value;
 			mo.Goal = goal.value;
-			mo.HP = int.Parse(hp.text);
+			int hpValue;
+			mo.HP = int.TryParse(hp.text, out hpValue) ? Mathf.Clamp(hpValue, 0, 255) : MobileObject.GetDefaultHP(id);	// one byte
 			if(npcTog.isOn)
 				mo.Whoami = dict[ids.options[ids.value].text];
 			MapCreator.SetGODirection(mo);

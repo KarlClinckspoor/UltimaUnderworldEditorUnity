@@ -126,6 +126,7 @@ namespace UltimateEditor.Uw1.UI
 		bool QuietMoment(float now)
 		{
 			if (now - lastInput < IdleSeconds) return false;
+			if (ModalWindow.AnyOpen) return false;	// a confirmation is waiting (e.g. open another game without saving)
 			if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2)) return false;
 			var es = EventSystem.current;
 			var selected = es ? es.currentSelectedGameObject : null;

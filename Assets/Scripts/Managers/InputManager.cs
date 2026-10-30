@@ -33,6 +33,10 @@ public class InputManager : MonoBehaviour {
 	private GameObject shadowObject;
 
 	private Vector3 dragStart;
+	private Vector3 dragStartScreen;
+	/// <summary>How far (screen pixels) the mouse must move with the button held before a click
+	/// becomes a drag: a click whose mouse twitches must not move the object.</summary>
+	const float DragThreshold = 5f;
 	private bool isDragging;
 	private float step;
 	private float offset;
@@ -109,7 +113,7 @@ public class InputManager : MonoBehaviour {
 		}
 		if (Input.GetMouseButton(0))
 		{
-			if (dragStart != Vector3.zero && mousePosition != dragStart && !isDragging)
+			if (dragStart != Vector3.zero && !isDragging && clickedObject && (Input.mousePosition - dragStartScreen).magnitude >= DragThreshold)
 			{
 				isDragging = true;
 				clickedObject.GetComponentInChildren<BoxCollider>().enabled = false;
@@ -225,6 +229,7 @@ public class InputManager : MonoBehaviour {
 			StaticObject so = clickedObject.GetComponent<StaticObjectScript>().StaticObject;
 			draggedFromTile = MapCreator.GetTile(so.MapPosition.x, so.MapPosition.y, UIManager.CurrentLevel);
 			dragStart = MapCreator.GetWorldPosition(Input.mousePosition, true);
+			dragStartScreen = Input.mousePosition;
 
 			shadowObject = new GameObject("Shadow of " + clickedObject.name);
 			SpriteRenderer sr = shadowObject.AddComponent<SpriteRenderer>();
@@ -258,8 +263,10 @@ public class InputManager : MonoBehaviour {
 			else if(hoveredOver && GetDataType(hoveredOver) == DataType.Object)
 			{
 				StaticObject other = hoveredOver.transform.parent.GetComponent<StaticObjectScript>().StaticObject;
-				//if (!other.IsQuantity)
-				if(other.CanBeInserted(so) && MapCreator.AddToContainer(so, other))
+				// Dropping onto a container, a critter, a door or a lever puts the object in it.
+				// Not onto traps and triggers: they lie on the floor under other objects, and what
+				// they hold is data (a create-object trap's template); use their panel for that.
+				if(!MapCreator.IsTrapOrTrigger(other) && other.CanBeInserted(so) && MapCreator.AddToContainer(so, other))
 				{
 					if (shadowObject)
 						Destroy(shadowObject);
@@ -274,7 +281,14 @@ public class InputManager : MonoBehaviour {
 				tile = MapCreator.GetTile(basePos, UIManager.CurrentLevel);
 			}
 			if (!tile)
+			{
+				// dropped off the map: the object stays where it was
+				MapCreator.SetGOPosition(so);
+				clickedObject.GetComponentInChildren<BoxCollider>().enabled = true;
+				if (shadowObject)
+					Destroy(shadowObject);
 				return;
+			}
 			//Debug.LogFormat("New Tile : {0}", tile.Position);
 			Vector2Int newOffsets = new Vector2Int(-1, -1);
 			float tileSize = MapCreator.TileSize * 2.0f;

@@ -134,6 +134,12 @@ namespace UltimateEditor.Uw1.UI
 				ui.SpawnPopupMessage("Wait until the game has finished loading.");
 				return;
 			}
+			// reloading the scene now would stop the save between two files
+			if (ui.IsSaving)
+			{
+				ui.SpawnPopupMessage("Wait until saving has finished.");
+				return;
+			}
 			if (ui.MapCreator != null && ui.MapCreator.IsInitialized)
 			{
 				Confirm(ui, levArk);
@@ -153,10 +159,16 @@ namespace UltimateEditor.Uw1.UI
 		static void Confirm(UIManager ui, string levArk)
 		{
 			var w = UiKit.Window("Open another game", 440, 190);
+			w.MakeModal();	// autosave waits: it must not write what may be about to be thrown away
 			UiKit.Paragraph(w.Content, "Open " + Describe(levArk) + "?\nThe data loaded now will be closed. Changes you have not saved are lost.", 12, UiKit.TextColor);
 			var row = UiKit.Row(w.Content, 24);
 			UiKit.Button(row, "Save, then open", () => { w.Close(); ui.SaveThen(() => Reopen(levArk)); }, 130, 22);
-			UiKit.Button(row, "Open without saving", () => { w.Close(); Reopen(levArk); }, 150, 22);
+			UiKit.Button(row, "Open without saving", () =>
+			{
+				if (ui.IsSaving) { ui.SpawnPopupMessage("Wait until saving has finished."); return; }
+				w.Close();
+				Reopen(levArk);
+			}, 150, 22);
 			UiKit.Button(row, "Cancel", w.Close, 80, 22);
 		}
 

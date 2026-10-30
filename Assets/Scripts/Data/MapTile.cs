@@ -46,42 +46,25 @@ public class MapTile {
 
 	public StaticObject GetLastObject()
 	{
-		//Debug.Log("Getting last object from tile " + Position);
-		if (ObjectAdress == 0)
-			return null;
-		//Debug.LogFormat("Object adress : {0}", ObjectAdress);
-		StaticObject next = MapCreator.LevelData[Level - 1].Objects[ObjectAdress];
-		StaticObject current = null;
-		while (next)
-		{
-			current = next;
-			next = next.GetNextObject();
-		}
-		//if (current)
-		//	Debug.LogFormat("Last object in tile : {0}", current.Name);
-		//else
-		//	Debug.Log("Current is null");
-		return current;
+		var objects = GetTileObjects();
+		return objects != null && objects.Count > 0 ? objects[objects.Count - 1] : null;
 	}
 
+	/// <summary>The objects on this tile, in chain order (null when there are none). A chain that
+	/// loops back is cut where it repeats.</summary>
 	public List<StaticObject> GetTileObjects(System.Func<StaticObject, bool> condition = null)
 	{
 		if (ObjectAdress == 0)
 			return null;
 		List<StaticObject> objects = new List<StaticObject>();
-
-		StaticObject next = MapCreator.LevelData[Level - 1].Objects[ObjectAdress];
-		StaticObject current = null;
-		while(next)
+		var all = MapCreator.LevelData[Level - 1].Objects;
+		StaticObject next = ObjectAdress < all.Length ? all[ObjectAdress] : null;
+		var seen = new HashSet<StaticObject>();
+		while (next && seen.Add(next))
 		{
-			current = next;
+			StaticObject current = next;
 			next = next.GetNextObject();
-			if (condition != null)
-			{
-				if (condition(current))
-					objects.Add(current);
-			}
-			else
+			if (condition == null || condition(current))
 				objects.Add(current);
 		}
 		return objects;
@@ -191,7 +174,8 @@ public class MapTile {
 		else
 		{
 			StaticObject parent = null;
-			while (next)
+			int guard = 0;	// a level has 1024 slots: a longer walk is a loop
+			while (next && guard++ < 1024)
 			{
 				parent = next;
 				next = next.GetNextObject();

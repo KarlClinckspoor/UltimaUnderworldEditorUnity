@@ -356,6 +356,22 @@ namespace UltimateEditor.Uw1.UI
 			if (Root) UnityEngine.Object.Destroy(Root);
 			if (Closed != null) Closed();
 		}
+
+		/// <summary>Marks a window that waits for a decision (a confirmation): autosave holds off
+		/// while one is open.</summary>
+		public void MakeModal()
+		{
+			if (Root && !Root.GetComponent<ModalWindow>()) Root.AddComponent<ModalWindow>();
+		}
+	}
+
+	/// <summary>On a window that waits for a decision; counts how many are open.</summary>
+	public sealed class ModalWindow : MonoBehaviour
+	{
+		static int open;
+		public static bool AnyOpen { get { return open > 0; } }
+		void OnEnable() { open++; }
+		void OnDisable() { open--; }
 	}
 
 	/// <summary>Keeps the scrolled body under the toolbar as the toolbar grows.</summary>

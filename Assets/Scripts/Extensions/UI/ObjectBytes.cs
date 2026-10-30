@@ -26,10 +26,10 @@ namespace UltimateEditor.Uw1.UI
 				b[0x08] = (byte)mo.HP;
 				b[0x09] = (byte)mo.B9;
 				b[0x0A] = (byte)mo.BA;
-				b[0x0B] = (byte)(mo.Goal + ((mo.GTarg & 0x0F) << 4));
+				b[0x0B] = (byte)((mo.Goal & 0x0F) + ((mo.GTarg & 0x0F) << 4));
 				b[0x0C] = (byte)(((mo.GTarg & 0xF0) >> 4) + (mo.BC & 0xF0));
 				b[0x0D] = (byte)mo.BD;
-				b[0x0E] = (byte)((mo.Attitude << 6) + (mo.BE & 0x3F));
+				b[0x0E] = (byte)(((mo.Attitude & 0x03) << 6) + (mo.BE & 0x3F));
 				b[0x0F] = (byte)mo.BF;
 				b[0x10] = (byte)mo.B10;
 				b[0x11] = (byte)mo.B11;
@@ -38,7 +38,7 @@ namespace UltimateEditor.Uw1.UI
 				b[0x14] = (byte)mo.B14;
 				b[0x15] = (byte)mo.B15;
 				b[0x16] = (byte)((mo.B16 & 0x0F) + ((mo.YHome & 0x0F) << 4));
-				b[0x17] = (byte)(((mo.YHome & 0x30) >> 4) + (mo.XHome << 2));
+				b[0x17] = (byte)(((mo.YHome & 0x30) >> 4) + ((mo.XHome & 0x3F) << 2));
 				b[0x18] = (byte)mo.B18;
 				b[0x19] = (byte)mo.B19;
 				b[0x1A] = (byte)mo.Whoami;

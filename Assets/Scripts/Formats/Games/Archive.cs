@@ -42,7 +42,7 @@ namespace UltimateEditor.Games
 	/// UW1: a word n, then n long offsets; no lengths, flags or compression. A block runs to
 	/// the smallest greater offset or the end of the file (uw1/src/sys/ARC.C). Writing a
 	/// block of the same length overwrites it; a new one is appended; one whose length
-	/// changed is removed and appended at the end.
+	/// changed is removed and appended at the end; an empty one is deleted.
 	/// </summary>
 	public sealed class Uw1Archive : Archive
 	{
@@ -76,6 +76,14 @@ namespace UltimateEditor.Games
 		public override void Write(int b, byte[] data)
 		{
 			if (b < 0 || b >= Count) throw new ArgumentOutOfRangeException("block");
+			// An empty block is stored as no block (offset 0). Appended with length 0, it would
+			// share its offset with the next block appended and read as that block's data (UW1
+			// has no lengths), e.g. a level's map notes after all were erased.
+			if (data == null || data.Length == 0)
+			{
+				Delete(b);
+				return;
+			}
 			uint off = Offset(b);
 			if (off != 0 && Length(b) == data.Length)
 			{

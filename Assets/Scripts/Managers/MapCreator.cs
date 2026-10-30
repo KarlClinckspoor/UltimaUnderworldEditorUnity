@@ -1217,7 +1217,8 @@ public class MapCreator : MonoBehaviour {
 						continue;
 					}
 					StaticObject next = staticObject.GetNextObject();
-					while (next)
+					int guard = 0;	// a level has 1024 slots: a longer walk is a loop
+					while (next && guard++ < 1024)
 					{
 						GameObject nextGO = SpawnGO(next, parent);
 						if(next.IsDoor())
@@ -1351,23 +1352,20 @@ public class MapCreator : MonoBehaviour {
 		else
 			LevelData[level - 1].StaticListStart++;
 
-		//Remove from tile (if possible)
-		so.Tile.RemoveObjectFromTile(so);
-		//If is linked / container
-		if (!so.IsQuantity)
-		{
-			//Remove all inventory too
-			List<StaticObject> containedObjects = so.GetContainedObjects();
-			foreach (var containedObject in containedObjects)
-				RemoveObject(containedObject);
-		}
-		//If is within inventory, unregister from it
+		//If is within inventory, unregister from it. Only unlinked: RemoveFromContainer's
+		//default puts it on the tile and reactivates a critter, which would put this freed slot
+		//back on the active list (a create-object trap's template).
 		if (removeFromContainer)
 		{
 			StaticObject container = so.GetContainer();
 			if (container)
-				container.RemoveFromContainer(so);
+				container.RemoveFromContainer(so, false);
 		}
+		//Remove from tile (if possible)
+		so.Tile.RemoveObjectFromTile(so);
+		//If is linked / container: remove all inventory too
+		foreach (var containedObject in so.GetContainedObjects())
+			RemoveObject(containedObject);
 		//If something was linking to it (trap / trigger) clear link
 		for (int i = 0; i < LevelData[level - 1].Objects.Length; i++)
 		{
@@ -1413,18 +1411,40 @@ public class MapCreator : MonoBehaviour {
 		return null;
 	}
 
+	/// <summary>Item ids 0x180 to 0x1BF: traps and triggers.</summary>
+	public static bool IsTrapOrTrigger(StaticObject so) { return so.ObjectID >= 0x180 && so.ObjectID < 0x1C0; }
+
+	/// <summary>The height of an object standing on a tile's floor, as the editor has always
+	/// placed it: floor * 8, one step more on a slope, and an open portcullis 24 higher.</summary>
+	public static int FloorZ(StaticObject so, MapTile tile)
+	{
+		int z = tile.FloorHeight * 8;
+		if (so.ObjectID == 334)	// open portcullis
+			z += 24;
+		if (tile.IsSlope())
+			z += 8;
+		return Mathf.Clamp(z, 0, 127);
+	}
+
 	public static void SetNewPosition(StaticObject so, MapTile oldTile, MapTile newTile, Vector2Int offsets)
 	{
 		//pos = new Vector3((pos.x / 0.6f - Mathf.Floor(pos.x / 0.6f)) * 0.7f, (pos.y / 0.6f - Mathf.Floor(pos.y / 0.6f)) * 0.7f, 0);
 		//so.XPos = (int)(pos.x * 10.0f);
 		//so.YPos = (int)(pos.y * 10.0f);
-		so.XPos = offsets.x;
-		so.YPos = offsets.y;
-		so.ZPos = newTile.FloorHeight * 8;
-		if (so.ObjectID == 334)	//Heckin open portcullis
-			so.ZPos += 24;
-		if (newTile.IsSlope())
-			so.ZPos += 8;
+		// Traps and triggers keep their fields as they are: their height and fine position are
+		// data (a teleport's level, a variable trap's index and value, a terrain trap's area;
+		// uw1/src/event/TRIGGER.C), not where they stand. Other objects standing on the floor
+		// stay on it; raised ones (levers, bridges, things on walls) keep their height above it.
+		if (!IsTrapOrTrigger(so))
+		{
+			int oldFloor = oldTile != null ? FloorZ(so, oldTile) : -1;
+			so.XPos = offsets.x;
+			so.YPos = offsets.y;
+			if (oldTile == null || so.ZPos == oldFloor)
+				so.ZPos = FloorZ(so, newTile);
+			else
+				so.ZPos = Mathf.Clamp(so.ZPos + (newTile.FloorHeight - oldTile.FloorHeight) * 8, 0, 127);
+		}
 		bool removed = false;
 		bool added = false;
 		if (!(oldTile == newTile))
@@ -1460,6 +1480,10 @@ public class MapCreator : MonoBehaviour {
 	/// </summary>
 	public bool AddTrigger(StaticObject so, StaticObject trigger)
 	{
+		// A stack's or enchanted item's link field is its count or special value: making it a
+		// link would point at whatever object has that index. Only an empty link can change.
+		if (so.IsQuantity && so.Special != 0)
+			return false;
 		so.IsQuantity = false;
 		bool added = AddToContainer(trigger, so);
 		if (!added)

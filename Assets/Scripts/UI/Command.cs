@@ -17,6 +17,7 @@ public class MoveObjectCommand : Command
 	private MapTile newTile;
 	private Vector2Int oldOffsets;
 	private Vector2Int newOffsets;
+	private int oldZ;
 
 	public MoveObjectCommand(StaticObject so, MapTile ot, MapTile nt, Vector2Int oo, Vector2Int no)
 	{
@@ -25,6 +26,7 @@ public class MoveObjectCommand : Command
 		newTile = nt;
 		oldOffsets = oo;
 		newOffsets = no;
+		oldZ = so.ZPos;
 
 		Description = string.Format("Move {0} from tile {1} to {2}", so.Name, ot.Position, nt.Position);
 	}
@@ -40,6 +42,11 @@ public class MoveObjectCommand : Command
 		if (!staticObject)
 			return;
 		MapCreator.SetNewPosition(staticObject, newTile, oldTile, oldOffsets);
+		// back exactly where it was, height included
+		staticObject.XPos = oldOffsets.x;
+		staticObject.YPos = oldOffsets.y;
+		staticObject.ZPos = oldZ;
+		MapCreator.SetGOPosition(staticObject);
 	}
 }
 

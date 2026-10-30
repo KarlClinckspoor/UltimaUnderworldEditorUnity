@@ -196,7 +196,8 @@ public class MobileObject : StaticObject {
 
 	public static string[] GetGoals()
 	{
-		string[] goals = new string[13];
+		// The goal field has 4 bits; 13 to 15 are not used by the shipped data but are kept as read.
+		string[] goals = new string[16];
 		goals[0] = "Stand (0)";
 		goals[1] = "Go to...";
 		goals[2] = "Wander (2)";
@@ -210,6 +211,9 @@ public class MobileObject : StaticObject {
 		goals[10] = "Awaiting conversation";
 		goals[11] = "Stand (11)";
 		goals[12] = "Stand (12)";
+		goals[13] = "Unknown (13)";
+		goals[14] = "Unknown (14)";
+		goals[15] = "Unknown (15)";
 		return goals;
 	}
 	public static int GetDefaultHP(int monsterId)

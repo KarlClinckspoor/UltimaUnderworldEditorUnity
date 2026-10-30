@@ -143,9 +143,14 @@ public static class DataWriter {
 			// UW1 can add and remove walls, floors, doors and character heads, which changes a
 			// file's list and offsets: such a file is written whole, by the old writers.
 			string dataDir = FileExplorer.GetUpperPath(DataReader.FilePath);
+			// Without the palette table the whole-file writers would write the headers and
+			// offsets and none of the pictures, which the game can't load; such files are left.
+			bool table = PaletteMapping != null;
+			if (!table)
+				GrPictures.Warn(report, "The palette table (StreamingAssets/mapping.dat) is missing: files whose number of pictures changed were not written");
 			if (Uw1TrFiles.CanPatch(true, textures.Walls))
 				Uw1TrFiles.Save(true, textures.Walls, BackupData, report);
-			else
+			else if (table)
 			{
 				SaveTextures("W64.TR", textures.Walls, textures.Palettes[0], 2);
 				SaveTextures("W16.TR", textures.Walls, textures.Palettes[0], 2, 4);
@@ -154,7 +159,7 @@ public static class DataWriter {
 			}
 			if (Uw1TrFiles.CanPatch(false, textures.Floors))
 				Uw1TrFiles.Save(false, textures.Floors, BackupData, report);
-			else
+			else if (table)
 			{
 				SaveTextures("F32.TR", textures.Floors, textures.Palettes[0], 2);
 				SaveTextures("F16.TR", textures.Floors, textures.Palettes[0], 2, 2);
@@ -162,13 +167,13 @@ public static class DataWriter {
 				report.Add("F32.TR and F16.TR: written whole (the number of textures changed)");
 			}
 			var whole = new List<string>();
-			if (!GrPictures.CanPatch("DOORS.GR", textures.Doors))
+			if (table && !GrPictures.CanPatch("DOORS.GR", textures.Doors))
 			{
 				SaveTextures("DOORS.GR", textures.Doors, textures.Palettes[0], 1);
 				GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), textures.Doors.Textures, textures.Palettes[0]);
 				whole.Add("DOORS.GR");
 			}
-			if (!GrPictures.CanPatch("CHARHEAD.GR", textures.NPCHeads))
+			if (table && !GrPictures.CanPatch("CHARHEAD.GR", textures.NPCHeads))
 			{
 				SaveTextures("CHARHEAD.GR", textures.NPCHeads, textures.Palettes[0], 1, 0, 56 - textures.NPCHeads.Count);
 				GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), textures.NPCHeads.Textures, textures.Palettes[0]);
@@ -319,11 +324,12 @@ public static class DataWriter {
 	{
 		//FileStream fs = new FileStream(Application.dataPath + "/write.txt", FileMode.OpenOrCreate);
 		//Debug.Log("Save tile");
-		byte a = (byte)((int)tile.TileType + (tile.FloorHeight << 4));
-		byte b = (byte)((tile.FloorTexture << 2) + ((tile.IsAntimagic == true ? 1 : 0) << 6) + ((tile.IsDoor == true ? 1 : 0) << 7));
+		// Every field is masked to its width, so a value out of range can't spill into the next.
+		byte a = (byte)(((int)tile.TileType & 0x0F) + ((tile.FloorHeight & 0x0F) << 4));
+		byte b = (byte)(((tile.FloorTexture & 0x0F) << 2) + ((tile.IsAntimagic == true ? 1 : 0) << 6) + ((tile.IsDoor == true ? 1 : 0) << 7));
 		//byte c = (byte)(tile.WallTexture + ((tile.ObjectAdress & 0x0F) << 4));
 		//byte d = (byte)((tile.ObjectAdress & 0xFF0) >> 4);
-		byte c = (byte)(tile.WallTexture + ((tile.ObjectAdress & 0x03) << 6));
+		byte c = (byte)((tile.WallTexture & 0x3F) + ((tile.ObjectAdress & 0x03) << 6));
 		byte d = (byte)((tile.ObjectAdress & 0xFFC) >> 2);
 		//Debug.LogFormat("tile.ObjectAdress & 0x300 : {0}, tile.ObjectAdress & 0x300 >> 2 : {1}, tile.WallTexture : {2}, tile.ObjectAdress : {3}, tile.ObjectAdress & 0xFF0 : {4}", (tile.ObjectAdress & 0x300), (tile.ObjectAdress & 0x300) >> 2, tile.WallTexture, tile.ObjectAdress, tile.ObjectAdress & 0xFF);
 		fs.WriteByte(a);
@@ -336,17 +342,20 @@ public static class DataWriter {
 
 	private static void SaveStaticObject(StaticObject so, Stream fs)
 	{
+		// Every field is masked to its width (object.h), so a value out of range can't spill into
+		// the next field: quality into the next link, owner into the link, flags into the
+		// enchanted and door bits, height into the heading.
 		byte a = (byte)(so.ObjectID & 0xFF);
-		byte b = (byte)(((so.ObjectID & 0x100) >> 8) + (so.Flags << 1) + ((so.IsEnchanted == true ? 1 : 0) << 4) + ((so.IsDoorOpen == true ? 1 : 0) << 5) + ((so.IsInvisible == true ? 1 : 0) << 6) + ((so.IsQuantity == true ? 1 : 0) << 7));
-		byte c = (byte)(so.ZPos + ((so.Direction & 0x01) << 7));
-		byte d = (byte)(((so.Direction & 0x06) >> 1) + (so.YPos << 2) + (so.XPos << 5));
+		byte b = (byte)(((so.ObjectID & 0x100) >> 8) + ((so.Flags & 0x07) << 1) + ((so.IsEnchanted == true ? 1 : 0) << 4) + ((so.IsDoorOpen == true ? 1 : 0) << 5) + ((so.IsInvisible == true ? 1 : 0) << 6) + ((so.IsQuantity == true ? 1 : 0) << 7));
+		byte c = (byte)((so.ZPos & 0x7F) + ((so.Direction & 0x01) << 7));
+		byte d = (byte)(((so.Direction & 0x06) >> 1) + ((so.YPos & 0x07) << 2) + ((so.XPos & 0x07) << 5));
 		//byte e = (byte)(so.Quality + ((so.NextAdress & 0x0F) << 4));
 		//byte f = (byte)((so.NextAdress & 0xFF0) >> 4);
-		byte e = (byte)(so.Quality + ((so.NextAdress & 0x03) << 6));
+		byte e = (byte)((so.Quality & 0x3F) + ((so.NextAdress & 0x03) << 6));
 		byte f = (byte)((so.NextAdress & 0xFFC) >> 2);
 		//byte g = (byte)(so.Owner_Special + ((so.Quantity_Link_Special & 0x0F) << 4));
 		//byte h = (byte)((so.Quantity_Link_Special & 0xFF0) >> 4);
-		byte g = (byte)(so.Owner + ((so.Special & 0x03) << 6));
+		byte g = (byte)((so.Owner & 0x3F) + ((so.Special & 0x03) << 6));
 		byte h = (byte)((so.Special & 0xFFC) >> 2);
 
 		//Debug.LogFormat("ZPos : {0}, Direction : {1}, Direction & 0x01 : {2}, Direction & 0x01 << 7 : {3}", so.ZPos, so.Direction, so.Direction & 0x01, (so.Direction & 0x01) << 7);
@@ -367,10 +376,10 @@ public static class DataWriter {
 		byte b8 = (byte)mo.HP;
 		byte b9 = (byte)mo.B9;
 		byte bA = (byte)mo.BA;
-		byte bB = (byte)(mo.Goal + ((mo.GTarg & 0x0F) << 4));
+		byte bB = (byte)((mo.Goal & 0x0F) + ((mo.GTarg & 0x0F) << 4));
 		byte bC = (byte)(((mo.GTarg & 0xF0) >> 4) + (mo.BC & 0xF0));
 		byte bD = (byte)mo.BD;
-		byte bE = (byte)((mo.Attitude << 6) + (mo.BE & 0x03F));
+		byte bE = (byte)(((mo.Attitude & 0x03) << 6) + (mo.BE & 0x03F));
 		byte bF = (byte)mo.BF;
 		byte b10 = (byte)mo.B10;
 		byte b11 = (byte)mo.B11;
@@ -379,7 +388,7 @@ public static class DataWriter {
 		byte b14 = (byte)mo.B14;
 		byte b15 = (byte)mo.B15;
 		byte b16 = (byte)((mo.B16 & 0x0F) + ((mo.YHome & 0x0F) << 4));
-		byte b17 = (byte)(((mo.YHome & 0x30) >> 4) + (mo.XHome << 2));
+		byte b17 = (byte)(((mo.YHome & 0x30) >> 4) + ((mo.XHome & 0x3F) << 2));
 		byte b18 = (byte)mo.B18;
 		byte b19 = (byte)mo.B19;
 		byte b1A = (byte)mo.Whoami;

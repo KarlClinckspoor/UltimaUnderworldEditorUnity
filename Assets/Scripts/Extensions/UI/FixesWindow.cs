@@ -147,7 +147,7 @@ namespace UltimateEditor.Uw1.UI
 				foreach (var so in ld.Objects)
 				{
 					if (so == null || so.CurrentAdress < 2) continue;
-					if (!Removable(so, referenced) || guarded.Contains(so.ObjectID)) continue;
+					if (!Removable(so, referenced) || guarded.Contains(so.ObjectID) || QuestObject(so)) continue;
 					// what a character with a conversation carries may be asked for or given in it
 					var holder = so.GetFirstContainer() as MobileObject;
 					if (holder != null && holder.Whoami > 0) continue;
@@ -200,7 +200,25 @@ namespace UltimateEditor.Uw1.UI
 		static HashSet<int> GuardedItems()
 		{
 			var set = new HashSet<int>();
-			set.Add(LevArk.Game.Kind == GameKind.UW2 ? 0xA1 : 0xA7);
+			bool uw2 = LevArk.Game.Kind == GameKind.UW2;
+			set.Add(uw2 ? 0xA1 : 0xA7);
+			if (uw2)
+			{
+				// the curious implement opens locks as a key does, and the lockpick picks them
+				// (uw2/src/obj/OBJUSE.C, UseKey)
+				set.Add(0x100);
+				set.Add(0x101);
+			}
+			else
+			{
+				// UW1's talismans: every kind whose fate (COMOBJ.DAT byte 7, bits 1-4) is 10, which
+				// the game destroys in the lava of level 8 to count down the talismans left
+				// (uw1/src/motion/OBJPHYS.C).
+				var com = MapCreator.ObjectData != null ? MapCreator.ObjectData.CommonData : null;
+				if (com != null)
+					for (int id = 0; id < com.Length && id < 0x200; id++)
+						if (com[id] != null && com[id].ObjectType == 10) set.Add(id);
+			}
 			foreach (var ld in MapCreator.LevelData)
 			{
 				if (ld == null || !ld.Present) continue;
@@ -208,6 +226,14 @@ namespace UltimateEditor.Uw1.UI
 					if (o != null && o.ObjectID == 0x18C) set.Add((o.Quality << 5 | o.Owner) & 0x1FF);
 			}
 			return set;
+		}
+
+		/// <summary>Single objects the game needs whatever their kind: UW1's Garamon's bones (bones
+		/// with owner 0x3E), which must be buried to win (uw1/src/obj/USEITEMS.C, UseBonesOn).</summary>
+		public static bool QuestObject(StaticObject so)
+		{
+			if (LevArk.Game.Kind == GameKind.UW1 && so.IsBones() && so.Owner == 0x3E) return true;
+			return false;
 		}
 
 		static bool Removable(StaticObject so, HashSet<int> referenced)

@@ -167,8 +167,8 @@ public class PropertiesPanel : MonoBehaviour {
 			string[] atts = MobileObject.GetAttitudes();
 			createDropdownProperty("Attitude", BasicPanel.transform, atts[mo.Attitude], atts, (i) => changeMobileAttitude(mo, i));
 			string[] goals = MobileObject.GetGoals();
-			createDropdownProperty("Goal", BasicPanel.transform, goals[mo.Goal], goals, (i) => changeMobileGoal(mo, i));
-			createInputProperty("HP", BasicPanel.transform, mo.HP, (str) => changeMobileHP(mo, int.Parse(str)), 1, 512);
+			createDropdownProperty("Goal", BasicPanel.transform, goals[Mathf.Clamp(mo.Goal, 0, goals.Length - 1)], goals, (i) => changeMobileGoal(mo, i));
+			createInputProperty("HP", BasicPanel.transform, mo.HP, (str) => changeMobileHP(mo, int.Parse(str)), 0, 255);	// one byte
 			Dictionary<string, int> npcIds = MapCreator.GetNPCIDs();
 			GameObject npcTogGO = createToggleProperty("Is NPC", BasicPanel.transform, mo.Whoami > 0);
 			Toggle npcTog = npcTogGO.GetComponentInChildren<Toggle>();
@@ -1156,15 +1156,25 @@ public class PropertiesPanel : MonoBehaviour {
 		};
 		createButtonProperty("Add trigger", BasicPanel.transform, createUseTrigger);
 	}
+	/// <summary>The count of a stack, or the special value (512 + n) of a quantity object. Only for
+	/// quantity objects: otherwise the link field points at contents, triggers or a lock, which
+	/// the panel shows as links. Whether it is a count or a special value is fixed when the panel
+	/// is built, so typing can't turn one into the other.</summary>
 	private GameObject createQuantityInput(StaticObject so)
 	{
+		if (!so.IsQuantity)
+			return null;
+		bool special = so.Special >= 512;
 		Action<string> changeQuantityAct = (s) =>
 		{
-			so.Special = so.Special >= 512 ? int.Parse(s) + 512 : int.Parse(s);
+			int v;
+			if (!int.TryParse(s, out v))
+				return;
+			so.Special = (special ? 512 : 0) + Mathf.Clamp(v, 0, 511);
 			Special.text = so.Special.ToString();
 		};
-		int val = so.Special >= 512 ? so.Special - 512 : so.Special;
-		return createInputProperty(so.Special >= 512 ? "Special" : "Quantity", BasicPanel.transform, val, changeQuantityAct);
+		int val = special ? so.Special - 512 : so.Special;
+		return createInputProperty(special ? "Special" : "Quantity", BasicPanel.transform, val, changeQuantityAct, special ? 0 : 1, 511);
 	}
 	private void createQuantityToggle(StaticObject so, GameObject quantityInputObject)
 	{
@@ -1455,6 +1465,9 @@ public class PropertiesPanel : MonoBehaviour {
 			toggle.onValueChanged.AddListener((b) => toggleAction(b));
 		return toggleGO;
 	}
+	/// <summary>A number field. The value is taken when editing ends (not on every keystroke, which
+	/// passed half-typed numbers to the object), clamped to min..max, and an empty or invalid
+	/// entry puts the last value back.</summary>
 	private GameObject createInputProperty(string text, Transform parent, int val, Action<string> inputAction, int min = 0, int max = 512)
 	{
 		GameObject inputGO = Instantiate(InputPropertyPrefab, parent);
@@ -1463,14 +1476,19 @@ public class PropertiesPanel : MonoBehaviour {
 		InputField input = inputGO.GetComponentInChildren<InputField>();
 		input.contentType = InputField.ContentType.IntegerNumber;
 		input.text = val.ToString();
-		Action<string> clampVals = (str) =>
+		int last = Mathf.Clamp(val, min, max);
+		input.onEndEdit.AddListener((str) =>
 		{
-			int newval = int.Parse(str);
-			newval = Mathf.Clamp(newval, min, max);
-			input.text = newval.ToString();
-		};
-		input.onEndEdit.AddListener((str) => clampVals(str));
-		input.onValueChanged.AddListener((s) => inputAction(s));
+			int v;
+			if (!int.TryParse(str, out v))
+				v = last;
+			v = Mathf.Clamp(v, min, max);
+			input.SetTextWithoutNotify(v.ToString());
+			if (v == last && str == v.ToString())
+				return;
+			last = v;
+			inputAction(v.ToString());
+		});
 		return inputGO;
 	}
 	private GameObject createLargeInputProperty(string text, Transform parent, string val, System.Action<string> inputAction)

@@ -549,90 +549,76 @@ public class StaticObject {
 
 	public StaticObject GetNextObject()
 	{
-		if (NextAdress == 0)
-			return null;
-
-		return MapCreator.LevelData[CurrentLevel - 1].Objects[NextAdress];
+		return ObjectAt(NextAdress);
 	}
 
 	public StaticObject GetPrevObject()
 	{
-		if (PrevAdress == 0)
-			return null;
-
-		return MapCreator.LevelData[CurrentLevel - 1].Objects[PrevAdress];
+		return ObjectAt(PrevAdress);
 	}
 
+	/// <summary>The object at an index of this object's level; null for 0 or an index out of range.</summary>
+	StaticObject ObjectAt(int index)
+	{
+		if (index <= 0)
+			return null;
+		var objects = MapCreator.LevelData[CurrentLevel - 1].Objects;
+		return index < objects.Length ? objects[index] : null;
+	}
+
+	/// <summary>A level has 1024 object slots, so no real chain is longer: a walk that gets this
+	/// far has met a loop (a corrupt save or a bad link) and stops.</summary>
+	const int MaxChain = 1024;
+
+	/// <summary>The first object this one holds; null when it holds nothing, or when it is a
+	/// quantity object, whose link field is a count or a special value, not a link.</summary>
 	public StaticObject GetContainedObject()
 	{
-		if (Special == 0)
+		if (IsQuantity)
 			return null;
-
-		return MapCreator.LevelData[CurrentLevel - 1].Objects[Special];
+		return ObjectAt(Special);
 	}
 
+	/// <summary>Everything this object holds, in order (never null). A chain that loops back is
+	/// cut where it repeats.</summary>
 	public List<StaticObject> GetContainedObjects()
 	{
 		List<StaticObject> contained = new List<StaticObject>();
-
+		var seen = new HashSet<StaticObject>();
 		StaticObject next = GetContainedObject();
-		StaticObject current = null;
-
-		int safe = 40;
-		while(next)
+		while (next && seen.Add(next) && contained.Count < MaxChain)
 		{
-			current = next;
-			contained.Add(current);
+			contained.Add(next);
 			next = next.GetNextObject();
-
-			safe--;
-			if (safe == 0)
-			{
-				Debug.LogErrorFormat("Failed Loop [GetContainedObjects] {0}", Name);
-				return null;
-			}
 		}
+		if (next && contained.Count > 0 && seen.Contains(next))
+			Debug.LogWarningFormat("[GetContainedObjects] the contents of {0} loop back to {1}", Name, next.Name);
 		return contained;
 	}
 
+	/// <summary>The object holding this one, found by walking back along the chain to the object
+	/// whose link points at the chain's first object. Quantity objects hold nothing.</summary>
 	public StaticObject GetContainer()
 	{
 		StaticObject prev = GetPrevObject();
-		//StaticObject current = null;
 		StaticObject current = this;
-		int safe = 80;
-		while (prev)
+		var seen = new HashSet<StaticObject> { this };
+		while (prev && seen.Add(prev))
 		{
-			if (prev.Special == current.CurrentAdress)
+			if (!prev.IsQuantity && prev.Special == current.CurrentAdress)
 				return prev;
 			current = prev;
-			//if (current.IsContainer() && current.GetFromInventory(this))
-			//	break;
 			prev = prev.GetPrevObject();
-
-			safe--;
-			if (safe == 0)
-			{
-				Debug.LogErrorFormat("Failed Loop [GetContainer] {0}, prev : {1}", Name, prev.Name);
-				return null;
-			}
 		}
 		return null;
-		//if (current)
-		//	Debug.LogFormat("This {0} container : {1}", Name, current.Name);
-		//else
-		//	Debug.LogFormat("This {0} has no container", Name);
-		//if (current.IsContainer())
-		//	return current;
-		//else
-		//	return null;
 	}
 
 	public StaticObject GetFirstContainer()
 	{
 		StaticObject cont = GetContainer();
 		StaticObject current = this;
-		while(cont)
+		var seen = new HashSet<StaticObject> { this };
+		while (cont && seen.Add(cont))
 		{
 			current = cont;
 			cont = cont.GetContainer();
@@ -642,42 +628,13 @@ public class StaticObject {
 
 	public StaticObject GetLastContainedObject()
 	{
-		StaticObject next = GetContainedObject();
-		StaticObject current = null;
-		int safe = 90;
-		while(next)
-		{
-			current = next;
-			next = next.GetNextObject();
-
-			safe--;
-			if(safe == 0)
-			{
-				Debug.LogErrorFormat("Failed Loop [GetLastContainedObject] {0}", Name);
-				return null;
-			}
-		}
-		return current;
+		var list = GetContainedObjects();
+		return list.Count > 0 ? list[list.Count - 1] : null;
 	}
+
 	public int GetContainedObjectsCount()
 	{
-		StaticObject next = GetContainedObject();
-		StaticObject current = null;
-		int safe = 90;
-		int count = 0;
-		while (next)
-		{
-			current = next;
-			next = next.GetNextObject();
-			count++;
-			safe--;
-			if (safe == 0)
-			{
-				Debug.LogErrorFormat("Failed Loop [GetContainedObjectsCount] {0}", Name);
-				return -1;
-			}
-		}
-		return count;
+		return GetContainedObjects().Count;
 	}
 	public StaticObject GetUseTrigger()
 	{
@@ -715,8 +672,8 @@ public class StaticObject {
 	public StaticObject GetFromInventory(StaticObject searched)
 	{
 		StaticObject next = GetContainedObject();
-
-		while (next)
+		int guard = 0;	// a level has 1024 slots: a longer walk is a loop
+		while (next && guard++ < MaxChain)
 		{
 			if (next == searched)
 				return searched;
@@ -746,13 +703,17 @@ public class StaticObject {
 		return true;
 	}
 
-	public bool RemoveFromContainer(StaticObject so)
+	/// <summary>Takes so out of this object's contents. With toTile (the default), so then lies
+	/// on this object's tile, at the end of its chain, and a critter becomes active again; without
+	/// it (so is being deleted), so is only unlinked.</summary>
+	public bool RemoveFromContainer(StaticObject so, bool toTile = true)
 	{
 		StaticObject next = GetContainedObject();
 		StaticObject before = this;
 		StaticObject current = null;
+		var seen = new HashSet<StaticObject>();
 
-		while (next)
+		while (next && seen.Add(next))
 		{
 			current = next;
 			next = next.GetNextObject();
@@ -779,12 +740,17 @@ public class StaticObject {
 						next.PrevAdress = before.CurrentAdress;
 					}
 				}
+				so.NextAdress = 0;
+				if (!toTile)
+				{
+					so.PrevAdress = 0;
+					return true;
+				}
 				StaticObject lastOnTile = Tile.GetLastObject();
 				if (lastOnTile)
 					so.PrevAdress = lastOnTile.CurrentAdress;
 				else
 					so.PrevAdress = 0;
-				so.NextAdress = 0;
 				if (so is MobileObject)
 					MapCreator.ActivateMob((MobileObject)so, so.CurrentLevel);
 				return true;
