@@ -34,11 +34,16 @@ public static class Uw2T64
 		palette = pal;
 	}
 
-	public static void Saved(byte[] now, TextureContainer w, TextureContainer f)
+	/// <summary>The file as written, and the pictures written (changed): only those count as
+	/// saved, so one skipped now (wrong size) is tried and reported again next time.</summary>
+	public static void Saved(byte[] now, TextureContainer w, TextureContainer f, List<int> changed)
 	{
 		file = now;
-		walls = w.Textures.ToArray();
-		floors = f.Textures.ToArray();
+		foreach (int i in changed)
+		{
+			if (i < walls.Length && i < w.Count) walls[i] = w.Textures[i];
+			if (i < floors.Length && i < f.Count) floors[i] = f.Textures[i];
+		}
 	}
 
 	/// <summary>The new file, or null when nothing was remembered; changed lists the pictures written.</summary>

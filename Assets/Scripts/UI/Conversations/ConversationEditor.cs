@@ -121,7 +121,7 @@ public class ConversationEditor : ResizableWindow {
 		{
 			//try
 			//{
-			Stream stream = File.Open(GetConversationFile(), FileMode.Open);
+			Stream stream = File.Open(GetConversationFile(), FileMode.Open, FileAccess.Read, FileShare.Read);
 			BinaryFormatter bf = new BinaryFormatter();
 			ConversationStructure str = (ConversationStructure)bf.Deserialize(stream);
 			GlobalVariables = str.GlobalVariables;

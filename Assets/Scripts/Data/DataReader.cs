@@ -66,7 +66,7 @@ public static class DataReader {
 
 	public static bool ValidateFile(string path)
 	{
-		FileStream fs = new FileStream(path, FileMode.Open);
+		FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 		int test = fs.ReadByte();
 		bool valid = true;
 		//if (test == 135)
@@ -77,7 +77,7 @@ public static class DataReader {
 
 	public static GameType GetGameType(string path)
 	{
-		FileStream fs = new FileStream(path, FileMode.Open);
+		FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 		int test = fs.ReadByte();
 		GameType gameType = GameType.Null;
 		if (test == 135)
@@ -103,7 +103,7 @@ public static class DataReader {
 	/// <summary>The editor's original UW1-only loader, kept for comparison.</summary>
 	public static List<LevelData> LoadLevelsUw1Direct()
 	{
-		FileStream fs = new FileStream(FilePath, FileMode.Open);
+		FileStream fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 		int blockCount = GetNumberOfBlocks(fs);
 		int levelCount = blockCount / 15;
 		//LevelData[] levelData = new LevelData[levelCount];
@@ -650,7 +650,7 @@ public static class DataReader {
 		LoadTexturesFromResources();
 
 		string filePath = GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/pals.dat");
-		FileStream fs = new FileStream(filePath, FileMode.Open);
+		FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 		List<Color[]> pals = new List<Color[]>();
 		for (int i = 0; i < 7; i++)
 		{
@@ -750,7 +750,7 @@ public static class DataReader {
 
 		int iCount = 0, iFirst = 0;
 		int[] itemOffsets = ReadGraphicOffsets("OBJECTS.GR", ref iCount, ref iFirst);
-		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.GR"), FileMode.Open);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/OBJECTS.GR"), FileMode.Open, FileAccess.Read, FileShare.Read);
 		List<Texture2D> itemsTex = new List<Texture2D>();
 		List<int[]> rawTexs = new List<int[]>();
 		List<int> objAuxPals = new List<int>();
@@ -814,7 +814,7 @@ public static class DataReader {
 			GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
 			GrPictures.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
 		}
-		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open);
+		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open, FileAccess.Read, FileShare.Read);
 		int[] wallDat = new int[256];
 		int[] florDat;
 		for (int i = 0; i < 256; i++)		
@@ -1033,7 +1033,7 @@ public static class DataReader {
 
 	public static StringData LoadStrings()
 	{
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/STRINGS.PAK"), FileMode.Open);
+		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/STRINGS.PAK"), FileMode.Open, FileAccess.Read, FileShare.Read);
 		Tuple<HuffmanNode[], long> pair = ReadHuffmanNodes(fs);
 		Tuple<List<StringBlock>, Dictionary<int, int>> blockPair = ReadStringBlocks(fs, pair.Item2);
 		for (int i = 0; i < blockPair.Item1.Count; i++)
@@ -1246,7 +1246,7 @@ public static class DataReader {
 	public static Dictionary<int, int> ReadPrivateVariables()
 	{
 		FileInfo fi = new FileInfo(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/BABGLOBS.DAT"));
-		FileStream fs = new FileStream(fi.FullName, FileMode.Open);
+		FileStream fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
 		Dictionary<int, int> privVars = new Dictionary<int, int>();
 
 		while(fs.Position < fi.Length)

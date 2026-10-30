@@ -48,7 +48,7 @@ namespace UltimateEditor.Games
 		/// <param name="filePath">ALLPALS.DAT (DataReader passes DATA's, resolved)</param>
 		public static List<int[]> ReadAuxPalettes(string filePath)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Open);
+			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
 			List<int[]> auxpals = new List<int[]>();
 			// 32 palettes: the game reads 0x200 bytes (reference gfx/LOADGR.C:428; the file is 513
@@ -74,7 +74,7 @@ namespace UltimateEditor.Games
 		/// <param name="filePath">the picture file (DataReader resolves the name in DATA)</param>
 		public static int[] ReadGraphicOffsets(string filePath, ref int count, ref int first)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Open);
+			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 			int start = fs.ReadByte();
 			int size = 0;
 			if (start == 2)
@@ -224,7 +224,7 @@ namespace UltimateEditor.Games
 				return null;
 			int count = offsets.Length;
 			List<int[]> textures = new List<int[]>();
-			FileStream fs = new FileStream(filePath, FileMode.Open);
+			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 			for (int i = 0; i < count; i++)
 			{
 				if (!specificSize)

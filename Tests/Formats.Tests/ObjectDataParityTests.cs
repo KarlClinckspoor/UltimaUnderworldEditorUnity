@@ -44,12 +44,14 @@ namespace Formats.Tests
 			SetGame(d1); SetGameCurrent(d2);
 			LW.SaveObjectDatas(L.LoadObjectData());
 			CW.SaveObjectDatas(C.LoadObjectData());
-			foreach (var rel in new[] { "DATA/OBJECTS.DAT", "DATA/COMOBJ.DAT", "CRIT/ASSOC.ANM", "CRIT/AS.AN", "DATA/OBJECTS.DAT.BKP", "DATA/COMOBJ.DAT.BKP" })
+			foreach (var rel in new[] { "DATA/OBJECTS.DAT", "DATA/COMOBJ.DAT", "CRIT/ASSOC.ANM", "CRIT/AS.AN" })
 			{
 				string p1 = Path.Combine(d1, rel), p2 = Path.Combine(d2, rel);
 				Assert.Equal(File.Exists(p1), File.Exists(p2));
 				if (File.Exists(p1)) Same.Bytes(File.ReadAllBytes(p1), File.ReadAllBytes(p2), game + " " + rel);
 			}
+			// the old writer always rewrote them, with .BKP copies; now an unchanged file is not written
+			Assert.Empty(Directory.GetFiles(d2, "*.BKP", SearchOption.AllDirectories));
 		}
 	}
 }

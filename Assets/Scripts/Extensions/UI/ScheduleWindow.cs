@@ -50,8 +50,7 @@ namespace UltimateEditor.Uw1.UI
 				if (problems.Length > 0) { w.Status.text = "Not saved:" + problems + " Use Sort by time."; return; }
 				var written = ScdArk.Write(arc, blocks);
 				if (written.Count == 0) { w.Status.text = "Nothing changed."; return; }
-				GameSession.BackupOnce(path);
-				File.WriteAllBytes(path, arc.ToArray());
+				GameWrite.Write(path, arc.ToArray());
 				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + ".";
 				// The level clocks' "next row" indexes are not moved with the rows (the game's
 				// Sched_InsertLong and Sched_Delete do). DATA's file has every clock at 0.

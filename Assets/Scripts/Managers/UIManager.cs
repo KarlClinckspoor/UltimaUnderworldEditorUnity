@@ -528,16 +528,30 @@ public class UIManager : MonoBehaviour {
 		return true;
 	}
 
+	/// <summary>The folder the last autosave wrote its copy to (Extensions/UI/Autosave.cs).</summary>
+	public string LastAutosaveFolder { get; private set; }
+
 	IEnumerator autoSave(Action<bool> done)
 	{
-		yield return StartCoroutine(Save(true));
+		// The autosave goes to a copy of the game ("Editor autosaves"), never the game's own
+		// files: those change only when the user saves (Data/GameWrite.cs).
+		string snapshot = null;
+		try { snapshot = GameWrite.NewSnapshot(); }
+		catch (Exception e)
+		{
+			SpawnPopupMessage("Autosave failed: could not copy the game\n" + e.Message);
+			if (done != null) done(false);
+			yield break;
+		}
+		yield return StartCoroutine(Save(true, snapshot));
+		if (lastSaveOk) LastAutosaveFolder = snapshot;
 		if (done != null)
 			done(lastSaveOk);
 	}
 
 	/// <summary>Writes every file. quiet (an autosave) leaves out the progress messages and the
 	/// closing popup; failures are shown either way.</summary>
-	private IEnumerator Save(bool quiet = false)
+	private IEnumerator Save(bool quiet = false, string snapshot = null)
 	{
 		if (saving)
 			yield break;
@@ -550,7 +564,7 @@ public class UIManager : MonoBehaviour {
 			yield return null;
 			try
 			{
-				DataWriter.SaveLevelData(MapCreator.LevelData);
+				GameWrite.RunIn(snapshot, () => DataWriter.SaveLevelData(MapCreator.LevelData));
 			}
 			catch(Exception e)
 			{
@@ -561,7 +575,7 @@ public class UIManager : MonoBehaviour {
 			yield return null;
 			try
 			{
-				DataWriter.SaveTextureData(MapCreator.TextureData);
+				GameWrite.RunIn(snapshot, () => DataWriter.SaveTextureData(MapCreator.TextureData));
 			}
 			catch(Exception e)
 			{
@@ -572,7 +586,7 @@ public class UIManager : MonoBehaviour {
 			yield return null;
 			try
 			{
-				DataWriter.SaveStringData(MapCreator.StringData);
+				GameWrite.RunIn(snapshot, () => DataWriter.SaveStringData(MapCreator.StringData));
 			}
 			catch(Exception e)
 			{
@@ -583,7 +597,7 @@ public class UIManager : MonoBehaviour {
 			yield return null;
 			try
 			{
-				DataWriter.SaveConversationData(MapCreator.ConversationData);
+				GameWrite.RunIn(snapshot, () => DataWriter.SaveConversationData(MapCreator.ConversationData));
 			}
 			catch(Exception e)
 			{
@@ -594,7 +608,7 @@ public class UIManager : MonoBehaviour {
 			yield return null;
 			try
 			{
-				DataWriter.SaveObjectDatas(MapCreator.ObjectData);
+				GameWrite.RunIn(snapshot, () => DataWriter.SaveObjectDatas(MapCreator.ObjectData));
 			}
 			catch(Exception e)
 			{
@@ -603,7 +617,8 @@ public class UIManager : MonoBehaviour {
 			}
 			if (!quiet) Destroy(popup);
 			lastSaveOk = true;
-			if (Saved != null) Saved();
+			// an autosave copy leaves the game's files as they were: they are not saved
+			if (snapshot == null && Saved != null) Saved();
 			if (!quiet && GrPictures.Problems.Count > 0)
 				SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", GrPictures.Problems.ToArray()), null, true);
 		}

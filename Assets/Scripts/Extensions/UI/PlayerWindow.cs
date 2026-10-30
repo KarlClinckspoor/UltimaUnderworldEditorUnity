@@ -63,9 +63,7 @@ namespace UltimateEditor.Uw1.UI
 			var top = UiKit.Row(w.Content, 22);
 			UiKit.Button(top, "Save PLAYER.DAT", () =>
 			{
-				string bkp = path + ".BKP";
-				if (!File.Exists(bkp)) File.Copy(path, bkp);
-				File.WriteAllBytes(path, p.ToBytes());
+				GameWrite.Write(path, p.ToBytes());
 				w.Status.text = "Saved " + path;
 			}, 130, 22, UiKit.AccentColor);
 			UiKit.Button(top, "Reload", () => Load(w, path), 70, 22);

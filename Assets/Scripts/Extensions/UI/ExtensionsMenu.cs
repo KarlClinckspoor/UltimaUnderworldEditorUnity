@@ -111,7 +111,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
 			Entry(root, "Export as mod (.uwmod package)...", () => ModExportWindow.Show(), false);
-			EntryAlways(root, "Autosave (" + (Autosave.Minutes == 0 ? "off" : "every " + Autosave.Minutes + " min") + ")...", () => AutosaveWindow.Show());
+			EntryAlways(root, "Autosave and backups (" + (Autosave.Minutes == 0 ? "autosave off" : "every " + Autosave.Minutes + " min") + ")...", () => AutosaveWindow.Show());
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
 			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
@@ -183,14 +183,10 @@ namespace UltimateEditor.Uw1.UI
 			}
 		}
 
-		/// <summary>Writes a DATA file, keeping a one-time .BKP copy of the original as the editor does.</summary>
+		/// <summary>Writes a DATA file through GameWrite (the .BKP original and dated versions).</summary>
 		public static void WriteDataFile(string fileName, byte[] data)
 		{
-			string path = UltimateEditor.Games.GameFiles.Resolve(Path.Combine(DataFolder, fileName));
-			string backup = path + ".BKP";
-			if (File.Exists(path) && !File.Exists(backup))
-				File.Copy(path, backup);
-			File.WriteAllBytes(path, data);
+			GameWrite.Write(UltimateEditor.Games.GameFiles.Resolve(Path.Combine(DataFolder, fileName)), data);
 		}
 
 		public static string FindDataFile(string fileName)

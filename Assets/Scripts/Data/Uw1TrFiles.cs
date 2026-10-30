@@ -73,10 +73,10 @@ public static class Uw1TrFiles
 		return p != null && c != null && c.Count == p.Original.Length && p.Offsets.Length >= c.Count && p.SmallOffsets.Length >= c.Count;
 	}
 
-	/// <summary>Patches the replaced pictures of the walls (or floors) into their two files.
-	/// backup is called with a file name before that file is written. Returns the pictures
-	/// written; problems go to report (and GrPictures.Problems, for the message after saving).</summary>
-	public static int Save(bool wallsPair, TextureContainer c, Action<string> backup, List<string> report)
+	/// <summary>Patches the replaced pictures of the walls (or floors) into their two files,
+	/// through GameWrite. Returns the pictures written; problems go to report (and
+	/// GrPictures.Problems, for the message after saving).</summary>
+	public static int Save(bool wallsPair, TextureContainer c, List<string> report)
 	{
 		var p = wallsPair ? walls : floors;
 		if (!CanPatch(wallsPair, c)) return 0;
@@ -113,10 +113,13 @@ public static class Uw1TrFiles
 			written++;
 		}
 		if (written == 0) return 0;
-		if (!Same(big, p.Bytes)) { backup(p.Name); File.WriteAllBytes(p.Path, big); p.Bytes = big; }
-		if (!Same(small, p.SmallBytes)) { backup(p.SmallName); File.WriteAllBytes(p.SmallPath, small); p.SmallBytes = small; }
-		foreach (int i in done) p.Original[i] = c.Textures[i];
+		if (!Same(big, p.Bytes)) GameWrite.Write(p.Path, big);
+		if (!Same(small, p.SmallBytes)) GameWrite.Write(p.SmallPath, small);
 		report.Add(p.Name + " and " + p.SmallName + ": " + written + " picture(s) written");
+		if (GameWrite.Snapshot) return written;   // an autosave copy: the game's own files are unchanged
+		p.Bytes = big;
+		p.SmallBytes = small;
+		foreach (int i in done) p.Original[i] = c.Textures[i];
 		return written;
 	}
 

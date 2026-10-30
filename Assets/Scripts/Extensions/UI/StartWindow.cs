@@ -46,8 +46,7 @@ namespace UltimateEditor.Uw1.UI
 				if (lev != null && lev.MapTiles[x, y].TileType == TileType.Solid) { w.Status.text = "That square of level 1 is solid rock."; return; }
 				var b = File.ReadAllBytes(exe);
 				if (!StartPosition.Patch(b, game, x, y)) { w.Status.text = "The call was not found any more."; return; }
-				GameSession.BackupOnce(exe);
-				File.WriteAllBytes(exe, b);
+				GameWrite.Write(exe, b);
 				StartPosition.ExeX = x; StartPosition.ExeY = y;
 				w.Status.text = string.Format("New games now start at ({0}, {1}) of level 1.", x, y);
 			}, 170, 22, UiKit.AccentColor);

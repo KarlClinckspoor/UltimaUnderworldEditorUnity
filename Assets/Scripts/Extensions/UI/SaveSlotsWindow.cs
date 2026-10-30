@@ -81,8 +81,7 @@ namespace UltimateEditor.Uw1.UI
 			UiKit.Dropdown(tools, names, 0, i => { current = i; Fill(w, g, data, current); }, 330);
 			UiKit.Button(tools, "Save BGLOBALS.DAT", () =>
 			{
-				GameSession.BackupOnce(path);
-				File.WriteAllBytes(path, g.ToBytes(true));
+				GameWrite.Write(path, g.ToBytes(true));
 				w.Status.text = "Saved " + path;
 			}, 140, 22, UiKit.AccentColor);
 			UiKit.Paragraph(w.Toolbar, "The variables a conversation keeps between talks (the game reads at most as many as the script declares). They are shown by index, in the order the script declares them.", 10);

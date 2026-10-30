@@ -115,13 +115,13 @@ public static class GameSession
 		if (text != null && text.Length > DescMax) text = text.Substring(0, DescMax);
 		var b = new byte[(text ?? "").Length];
 		for (int i = 0; i < b.Length; i++) b[i] = text[i] < 256 ? (byte)text[i] : (byte)'?';
-		BackupOnce(path);
-		File.WriteAllBytes(path, b);
+		GameWrite.Write(path, b);
 	}
 
-	/// <summary>The editor's one-time .BKP copy, for any file by full path.</summary>
+	/// <summary>The editor's .BKP original and a dated version (GameWrite.Backup), for any file by
+	/// full path, before it is written by other means than GameWrite.Write.</summary>
 	public static void BackupOnce(string path)
 	{
-		if (File.Exists(path) && !File.Exists(path + ".BKP")) File.Copy(path, path + ".BKP");
+		GameWrite.Backup(path);
 	}
 }

@@ -170,7 +170,8 @@ public static class LevArk
 			WriteIfChanged(Game.TextureBlock(l), tex);
 			ld.SourceTextureBlock = tex;
 		}
-		Archive.Save(Path);
+		// written (with the .BKP and a dated version) only when its bytes changed
+		GameWrite.Write(Path, Archive.ToBytes());
 	}
 
 	/// <summary>The level block a save would write for this level now (for checks; nothing is written).</summary>
@@ -217,8 +218,7 @@ public static class LevArk
 	/// changes), keeping the editor's one-time .BKP.</summary>
 	public static void SaveArchiveNow()
 	{
-		GameSession.BackupOnce(Path);
-		Archive.Save(Path);
+		GameWrite.Write(Path, Archive.ToBytes());
 	}
 
 	static void WriteIfChanged(int block, byte[] data)

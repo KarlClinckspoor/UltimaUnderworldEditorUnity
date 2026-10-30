@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace UltimateEditor.Games
@@ -17,7 +18,7 @@ namespace UltimateEditor.Games
 		/// <param name="filePath">COMOBJ.DAT</param>
 		public static void LoadCommonData(ObjectData objDat, string filePath)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Open);
+			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 			int val_a = fs.ReadByte();
 			int val_b = fs.ReadByte();
 			objDat.CommonStart = val_a + val_b * 256;
@@ -75,7 +76,7 @@ namespace UltimateEditor.Games
 		/// <summary>OBJECTS.DAT (DataReader.LoadObjectData's first half).</summary>
 		public static void ReadObjectsDat(ObjectData od, string filePath)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Open);
+			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 			int val_a = fs.ReadByte();
 			int val_b = fs.ReadByte();
 			od.StartValue = val_a + val_b * 256;
@@ -112,7 +113,7 @@ namespace UltimateEditor.Games
 				}
 				return;
 			}
-			fs = new FileStream(GameFiles.Resolve(gameFolder + "/CRIT/ASSOC.ANM"), FileMode.Open);
+			fs = new FileStream(GameFiles.Resolve(gameFolder + "/CRIT/ASSOC.ANM"), FileMode.Open, FileAccess.Read, FileShare.Read);
 			od.MonsterSpriteNames = new string[32];
 			for (int i = 0; i < 32; i++)
 			{
@@ -321,10 +322,13 @@ namespace UltimateEditor.Games
 
 			return md;
 		}
-		/// <param name="filePath">COMOBJ.DAT (DataWriter backs it up first)</param>
-		public static void SaveCommonData(ObjectData objDat, string filePath)
+		/// <param name="filePath">COMOBJ.DAT</param>
+		public static void SaveCommonData(ObjectData objDat, string filePath) { File.WriteAllBytes(filePath, BuildCommonData(objDat)); }
+
+		/// <summary>COMOBJ.DAT's bytes (the editor writes them through its own file writer).</summary>
+		public static byte[] BuildCommonData(ObjectData objDat)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Create);
+			var fs = new MemoryStream();
 			byte start_b_a = (byte)(objDat.CommonStart & 0xFF);
 			byte start_b_b = (byte)((objDat.CommonStart & 0xFF00) >> 8);
 			fs.WriteByte(start_b_a);
@@ -352,12 +356,15 @@ namespace UltimateEditor.Games
 				byte bA = (byte)((com.RawData[10] & 0xE0) + com.QualityType + (com.LookDescription << 4));
 				fs.WriteByte(bA);
 			}
-			fs.Close();
+			return fs.ToArray();
 		}
-		/// <param name="filePath">OBJECTS.DAT (DataWriter backs it up first)</param>
-		public static void SaveObjectData(ObjectData objDat, string filePath)
+		/// <param name="filePath">OBJECTS.DAT</param>
+		public static void SaveObjectData(ObjectData objDat, string filePath) { File.WriteAllBytes(filePath, BuildObjectData(objDat)); }
+
+		/// <summary>OBJECTS.DAT's bytes (the editor writes them through its own file writer).</summary>
+		public static byte[] BuildObjectData(ObjectData objDat)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Create);
+			var fs = new MemoryStream();
 
 			byte start_b_a = (byte)(objDat.StartValue & 0xFF);
 			byte start_b_b = (byte)((objDat.StartValue & 0xFF00) >> 8);
@@ -380,7 +387,7 @@ namespace UltimateEditor.Games
 				SaveLightData(objDat.LightData[i], fs);
 			for (int i = 0; i < 112; i++)		
 				fs.WriteByte((byte)objDat.UnknownData[i]);		
-			fs.Close();
+			return fs.ToArray();
 		}
 		public static void SaveWeaponData(WeaponData wd, Stream fs)
 		{
@@ -506,35 +513,30 @@ namespace UltimateEditor.Games
 			fs.WriteByte((byte)md.Unk9);
 			fs.WriteByte((byte)md.Unk10);
 		}
-		/// <summary>gameFolder is DATA's parent; the critter file is backed up once (.BKP).</summary>
+		/// <summary>The critter file with the monsters' sprite pages and palettes put in: UW2's
+		/// CRIT\AS.AN (64 entries of page, palette, nothing else), UW1's CRIT\ASSOC.ANM (the
+		/// same 64 entries from offset 256). gameFolder is DATA's parent. Returns the file's path
+		/// and its new bytes, or null when the file is missing; nothing is written.</summary>
+		public static KeyValuePair<string, byte[]>? BuildMonsterSpriteFile(ObjectData objDat, GameKind kind, string gameFolder)
+		{
+			bool uw2 = kind == GameKind.UW2;
+			string path = GameFiles.Resolve(gameFolder + (uw2 ? "/CRIT/AS.AN" : "/CRIT/ASSOC.ANM"));
+			if (!File.Exists(path)) return null;
+			byte[] b = File.ReadAllBytes(path);
+			int at = uw2 ? 0 : 256;
+			for (int i = 0; i < 64 && at + 2 * i + 1 < b.Length; i++)
+			{
+				b[at + 2 * i] = (byte)objDat.MonsterData[i].SpriteID;
+				b[at + 2 * i + 1] = (byte)objDat.MonsterData[i].AuxPalette;
+			}
+			return new KeyValuePair<string, byte[]>(path, b);
+		}
+
+		/// <summary>Writes BuildMonsterSpriteFile's result in place (no backup).</summary>
 		public static void SaveMonsterSpriteInfo(ObjectData objDat, GameKind kind, string gameFolder)
 		{
-			if (kind == UltimateEditor.Games.GameKind.UW2)
-			{
-				// UW2: CRIT\AS.AN, 64 entries of (page, palette), nothing else in the file
-				string asan = GameFiles.Resolve(gameFolder + "/CRIT/AS.AN");
-				if (!File.Exists(asan + ".BKP")) File.Copy(asan, asan + ".BKP");
-				byte[] b = File.ReadAllBytes(asan);
-				for (int i = 0; i < 64 && 2 * i + 1 < b.Length; i++)
-				{
-					b[2 * i] = (byte)objDat.MonsterData[i].SpriteID;
-					b[2 * i + 1] = (byte)objDat.MonsterData[i].AuxPalette;
-				}
-				File.WriteAllBytes(asan, b);
-				return;
-			}
-			string file = GameFiles.Resolve(gameFolder + "/CRIT/ASSOC.ANM");
-			string backupFile = file + ".BKP";
-			if (!File.Exists(backupFile))
-				File.Copy(file, backupFile);
-			FileStream fs = new FileStream(file, FileMode.Open);
-			fs.Position = 256;
-			for (int i = 0; i < 64; i++)
-			{
-				fs.WriteByte((byte)objDat.MonsterData[i].SpriteID);
-				fs.WriteByte((byte)objDat.MonsterData[i].AuxPalette);
-			}
-			fs.Close();
+			var f = BuildMonsterSpriteFile(objDat, kind, gameFolder);
+			if (f.HasValue) File.WriteAllBytes(f.Value.Key, f.Value.Value);
 		}
 	}
 }

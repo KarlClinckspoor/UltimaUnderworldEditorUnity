@@ -25,6 +25,9 @@ namespace UltimateEditor.Games
 		public byte[] ToArray() { return (byte[])file.Clone(); }
 		public void Save(string path) { File.WriteAllBytes(path, file); }
 
+		/// <summary>The whole file as it is in memory (a copy).</summary>
+		public byte[] ToBytes() { return (byte[])file.Clone(); }
+
 		/// <summary>Opens either format: UW2 when the long after the count is 0 and the four tables fit, else UW1.</summary>
 		public static Archive Open(byte[] data, GameKind kind)
 		{

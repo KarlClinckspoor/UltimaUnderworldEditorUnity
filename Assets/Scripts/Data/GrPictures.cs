@@ -83,20 +83,20 @@ public static class GrPictures
 	/// name before that file is written; skip names files the caller writes itself. Returns
 	/// one line per file written or problem found. Problems is not cleared here: the caller
 	/// clears it once per save (DataWriter.SaveTextureData).</summary>
-	public static List<string> Save(TextureData t, Action<string> backup, ICollection<string> skip = null)
+	public static List<string> Save(TextureData t, ICollection<string> skip = null)
 	{
 		var report = new List<string>();
 		// one file failing (unreadable, in use) must not stop the rest of the save
 		foreach (var f in Files(t))
 		{
 			if (skip != null && skip.Contains(f.Key)) continue;
-			try { SaveFile(f.Key, f.Value, f.Key == "OBJECTS.GR", report, backup); }
+			try { SaveFile(f.Key, f.Value, f.Key == "OBJECTS.GR", report); }
 			catch (Exception e) { Warn(report, f.Key + ": not written (" + e.Message + ")"); }
 		}
 		return report;
 	}
 
-	static void SaveFile(string name, TextureContainer c, bool objects, List<string> report, Action<string> backup)
+	static void SaveFile(string name, TextureContainer c, bool objects, List<string> report)
 	{
 		Tracked tr;
 		if (c == null || !files.TryGetValue(name, out tr) || tr.Bytes == null) return;
@@ -138,12 +138,12 @@ public static class GrPictures
 		}
 		if (replace.Count == 0) return;
 		byte[] now = GrFile.Rebuild(tr.Bytes, replace);
-		backup(name);
-		File.WriteAllBytes(tr.Path, now);
+		GameWrite.Write(tr.Path, now);
+		report.Add(name + ": " + replace.Count + " picture(s) written");
+		if (GameWrite.Snapshot) return;   // an autosave copy: the game's own file is unchanged
 		tr.Bytes = now;
 		// only the pictures written count as saved; skipped ones are reported again next time
 		foreach (var i in replace.Keys) tr.Original[i] = c.Textures[i];
-		report.Add(name + ": " + replace.Count + " picture(s) written");
 	}
 
 	public static void Warn(List<string> report, string line)

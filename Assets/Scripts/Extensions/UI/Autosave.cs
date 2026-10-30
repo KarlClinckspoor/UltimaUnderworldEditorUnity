@@ -7,12 +7,14 @@ namespace UltimateEditor.Uw1.UI
 {
 	/// <summary>
 	/// Autosave: every so many minutes the editor runs its own Save (UIManager.AutoSave), the
-	/// same as File > Save without the progress messages. The interval is set in Tools >
-	/// Autosave: 10 minutes by default, 0 turns it off. It is kept in PlayerPrefs, so it holds
-	/// for every game and survives a restart.
+	/// same as File > Save without the progress messages, into a copy of the game. The interval
+	/// is set in Tools > Autosave: 10 minutes by default, 0 turns it off. It is kept in
+	/// PlayerPrefs, so it holds for every game and survives a restart.
 	///
-	/// Like File > Save, it writes the game's files in place (DATA, or the save that is open);
-	/// the originals keep their one-time .BKP copies. When it saves:
+	/// The game's own files are not touched: each autosave copies the game's DATA and CRIT
+	/// folders, executable and open save to "Editor autosaves/date time" beside DATA and saves
+	/// there (Data/GameWrite.cs), keeping as many copies as backup versions. A copy can be opened
+	/// with File > Open game. When it saves:
 	/// - the interval has passed since the last save, File > Save or automatic (opening a game
 	///   counts as one: the files are then as on disk);
 	/// - something was clicked or typed since that save, so an idle editor writes nothing;
@@ -142,7 +144,9 @@ namespace UltimateEditor.Uw1.UI
 		{
 			if (!ok) return;    // Save has shown what failed
 			lastAutosave = DateTime.Now;
-			string text = "Autosaved at " + lastAutosave.Value.ToString("HH:mm");
+			// the game's own files are not saved by an autosave; the next one waits for a new edit
+			editSinceSave = lastEditFrame > ui.SaveStartFrame;
+			string text = "Autosaved a copy at " + lastAutosave.Value.ToString("HH:mm") + " (" + GameWrite.AutosavesFolder + ")";
 			int problems = GrPictures.Problems.Count;
 			if (problems > 0)
 				text += "; " + problems + (problems == 1 ? " picture was" : " pictures were") + " not written (File > Save lists them)";
@@ -198,11 +202,13 @@ namespace UltimateEditor.Uw1.UI
 	{
 		public static void Show()
 		{
-			var w = UiKit.Window("Autosave", 480, 200);
+			var w = UiKit.Window("Autosave and backups", 520, 270);
 			UiKit.Paragraph(w.Toolbar,
-				"Saves your work every so many minutes, as File > Save does: the game's files are written in place, " +
-				"and the originals keep their one-time .BKP copies. It saves only after an edit since the last save, " +
-				"and waits until you stop typing or dragging. 0 minutes turns it off. The setting holds for every game.", 10);
+				"Every so many minutes, your work is saved into a copy of the game in \"" + GameWrite.AutosavesFolder + "\" beside DATA; " +
+				"the game's own files change only when you save. A copy can be opened with File > Open game. It saves only after an edit, " +
+				"and waits until you stop typing or dragging. 0 minutes turns it off.\n" +
+				"Each save keeps the files it replaces in \"" + GameWrite.BackupsFolder + "\" (the last so many versions of each file), " +
+				"besides the original's .BKP. The same number of autosave copies is kept. The settings hold for every game.", 10);
 			var row = UiKit.Row(w.Content, 20);
 			UiKit.Label(row, "Every (minutes)", 11, FontStyle.Bold, null, 110);
 			InputField input = null;
@@ -224,6 +230,22 @@ namespace UltimateEditor.Uw1.UI
 			}, 50);
 			UiKit.Button(row, "Default (" + Autosave.DefaultMinutes + ")", () => set(Autosave.DefaultMinutes), 90, 20);
 			UiKit.Button(row, "Off", () => set(0), 50, 20);
+
+			var vrow = UiKit.Row(w.Content, 20);
+			UiKit.Label(vrow, "Versions to keep", 11, FontStyle.Bold, null, 110);
+			InputField vin = null;
+			vin = UiKit.Input(vrow, GameWrite.Versions.ToString(), s =>
+			{
+				int v;
+				if (int.TryParse(s, out v) && v >= 0 && v <= GameWrite.MaxVersions)
+				{
+					GameWrite.Versions = v;
+					w.Status.text = v == 0 ? "No older versions kept (only the .BKP original); one autosave copy." : "The last " + v + " versions of each file are kept, and " + v + " autosave copies.";
+				}
+				else w.Status.text = "Enter 0 to " + GameWrite.MaxVersions + ".";
+				vin.text = GameWrite.Versions.ToString();
+			}, 50);
+			UiKit.Button(vrow, "Default (" + GameWrite.DefaultVersions + ")", () => { GameWrite.Versions = GameWrite.DefaultVersions; vin.text = GameWrite.Versions.ToString(); }, 90, 20);
 			var state = UiKit.Label(w.Content, Autosave.Describe(), 11, FontStyle.Normal, UiKit.DimTextColor);
 			w.Root.AddComponent<AutosaveStatus>().Label = state;
 		}

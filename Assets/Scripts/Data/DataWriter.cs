@@ -48,9 +48,9 @@ public static class DataWriter {
 
 	public static void SaveLevelData(List<LevelData> levels)
 	{
-		// the LEV.ARK being edited: DATA's or a save's (Data/GameSession.cs)
-		GameSession.BackupOnce(LevArk.Path);
-		// Data/LevArk.cs: patches each level's original block and writes only the blocks that changed.
+		// the LEV.ARK being edited: DATA's or a save's (Data/GameSession.cs). Data/LevArk.cs
+		// patches each level's original block, and the file is written (through GameWrite)
+		// only when a block changed.
 		LevArk.Save(levels);
 	}
 
@@ -129,14 +129,15 @@ public static class DataWriter {
 		{
 			List<int> changed; List<string> warnings;
 			var t64 = Uw2T64.Build(textures.Walls, textures.Floors, out changed, out warnings);
-			foreach (var w in warnings) Debug.LogWarning("T64.TR: " + w);
+			foreach (var w in warnings) GrPictures.Warn(report, "T64.TR: " + w);
 			if (t64 != null && changed.Count > 0)
 			{
-				BackupData("T64.TR");
-				File.WriteAllBytes(Uw2T64.Path, t64);
-				Uw2T64.Saved(t64, textures.Walls, textures.Floors);
+				GameWrite.Write(Uw2T64.Path, t64);
+				if (!GameWrite.Snapshot)
+					Uw2T64.Saved(t64, textures.Walls, textures.Floors, changed);
+				report.Add("T64.TR: " + changed.Count + " picture(s) written");
 			}
-			report.AddRange(GrPictures.Save(textures, BackupData));
+			report.AddRange(GrPictures.Save(textures));
 		}
 		else
 		{
@@ -149,38 +150,40 @@ public static class DataWriter {
 			if (!table)
 				GrPictures.Warn(report, "The palette table (StreamingAssets/mapping.dat) is missing: files whose number of pictures changed were not written");
 			if (Uw1TrFiles.CanPatch(true, textures.Walls))
-				Uw1TrFiles.Save(true, textures.Walls, BackupData, report);
+				Uw1TrFiles.Save(true, textures.Walls, report);
 			else if (table)
 			{
 				SaveTextures("W64.TR", textures.Walls, textures.Palettes[0], 2);
 				SaveTextures("W16.TR", textures.Walls, textures.Palettes[0], 2, 4);
-				Uw1TrFiles.RememberWalls(dataDir, textures.Walls.Textures);
+				if (!GameWrite.Snapshot)
+					Uw1TrFiles.RememberWalls(dataDir, textures.Walls.Textures);
 				report.Add("W64.TR and W16.TR: written whole (the number of textures changed)");
 			}
 			if (Uw1TrFiles.CanPatch(false, textures.Floors))
-				Uw1TrFiles.Save(false, textures.Floors, BackupData, report);
+				Uw1TrFiles.Save(false, textures.Floors, report);
 			else if (table)
 			{
 				SaveTextures("F32.TR", textures.Floors, textures.Palettes[0], 2);
 				SaveTextures("F16.TR", textures.Floors, textures.Palettes[0], 2, 2);
-				Uw1TrFiles.RememberFloors(dataDir, textures.Floors.Textures);
+				if (!GameWrite.Snapshot)
+					Uw1TrFiles.RememberFloors(dataDir, textures.Floors.Textures);
 				report.Add("F32.TR and F16.TR: written whole (the number of textures changed)");
 			}
 			var whole = new List<string>();
 			if (table && !GrPictures.CanPatch("DOORS.GR", textures.Doors))
 			{
 				SaveTextures("DOORS.GR", textures.Doors, textures.Palettes[0], 1);
-				GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), textures.Doors.Textures, textures.Palettes[0]);
+				if (!GameWrite.Snapshot) GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), textures.Doors.Textures, textures.Palettes[0]);
 				whole.Add("DOORS.GR");
 			}
 			if (table && !GrPictures.CanPatch("CHARHEAD.GR", textures.NPCHeads))
 			{
 				SaveTextures("CHARHEAD.GR", textures.NPCHeads, textures.Palettes[0], 1, 0, 56 - textures.NPCHeads.Count);
-				GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), textures.NPCHeads.Textures, textures.Palettes[0]);
+				if (!GameWrite.Snapshot) GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), textures.NPCHeads.Textures, textures.Palettes[0]);
 				whole.Add("CHARHEAD.GR");
 			}
 			foreach (var f in whole) report.Add(f + ": written whole (the number of pictures changed)");
-			report.AddRange(GrPictures.Save(textures, BackupData, whole));
+			report.AddRange(GrPictures.Save(textures, whole));
 		}
 		foreach (var line in report) Debug.Log(line);
 		SaveTerrainData(textures);
@@ -199,12 +202,12 @@ public static class DataWriter {
 			for (int i = 0; i < block.StringCount; i++)
 				if (!StringsPak.CanEncode(block.Strings[i], strings.Nodes))
 					throw new InvalidDataException(string.Format("String {0} of block {1} has a character STRINGS.PAK cannot encode:\n{2}", i, block.BlockNumber, block.Strings[i]));
-		BackupData(file);
-		FileStream fs = new FileStream(path, FileMode.Create);
+		var fs = new MemoryStream();
 		long tableStart = SaveHuffmanNodes(fs, strings.Nodes);
 		SaveStringBlocks(fs, strings.Blocks, strings.Nodes, tableStart);
-		fs.Close();
-		strings.TakeSnapshot();
+		GameWrite.Write(path, fs.ToArray());
+		if (!GameWrite.Snapshot)
+			strings.TakeSnapshot();
 		//StreamWriter sw = new StreamWriter(Application.dataPath + "/strings.txt");
 		//foreach (var block in strings.Blocks)
 		//{
@@ -218,19 +221,15 @@ public static class DataWriter {
 
 	public static void SaveConversationData(ConversationData convs)
 	{
-		string file = "CNV.ARK";
-		BackupData(file);
+		string data = FileExplorer.GetUpperPath(DataReader.FilePath);
 		// The writer produces UW1's layout in memory; CnvArk writes the changed blocks through
 		// the game's own archive format (UW2: compressed) and leaves the others as they were.
 		var image = new MemoryStream();
 		SaveConversations(image, convs);
-		File.WriteAllBytes(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), CnvArk.Merge(image.ToArray()));
-		Stream fs;
-		file = "BABGLOBS.DAT";
-		BackupData(file);
-		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
-		SaveBabglobs(fs, convs);
-		fs.Close();
+		GameWrite.Write(GameFiles.Resolve(data + "/CNV.ARK"), CnvArk.Merge(image.ToArray()));
+		var globs = new MemoryStream();
+		SaveBabglobs(globs, convs);
+		GameWrite.Write(GameFiles.Resolve(data + "/BABGLOBS.DAT"), globs.ToArray());
 	}
 
 	public static void SaveObjectDatas(ObjectData objDat)
@@ -247,13 +246,11 @@ public static class DataWriter {
 		return true;
 	}
 
+	/// <summary>The .BKP original and a dated version of a DATA file, before it is written by
+	/// other means than GameWrite.Write (which does this itself).</summary>
 	public static void BackupData(string toBackup)
 	{
-		string originalFile = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + toBackup);
-		string backupFile = originalFile + ".BKP";
-		if (File.Exists(backupFile))
-			return;
-		File.Copy(originalFile, backupFile);
+		GameWrite.Backup(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + toBackup));
 	}
 
 	#endregion
@@ -561,7 +558,9 @@ public static class DataWriter {
 				index = texCon.Count;
 			
 			fs.Position = texCon.FirstOffset + i * 4;
-			int offset = firstOffset + (scaleFactor > 0 ? texCon.Offset / (scaleFactor * 2) : texCon.Offset) * index;
+			// a small copy is scale * scale times smaller (this divided by scale * 2, which
+			// doubled W16.TR with gaps; F16's scale of 2 hid it)
+			int offset = firstOffset + (scaleFactor > 0 ? texCon.Offset / (scaleFactor * scaleFactor) : texCon.Offset) * index;
 			//Debug.LogFormat("offset : {0}, i : {1}, index : {2}", offset, i, index);
 			byte a = (byte)(offset & 0xFF);
 			byte b = (byte)((offset & 0xFF00) >> 8);
@@ -582,8 +581,7 @@ public static class DataWriter {
 
 	public static void SaveTextures(string file, TextureContainer textures, Color[] palette, int type, int scaleFactor = 0, int fakeTextures = 0, bool reverse = false)
 	{
-		BackupData(file);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
+		var fs = new MemoryStream();
 		//fs.Position = textures.FirstOffset - 2;
 		//fs.WriteByte((byte)textures.Count);
 		fs.WriteByte((byte)type);
@@ -604,7 +602,7 @@ public static class DataWriter {
 				UnityEngine.Object.Destroy(tex);	// the scaled copy is only for this file
 			SaveTexture(fs, file, floorOffsets[i], raw, textures.ATI);
 		}
-		fs.Close();
+		GameWrite.Write(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), fs.ToArray());
 	}
 
 	public static void SaveOtherTextures(TextureContainer other, Color[] palette)
@@ -1072,12 +1070,8 @@ public static class DataWriter {
 			fs.WriteByte(a);
 			fs.WriteByte(b);
 		}
-		byte[] now = fs.ToArray();
 		// written only when a value changed, so an unchanged file keeps its date
-		if (File.Exists(path) && SameBytes(File.ReadAllBytes(path), now))
-			return;
-		BackupData(file);
-		File.WriteAllBytes(path, now);
+		GameWrite.Write(path, fs.ToArray());
 	}
 
 	#endregion
@@ -1230,16 +1224,12 @@ public static class DataWriter {
 
 	public static void SaveCommonData(ObjectData objDat)
 	{
-		string file = "COMOBJ.DAT";
-		BackupData(file);
-		ObjectDataCodec.SaveCommonData(objDat, GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file));
+		GameWrite.Write(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/COMOBJ.DAT"), ObjectDataCodec.BuildCommonData(objDat));
 	}
 
 	public static void SaveObjectData(ObjectData objDat)
 	{
-		string file = "OBJECTS.DAT";
-		BackupData(file);
-		ObjectDataCodec.SaveObjectData(objDat, GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file));
+		GameWrite.Write(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/OBJECTS.DAT"), ObjectDataCodec.BuildObjectData(objDat));
 	}
 	public static void SaveWeaponData(WeaponData wd, Stream fs) { ObjectDataCodec.SaveWeaponData(wd, fs); }
 	public static void SaveProjectileData(ProjectileData pd, Stream fs) { ObjectDataCodec.SaveProjectileData(pd, fs); }
@@ -1248,7 +1238,11 @@ public static class DataWriter {
 	public static void SaveContainerData(ContainerData cd, Stream fs) { ObjectDataCodec.SaveContainerData(cd, fs); }
 	public static void SaveLightData(LightData ld, Stream fs) { ObjectDataCodec.SaveLightData(ld, fs); }
 	public static void SaveMonsterData(MonsterData md, Stream fs) { ObjectDataCodec.SaveMonsterData(md, fs); }
-	public static void SaveMonsterSpriteInfo(ObjectData objDat) { ObjectDataCodec.SaveMonsterSpriteInfo(objDat, LevArk.Game.Kind, FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath))); }
+	public static void SaveMonsterSpriteInfo(ObjectData objDat)
+	{
+		var f = ObjectDataCodec.BuildMonsterSpriteFile(objDat, LevArk.Game.Kind, FileExplorer.GetUpperPath(FileExplorer.GetUpperPath(DataReader.FilePath)));
+		if (f.HasValue) GameWrite.Write(f.Value.Key, f.Value.Value);
+	}
 
 	#endregion
 
