@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The editor's scripts as they were before the formats moved out of Unity ($(LegacyCommit),
-       branch uw2-support), taken from git at build time and built against the same Unity
-       stand-ins. The parity tests run this code and the moved code on the same game files. -->
+       branch uw2-support), built against the same Unity stand-ins. The parity tests run this
+       code and the moved code on the same game files. The sources are kept in legacy-src.zip
+       (git archive of that commit's Assets/Scripts), so a shallow clone builds too. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Editor.Legacy</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LegacySrc>$(MSBuildProjectDirectory)/obj/legacy-src</LegacySrc>
@@ -15,8 +16,7 @@
   <Target Name="ExtractLegacySources" BeforeTargets="CollectPackageReferences;BeforeBuild;CoreCompile" Condition="!Exists('$(LegacySrc)/$(LegacyCommit).done')">
     <RemoveDir Directories="$(LegacySrc)" />
     <MakeDir Directories="$(LegacySrc)" />
-    <Exec Command="git -C &quot;$(RepoRoot)&quot; archive --format=zip -o &quot;$(LegacySrc)/legacy.zip&quot; $(LegacyCommit) Assets/Scripts" />
-    <Unzip SourceFiles="$(LegacySrc)/legacy.zip" DestinationFolder="$(LegacySrc)" />
+    <Unzip SourceFiles="$(MSBuildProjectDirectory)/legacy-src.zip" DestinationFolder="$(LegacySrc)" />
     <Touch Files="$(LegacySrc)/$(LegacyCommit).done" AlwaysCreate="true" />
   </Target>
 

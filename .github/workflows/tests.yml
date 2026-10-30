@@ -1,0 +1,19 @@
+name: Tests
+
+# Builds the editor's code outside Unity (Tests/EditorBuild against the Unity stand-ins), the
+# Formats and Modding projects, and runs the tests. There are no game files here, so the tests
+# that need them are reported as skipped; run those locally with UW_GAMEDATA (Tests/README.md).
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build and test
+        run: dotnet test Tests/Formats.Tests

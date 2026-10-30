@@ -46,7 +46,7 @@ namespace Formats.Tests.Modding
 			return pkg;
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Unchanged_game_gives_no_components(string game)
 		{
 			var p = Make(game);
@@ -55,7 +55,7 @@ namespace Formats.Tests.Modding
 			Assert.Empty(d.Components);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Level_edit_is_one_block_and_needs_a_new_game(string game)
 		{
 			var p = Make(game);
@@ -81,7 +81,7 @@ namespace Formats.Tests.Modding
 			Assert.True(pkg.Files.Values.Sum(b => b.Length) < 40000);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void String_and_picture_edits_are_content(string game)
 		{
 			var p = Make(game);
@@ -116,7 +116,7 @@ namespace Formats.Tests.Modding
 			Assert.Equal(4, sc.Count);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void New_removed_and_resized_files_are_whole_files(string game)
 		{
 			var p = Make(game);
@@ -134,7 +134,7 @@ namespace Formats.Tests.Modding
 			Assert.Contains(pkg.Manifest.Components, c => ((FileComponent)c).Base == Hashing.Absent);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Start_square_is_a_parameter_and_byte_patches_follow_ultimahacks(string game)
 		{
 			var p = Make(game);
@@ -190,7 +190,7 @@ namespace Formats.Tests.Modding
 			Assert.Throws<ModApplyException>(() => ModApply.ApplyExe(pkg2, (byte[])moved.Clone(), forbid));
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Changed_conversation_variable_count_is_flagged(string game)
 		{
 			var p = Make(game);
@@ -208,7 +208,7 @@ namespace Formats.Tests.Modding
 			Assert.Contains(ModClassifier.Warnings(pkg.Manifest), w => w.Contains("conversation"));
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void A_mod_refuses_files_it_was_not_made_from(string game)
 		{
 			var p = Make(game);
@@ -233,7 +233,7 @@ namespace Formats.Tests.Modding
 			Assert.Contains("LEV.ARK", e.Message);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Saved_game_exports_checks_and_installs(string game)
 		{
 			var p = Make(game);

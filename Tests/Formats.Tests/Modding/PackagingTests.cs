@@ -45,7 +45,7 @@ namespace Formats.Tests.Modding
 			Assert.Equal(zip, MiniZip.Write(entries));   // same content, same bytes
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Every_picture_file_rebuilds_byte_for_byte(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -62,7 +62,7 @@ namespace Formats.Tests.Modding
 			Assert.True(n > 30);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void StringsPak_rebuilds_unchanged_and_changes_only_the_blocks_it_must(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -83,7 +83,7 @@ namespace Formats.Tests.Modding
 				if (blk.Number != 4) Assert.Equal(blk.Raw, g.Find(blk.Number).Raw);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Executable_layout_locates_and_finds_relocations(string game)
 		{
 			string dir = GameData.Copy(game);

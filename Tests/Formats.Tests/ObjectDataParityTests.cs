@@ -24,7 +24,7 @@ namespace Formats.Tests
 			current::LevArk.Game = UltimateEditor.Games.GameProfile.For(current::LevArk.DetectFor(C.FilePath));
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Reading_gives_the_same_data(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -36,7 +36,7 @@ namespace Formats.Tests
 			Same.Assert(a, b, game + " ObjectData");
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Writing_gives_the_same_files(string game)
 		{
 			string d1 = GameData.Copy(game), d2 = GameData.Copy(game);

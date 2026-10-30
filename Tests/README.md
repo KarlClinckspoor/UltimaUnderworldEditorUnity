@@ -9,7 +9,7 @@ Unity does not use them (they are outside `Assets`).
 | `Formats` | `Assets/Scripts/Formats` alone, as .NET Standard 2.0 and C# 8: no UnityEngine and no editor code, the rules the `Underworld.Formats` asmdef (`noEngineReferences`) applies in Unity. The mod manager builds this project too. |
 | `Modding` | `Assets/Scripts/Modding` alone (mod packages: diff, apply, executables, saves), on top of `Formats`, under the rules of the `Underworld.Modding` asmdef. The mod manager builds this project too. |
 | `EditorBuild` | All of `Assets/Scripts` except those two folders, built against the stand-ins: a build error here is one in Unity. |
-| `Legacy` | `Assets/Scripts` as it was before the formats moved (commit `b61e96a` on `uw2-support`), taken from git at build time. |
+| `Legacy` | `Assets/Scripts` as it was before the formats moved (commit `b61e96a` on `uw2-support`), kept in `Legacy/legacy-src.zip` so a shallow clone builds it. |
 | `Formats.Tests` | xUnit tests: parity of the old and the moved code (top folder), saving only what changed (`SaveChangedOnlyTests`), the built-in 3D models (`ExeModelTests`), and the mod packages (`Modding/`). |
 
 ## Running
@@ -18,11 +18,17 @@ Unity does not use them (they are outside `Assets`).
 dotnet test Tests/Formats.Tests
 ```
 
+The projects target .NET 8 and run on any newer runtime (`RollForward` is `Major`).
+
 The game files come from `UW_GAMEDATA` (a folder holding `UW` and/or `UW2`, each with `DATA`,
-`CRIT` and the executable), or else from the repository's `gamedata` folder. A game that is
-not there is skipped, and with neither the data tests do nothing (they still build everything).
-Each test copies the game folder to the temporary folder first, puts the editor's `.BKP`
-backups back in place of the files they back up, and works on the copy.
+`CRIT` and the executable), or else from the repository's `gamedata` folder (ignored by git:
+never commit game files). A test that needs a game that is not there is reported as skipped;
+set `UW_REQUIRE_GAMEDATA=1` to make it fail instead. Each test copies the game folder to the
+temporary folder first, puts the editor's `.BKP` backups back in place of the files they back
+up, and works on the copy; the copies are deleted after the run.
+
+The GitHub workflow (`.github/workflows/tests.yml`) builds everything and runs the tests that
+need no game files on every push.
 
 ## What the parity tests check
 

@@ -11,7 +11,7 @@ namespace Formats.Tests
 	/// <summary>Archives, LZSS and level blocks: the old code against the moved code, on every archive of both games.</summary>
 	public class ArchiveParityTests
 	{
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Archives_read_and_rewrite_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -45,7 +45,7 @@ namespace Formats.Tests
 			Assert.True(arks >= 2);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Levels_load_and_build_the_same_blocks(string game)
 		{
 			string dir = GameData.Copy(game);

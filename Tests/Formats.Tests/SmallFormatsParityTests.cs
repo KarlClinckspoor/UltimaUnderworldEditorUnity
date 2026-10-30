@@ -12,7 +12,7 @@ namespace Formats.Tests
 	/// <summary>The smaller files whose code moved unchanged: run both on the shipped files.</summary>
 	public class SmallFormatsParityTests
 	{
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Picture_files_decode_and_rebuild_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -36,7 +36,7 @@ namespace Formats.Tests
 			}
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Exe_start_square_is_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -52,7 +52,7 @@ namespace Formats.Tests
 			else Assert.Equal((0x13, 0x30), (x2, y2));
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Small_data_files_parse_and_write_the_same(string game)
 		{
 			string dir = GameData.Copy(game);

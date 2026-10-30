@@ -43,7 +43,7 @@ namespace Formats.Tests
 			return s;
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Every_face_is_covered_exactly_by_its_triangles(string game)
 		{
 			var models = Load(game);
@@ -67,7 +67,7 @@ namespace Formats.Tests
 			Assert.True(faces > 400, game + ": only " + faces + " faces");
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void The_ankh_has_concave_faces_a_fan_would_overfill(string game)
 		{
 			var models = Load(game);
@@ -87,7 +87,7 @@ namespace Formats.Tests
 			Assert.True(concave >= 2, "ankh concave faces: " + concave);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Compact_quads_use_point_numbers(string game)
 		{
 			var models = Load(game);
@@ -105,7 +105,7 @@ namespace Formats.Tests
 				Assert.True(Area(models.Models[i], models.Models[i].Faces[0].Vertices) > 0.01, "model " + i + " has no area");
 		}
 
-		[Fact]
+		[GameFact("UW")]
 		public void Other_faces_are_the_same_as_before()
 		{
 			string dir = GameData.Copy("UW");

@@ -13,7 +13,7 @@ namespace Formats.Tests
 	/// <summary>STRINGS.PAK: the old DataReader/DataWriter code against the moved StringsPak.</summary>
 	public class StringsParityTests
 	{
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Reading_gives_the_same_tree_blocks_and_strings(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -27,7 +27,7 @@ namespace Formats.Tests
 			Same.Assert(a.BlockDictionary, b.BlockDictionary, "block dictionary");
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Writing_gives_the_same_bytes(string game)
 		{
 			string dir = GameData.Copy(game);

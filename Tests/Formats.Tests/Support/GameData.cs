@@ -9,11 +9,14 @@ namespace Formats.Tests
 {
 	/// <summary>
 	/// The game files the tests run on. Set UW_GAMEDATA to a folder holding UW (UW.EXE, DATA, CRIT...)
-	/// and/or UW2; without it the repository's own gamedata folder is used. A game that is not
-	/// there is skipped, so the tests also run (and pass trivially) without any game files.
+	/// and/or UW2; without it the repository's own gamedata folder is used. A test that needs a game
+	/// that is not there is reported as skipped (<see cref="GameFactAttribute"/>,
+	/// <see cref="GameTheoryAttribute"/>), unless UW_REQUIRE_GAMEDATA=1, which makes it fail instead.
 	///
 	/// Each test works on a fresh copy, with the editor's .BKP backups put back in place of the
-	/// files they back up, so it sees the shipped files and never changes the originals.
+	/// files they back up, so it sees the shipped files and never changes the originals. The
+	/// copies are deleted when the test run ends (and any left by a run that was killed, at the
+	/// start of the next one).
 	/// </summary>
 	public static class GameData
 	{
@@ -31,6 +34,51 @@ namespace Formats.Tests
 
 		public static bool Has(string game) { return Directory.Exists(Path.Combine(Root, game, "DATA")); }
 
+		/// <summary>True when UW_REQUIRE_GAMEDATA=1: missing game files fail the tests instead of skipping them.</summary>
+		public static bool Required { get { return Environment.GetEnvironmentVariable("UW_REQUIRE_GAMEDATA") == "1"; } }
+
+		/// <summary>Why a test for this game (null: either game) is skipped, or null when it can run.</summary>
+		public static string SkipReason(string game)
+		{
+			if (Required) return null;
+			bool ok = game == null ? Has("UW") || Has("UW2") : Has(game);
+			if (ok) return null;
+			return "no " + (game == null ? "UW or UW2" : game) + " game files in " + Root + " (set UW_GAMEDATA)";
+		}
+
+		static readonly string TempRoot = Path.Combine(Path.GetTempPath(), "uwtests");
+		static readonly string RunRoot = Path.Combine(TempRoot, System.Diagnostics.Process.GetCurrentProcess().Id + "-" + Guid.NewGuid().ToString("N").Substring(0, 6));
+		static bool cleanupHooked;
+
+		/// <summary>Copies go in a folder per test process. The folders of processes that have
+		/// ended (killed, or exited before ProcessExit could delete them) are deleted here.</summary>
+		static void HookCleanup()
+		{
+			if (cleanupHooked) return;
+			cleanupHooked = true;
+			if (Directory.Exists(TempRoot))
+				foreach (var d in Directory.GetDirectories(TempRoot))
+				{
+					string name = Path.GetFileName(d);
+					int dash = name.IndexOf('-');
+					int pid;
+					if (dash > 0 && int.TryParse(name.Substring(0, dash), out pid) && Running(pid)) continue;
+					TryDelete(d);
+				}
+			AppDomain.CurrentDomain.ProcessExit += (s, e) => TryDelete(RunRoot);
+		}
+
+		static bool Running(int pid)
+		{
+			try { return !System.Diagnostics.Process.GetProcessById(pid).HasExited; }
+			catch (Exception) { return false; }
+		}
+
+		static void TryDelete(string dir)
+		{
+			try { Directory.Delete(dir, true); } catch (Exception) { }
+		}
+
 		public static IEnumerable<object[]> Available()
 		{
 			foreach (var g in Games) if (Has(g)) yield return new object[] { g };
@@ -41,8 +89,13 @@ namespace Formats.Tests
 		/// <summary>A fresh, writable copy of the game folder with the shipped files (null: no such game).</summary>
 		public static string Copy(string game)
 		{
-			if (!Has(game)) return null;
-			string dst = Path.Combine(Path.GetTempPath(), "uwtests", game + "-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+			if (!Has(game))
+			{
+				if (Required && game != "none") throw new DirectoryNotFoundException("UW_REQUIRE_GAMEDATA is set but " + Path.Combine(Root, game, "DATA") + " is missing");
+				return null;
+			}
+			HookCleanup();
+			string dst = Path.Combine(RunRoot, game + "-" + Guid.NewGuid().ToString("N").Substring(0, 8));
 			CopyDir(Path.Combine(Root, game), dst);
 			foreach (var bkp in Directory.GetFiles(dst, "*.BKP", SearchOption.AllDirectories))
 			{
@@ -77,6 +130,27 @@ namespace Formats.Tests
 				if (n == "UW.EXE" || n == "UW2.EXE") return f;
 			}
 			return null;
+		}
+	}
+
+	/// <summary>A test that needs game files: skipped when there are none (see <see cref="GameData"/>).
+	/// With a game name, it needs that game.</summary>
+	public sealed class GameFactAttribute : FactAttribute
+	{
+		public GameFactAttribute(string game = null)
+		{
+			string why = GameData.SkipReason(game);
+			if (why != null) Skip = why;
+		}
+	}
+
+	/// <summary>A theory over <see cref="GameData.Available"/>: skipped when neither game is there.</summary>
+	public sealed class GameTheoryAttribute : TheoryAttribute
+	{
+		public GameTheoryAttribute()
+		{
+			string why = GameData.SkipReason(null);
+			if (why != null) Skip = why;
 		}
 	}
 

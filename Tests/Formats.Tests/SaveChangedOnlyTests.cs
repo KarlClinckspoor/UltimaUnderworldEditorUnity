@@ -70,7 +70,7 @@ namespace Formats.Tests
 			return t;
 		}
 
-		[Fact]
+		[GameFact("UW")]
 		public void Palette_lookup_in_memory_gives_the_old_indexes()
 		{
 			string dir = Setup("UW");
@@ -97,7 +97,7 @@ namespace Formats.Tests
 			Assert.True(n > 400);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Saving_unchanged_pictures_writes_no_file(string game)
 		{
 			string dir = Setup(game);
@@ -116,7 +116,7 @@ namespace Formats.Tests
 			Assert.Empty(current::GrPictures.Problems);
 		}
 
-		[Fact]
+		[GameFact("UW")]
 		public void A_replaced_uw1_wall_and_floor_are_patched_in_place()
 		{
 			string dir = Setup("UW");
@@ -165,7 +165,7 @@ namespace Formats.Tests
 				if (once.ContainsKey(name)) Same.Bytes(once[name], twice[name], "second save, " + name);
 		}
 
-		[Fact]
+		[GameFact("UW")]
 		public void A_replaced_uw1_door_rebuilds_only_that_picture()
 		{
 			string dir = Setup("UW");
@@ -191,7 +191,7 @@ namespace Formats.Tests
 			Same.Bytes(before["W64.TR"], after["W64.TR"], "W64.TR");
 		}
 
-		[Fact]
+		[GameFact("UW")]
 		public void An_added_uw1_wall_rewrites_the_pair_whole_and_then_patches_again()
 		{
 			string dir = Setup("UW");
@@ -216,7 +216,7 @@ namespace Formats.Tests
 			Assert.Equal(once["W64.TR"].Length, File.ReadAllBytes(GameData.InData(dir, "W64.TR")).Length);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Unchanged_strings_are_not_written(string game)
 		{
 			string dir = Setup(game);
@@ -229,7 +229,7 @@ namespace Formats.Tests
 			Assert.False(s.ChangedSinceSnapshot());
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void A_changed_string_is_written_as_the_old_writer_writes_it(string game)
 		{
 			// the old writer, on its own copy
@@ -256,7 +256,7 @@ namespace Formats.Tests
 			Assert.True(s.ChangedSinceSnapshot());
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Every_string_encodes_as_before_and_can_be_checked_without_encoding(string game)
 		{
 			string dir = Setup(game);

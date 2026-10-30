@@ -3,7 +3,7 @@
        folders, which are their own assemblies), built against the Unity stand-ins. A build
        error here is a build error in Unity. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Editor.Current</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

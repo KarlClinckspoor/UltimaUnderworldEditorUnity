@@ -25,7 +25,7 @@ namespace Formats.Tests
 				.Select(Path.GetFileName);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Offsets_and_raw_pictures_are_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -50,7 +50,7 @@ namespace Formats.Tests
 			Assert.True(files > 10);
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Four_bit_pictures_decode_and_encode_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -86,7 +86,7 @@ namespace Formats.Tests
 			}
 		}
 
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Palettes_are_the_same(string game)
 		{
 			string dir = GameData.Copy(game);
@@ -103,7 +103,7 @@ namespace Formats.Tests
 		}
 
 		/// <summary>The editor's whole picture load (every texture list, the palettes, TERRAIN.DAT), through Texture2D.</summary>
-		[Theory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void LoadTextures_gives_the_same_textures(string game)
 		{
 			string dir = GameData.Copy(game);
