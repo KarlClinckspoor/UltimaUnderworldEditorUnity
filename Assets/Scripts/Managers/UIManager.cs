@@ -1628,24 +1628,8 @@ public class UIManager : MonoBehaviour {
 			return;
 		if (listMenu)
 			Destroy(listMenu);
-
-		listMenu = Instantiate(ListMenuPrefab, transform);
-		ListMenu list = listMenu.GetComponent<ListMenu>();
-		list.Title.text = "Key editor";
-		list.Information.text = "UW1 has a limit of 63 keys";
-		StringBlock block = MapCreator.StringData.GetKeyBlock();
-		for (int i = 1; i < 64; i++)
-		{
-			GameObject stringItem = Instantiate(StringItemPrefab, list.Content.transform);
-			stringItem.name = "StringItem_" + i;
-			Text text = stringItem.GetComponentInChildren<Text>();
-			text.text = "Key " + i;
-			InputField input = stringItem.GetComponentInChildren<InputField>();
-			int index = i + 100;
-			input.text = block.Strings[index];
-			int new_i = index;
-			input.onEndEdit.AddListener((x) => block.Strings[new_i] = x);
-		}
+		// Key names with buttons that find each key's keys and locks (Extensions/UI/KeyEditorWindow.cs)
+		listMenu = UltimateEditor.Uw1.UI.KeyEditorWindow.Show(this);
 	}
 	public void CreateMantraEditor()
 	{

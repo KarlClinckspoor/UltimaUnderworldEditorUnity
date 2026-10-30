@@ -561,8 +561,7 @@ public class PropertiesPanel : MonoBehaviour {
 				string what = UltimateEditor.Games.Uw2Traps.Describe(so.ObjectID);
 				if (what != null)
 				{
-					var t = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "UW2: " + what + "\nRaw fields: Tools > Object fields.", 11, Color.white);
-					t.horizontalOverflow = HorizontalWrapMode.Wrap;
+					panelParagraph("UW2: " + what + "\nRaw fields: Tools > Object fields.", 11, Color.white);
 				}
 			}
 			if (uw2 && so.IsTrap() && !UltimateEditor.Games.Uw2Traps.SharedWithUw1(so.ObjectID))
@@ -573,8 +572,7 @@ public class PropertiesPanel : MonoBehaviour {
 				{
 					if (decoded) decoded.text = "Now: " + (Uw2TrapNow(so) ?? "(no decoding for this trap)");
 				};
-				decoded = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "", 11, new Color(1f, 0.92f, 0.6f));
-				decoded.horizontalOverflow = HorizontalWrapMode.Wrap;
+				decoded = panelParagraph("", 11, new Color(1f, 0.92f, 0.6f));
 				refresh();
 				createSliderProperty("Quality", BasicPanel.transform, so.Quality, 0, 63.0f, (f) => { changeObjectQuality(so, (int)f); refresh(); });
 				createSliderProperty("Owner", BasicPanel.transform, so.Owner, 0, 63.0f, (f) => { changeObjectOwner(so, (int)f); refresh(); });
@@ -1017,8 +1015,7 @@ public class PropertiesPanel : MonoBehaviour {
 		// rings lands twice on the torso.
 		var game = LevArk.Game.Kind;
 		bool shieldOrRing = so.IsShield() || so.IsBauble();
-		var note = UltimateEditor.Uw1.UI.UiKit.Paragraph(BasicPanel.transform, "", 10, new Color(1f, 0.85f, 0.55f));
-		note.horizontalOverflow = HorizontalWrapMode.Wrap;
+		var note = panelParagraph("", 10, new Color(1f, 0.85f, 0.55f));
 		Action refreshNote = () =>
 		{
 			string real = so.IsEnchanted ? UltimateEditor.Games.EnchantmentEffects.Describe(game, so.GetEnchantment(), shieldOrRing) : null;
@@ -1396,6 +1393,30 @@ public class PropertiesPanel : MonoBehaviour {
 		dropdown.value = 0;
 		dropdown.RefreshShownValue();
 	}
+	/// <summary>A note across the panel, its height following its text. The panel's layout
+	/// group sizes neither width nor height of its children, so a bare paragraph kept the
+	/// default 100-pixel width and wrapped into a narrow column: this one is as wide as the
+	/// panel, with a small margin, inside a box that grows with the text.</summary>
+	private Text panelParagraph(string text, int size, Color color)
+	{
+		float width = ((RectTransform)BasicPanel.transform).rect.width;
+		if (width < 60f)
+			width = 250f;
+		var box = UltimateEditor.Uw1.UI.UiKit.Rect("Note", BasicPanel.transform);
+		box.sizeDelta = new Vector2(width, 20f);
+		var layout = box.gameObject.AddComponent<VerticalLayoutGroup>();
+		layout.padding = new RectOffset(5, 5, 2, 2);
+		layout.childControlWidth = true;
+		layout.childControlHeight = true;
+		layout.childForceExpandWidth = true;
+		layout.childForceExpandHeight = false;
+		box.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+		var t = UltimateEditor.Uw1.UI.UiKit.Label(box, text, size, FontStyle.Normal, color, -1, -1);
+		t.alignment = TextAnchor.UpperLeft;
+		t.horizontalOverflow = HorizontalWrapMode.Wrap;
+		return t;
+	}
+
 	private GameObject createSliderProperty(string text, Transform parent, float val, float min, float max, System.Action<float> sliderAction, System.Func<int, int> valAct = null)
 	{
 		GameObject sliderGO = Instantiate(SliderPropertyPrefab, parent);
