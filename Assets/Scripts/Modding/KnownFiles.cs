@@ -623,6 +623,7 @@ namespace UltimateEditor.Modding
 			var known = For(g);
 			foreach (var kv in files)
 			{
+				if (kv.Value == Hashing.Absent) continue;   // a file the mod adds: says nothing about the base
 				string h;
 				if (!known.TryGetValue(kv.Key, out h) || h != kv.Value) return "other";
 			}

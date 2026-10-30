@@ -117,21 +117,43 @@ namespace Formats.Tests.Modding
 		}
 
 		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
-		public void New_removed_and_resized_files_are_whole_files(string game)
+		public void Resized_files_are_whole_files_unknown_ones_are_left_out_and_removed_ones_refused(string game)
 		{
 			var p = Make(game);
 			if (p == null) return;
+			// not a file the game reads: left out, with a note
 			File.WriteAllBytes(Path.Combine(p.Modded, "CUTS", "NEWCUT.N99"), Encoding.ASCII.GetBytes("new cutscene"));
+			File.WriteAllBytes(Path.Combine(p.Modded, "DATA", "uw1-zones.json"), Encoding.ASCII.GetBytes("{}"));
+			// a game file whose length changed: a whole file
 			string snd = Directory.GetFiles(Path.Combine(p.Modded, "SOUND")).First();
 			File.WriteAllBytes(snd, File.ReadAllBytes(snd).Concat(new byte[] { 1, 2, 3 }).ToArray());
-			string gone = Directory.GetFiles(Path.Combine(p.Modded, "CUTS")).First(f => !f.EndsWith("N99"));
-			File.Delete(gone);
 			ModDiffResult d;
 			var pkg = Export(p, out d);
-			Assert.Equal(3, pkg.Manifest.Components.Count);
-			Assert.All(pkg.Manifest.Components, c => Assert.IsType<FileComponent>(c));
-			Assert.Contains(pkg.Manifest.Components, c => ((FileComponent)c).Delete);
-			Assert.Contains(pkg.Manifest.Components, c => ((FileComponent)c).Base == Hashing.Absent);
+			Assert.Single(pkg.Manifest.Components);
+			Assert.IsType<FileComponent>(pkg.Manifest.Components[0]);
+			Assert.Contains(d.Notes, n => n.Contains("NEWCUT.N99") && n.Contains("UW1-ZONES.JSON"));
+
+			// a game file missing from the edited game: refused, not a delete for players' games
+			string gone = Directory.GetFiles(Path.Combine(p.Modded, "CUTS")).First(f => !f.EndsWith("N99"));
+			File.Delete(gone);
+			d = ModDiff.Compare(new GameFolder(p.Original), new GameFolder(p.Modded), p.Kind);
+			Assert.Contains(d.Problems, x => x.Contains(Path.GetFileName(gone).ToUpperInvariant()));
+		}
+
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		public void An_incomplete_install_is_a_problem_not_a_mod(string game)
+		{
+			var p = Make(game);
+			if (p == null) return;
+			Directory.Delete(Path.Combine(p.Original, "SOUND"), true);
+			var d = ModDiff.Compare(new GameFolder(p.Original), new GameFolder(p.Modded), p.Kind);
+			Assert.Contains(d.Problems, x => x.Contains("SOUND"));
+			Assert.DoesNotContain(d.Components, c => c.File != null && c.File.StartsWith("SOUND/"));
+			string exe = ExeIdentity.ExeName(p.Kind);
+			File.Delete(p.ModPath(exe));
+			d = ModDiff.Compare(new GameFolder(p.Original), new GameFolder(p.Modded), p.Kind);
+			Assert.Contains(d.Problems, x => x.Contains(exe));
+			Assert.DoesNotContain(d.Components, c => c.File == exe);
 		}
 
 		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
@@ -267,8 +289,46 @@ namespace Formats.Tests.Modding
 			Assert.Contains(probs, s => s.Contains("CNV.ARK"));
 			Assert.Contains(probs, s => s.Contains("conversation " + slot));
 			string slotDir = Path.Combine(p.Original, "SAVE3");
-			SaveMods.Install(c, pkg, slotDir);
+			// an old save in the slot, with a file the package doesn't have
+			Directory.CreateDirectory(slotDir);
+			File.WriteAllBytes(Path.Combine(slotDir, "PLAYER.DAT"), new byte[] { 9 });
+			File.WriteAllBytes(Path.Combine(slotDir, "EXTRA.DAT"), new byte[] { 7 });
+			string kept = SaveMods.Install(c, pkg, slotDir);
 			foreach (var f in SaveMods.FilesFor(kind)) Assert.Equal(File.ReadAllBytes(Path.Combine(save, f)), File.ReadAllBytes(Path.Combine(slotDir, f)));
+			// the slot holds the package's save only (the game restores every file in it), and
+			// the old one is kept beside it
+			Assert.False(File.Exists(Path.Combine(slotDir, "EXTRA.DAT")));
+			Assert.NotNull(kept);
+			Assert.Equal(new byte[] { 9 }, File.ReadAllBytes(Path.Combine(kept, "PLAYER.DAT")));
+			Assert.False(Directory.Exists(slotDir + ".uwmod-new"));
+		}
+
+		[Fact]
+		public void A_bad_package_is_refused_as_invalid_data()
+		{
+			var m = new ModManifest { Id = "x", Name = "x", Game = "uw1", Authors = { "x" } };
+			var good = new ModPackage { Manifest = m }.ToBytes();
+			var cases = new List<byte[]>();
+			// mod.json nested deeper than the stack allows
+			string deep = new string('[', 100000) + new string(']', 100000);
+			cases.Add(MiniZip.Write(new[] { new MiniZip.Entry("mod.json", System.Text.Encoding.UTF8.GetBytes(deep)) }));
+			// truncated JSON, a short \u escape
+			cases.Add(MiniZip.Write(new[] { new MiniZip.Entry("mod.json", System.Text.Encoding.UTF8.GetBytes("{\"id\": \"x")) }));
+			cases.Add(MiniZip.Write(new[] { new MiniZip.Entry("mod.json", System.Text.Encoding.UTF8.GetBytes("{\"id\": \"\\u12\"}")) }));
+			// a zip whose sizes and offsets point outside it
+			var bad = (byte[])good.Clone();
+			int end = bad.Length - 22;
+			bad[end + 16] = 0xFF; bad[end + 17] = 0xFF; bad[end + 18] = 0xFF; bad[end + 19] = 0x7F;
+			cases.Add(bad);
+			var huge = (byte[])good.Clone();
+			int cd = huge[end + 16] | huge[end + 17] << 8 | huge[end + 18] << 16;
+			huge[cd + 24] = 0xF0; huge[cd + 25] = 0xFF; huge[cd + 26] = 0xFF; huge[cd + 27] = 0x7F;
+			cases.Add(huge);
+			cases.Add(new byte[] { 1, 2, 3 });
+			// an entry with a path that climbs out
+			cases.Add(MiniZip.Write(new[] { new MiniZip.Entry("mod.json", System.Text.Encoding.UTF8.GetBytes(m.ToJson())), new MiniZip.Entry("payload/a/..", new byte[1]) }));
+			foreach (var zip in cases)
+				Assert.Throws<InvalidDataException>(() => ModPackage.FromBytes(zip));
 		}
 
 		[Fact]

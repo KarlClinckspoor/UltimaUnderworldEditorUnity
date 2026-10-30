@@ -131,6 +131,10 @@ namespace UltimateEditor.Modding
 			/// <summary>Number of strings in the original block, and in the mod's.</summary>
 			public int BaseCount, Count;
 			public List<StringSet> Set = new List<StringSet>();
+			/// <summary>Hashes of the original strings the mod drops (those from Count on, or all of
+			/// a removed block), so applying checks them like the ones it changes. Empty in
+			/// packages made before it was added.</summary>
+			public List<string> RemovedBase = new List<string>();
 		}
 
 		public sealed class StringSet
@@ -166,6 +170,12 @@ namespace UltimateEditor.Modding
 					s.Add(d);
 				}
 				e["set"] = s;
+				if (b.RemovedBase.Count > 0)
+				{
+					var rb = new List<object>();
+					foreach (var h in b.RemovedBase) rb.Add(h);
+					e["removed_base"] = rb;
+				}
 				l.Add(e);
 			}
 			var o = new Dictionary<string, object>();
@@ -194,6 +204,8 @@ namespace UltimateEditor.Modding
 					var d = MiniJson.Obj(y);
 					b.Set.Add(new StringSet { Index = ModManifest.Int(MiniJson.Get(d, "index")), Base = MiniJson.Str(d, "base", Hashing.Absent), Text = MiniJson.Str(d, "text") });
 				}
+				foreach (var h in MiniJson.Arr(MiniJson.Get(e, "removed_base")) ?? new List<object>())
+					b.RemovedBase.Add(h as string);
 				r.Blocks.Add(b);
 			}
 			return r;
@@ -260,6 +272,9 @@ namespace UltimateEditor.Modding
 		/// <summary>Number of pictures in the original and in the mod's file.</summary>
 		public int BaseCount, Count;
 		public List<Picture> Pictures = new List<Picture>();
+		/// <summary>Hashes of the original pictures the mod drops (from Count on), checked when
+		/// applying. Empty in packages made before it was added.</summary>
+		public List<string> RemovedBase = new List<string>();
 
 		public override string Summary { get { return string.Format("{0}: {1} picture{2}", File, Pictures.Count, Pictures.Count == 1 ? "" : "s"); } }
 
@@ -277,6 +292,12 @@ namespace UltimateEditor.Modding
 				l.Add(e);
 			}
 			o["pictures"] = l;
+			if (RemovedBase.Count > 0)
+			{
+				var rb = new List<object>();
+				foreach (var h in RemovedBase) rb.Add(h);
+				o["removed_base"] = rb;
+			}
 		}
 
 		protected override void ReadFields(Dictionary<string, object> o)
@@ -288,6 +309,7 @@ namespace UltimateEditor.Modding
 				var e = O(x);
 				Pictures.Add(new Picture { Index = I(e, "index"), Base = S(e, "base", Hashing.Absent), Data = S(e, "data") });
 			}
+			foreach (var h in A(MiniJson.Get(o, "removed_base"))) RemovedBase.Add(h as string);
 		}
 	}
 

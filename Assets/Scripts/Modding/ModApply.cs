@@ -33,6 +33,8 @@ namespace UltimateEditor.Modding
 				byte[] cur = outp.ContainsKey(rel) ? outp[rel] : original(rel);
 				try { outp[rel] = ApplyOne(c, cur, pkg, game); }
 				catch (ModApplyException e) { errors.Add(rel + ": " + e.Message); }
+				// the package is untrusted: whatever else goes wrong in it is refused the same way
+				catch (Exception e) { errors.Add(rel + ": the mod's change can't be applied (" + e.GetType().Name + ": " + e.Message + ")"); }
 			}
 			if (errors.Count > 0) throw new ModApplyException(string.Join("\n", errors));
 			return outp;
@@ -113,7 +115,7 @@ namespace UltimateEditor.Modding
 				var blk = file.Find(bc.Block);
 				if (bc.Removed)
 				{
-					if (blk == null || blk.Strings.Count != bc.BaseCount) { bad.Add("block " + bc.Block); continue; }
+					if (blk == null || blk.Strings.Count != bc.BaseCount || !SameTail(blk.Strings, 0, bc.RemovedBase)) { bad.Add("block " + bc.Block); continue; }
 					file.Blocks.Remove(blk);
 					continue;
 				}
@@ -124,11 +126,14 @@ namespace UltimateEditor.Modding
 					file.Blocks.Add(blk);
 				}
 				else if (blk == null || blk.Strings.Count != bc.BaseCount) { bad.Add("block " + bc.Block); continue; }
+				if (bc.Count < 0 || bc.Count > 0x10000) { bad.Add("block " + bc.Block + " (count " + bc.Count + ")"); continue; }
 				foreach (var st in bc.Set)
 				{
+					if (st.Index < 0 || st.Index >= bc.Count) { bad.Add("string " + st.Index + " of block " + bc.Block + " (out of range)"); continue; }
 					string old = st.Index < blk.Strings.Count ? blk.Strings[st.Index] : null;
 					if (Hashing.Sha256(old) != st.Base) { bad.Add("string " + st.Index + " of block " + bc.Block); continue; }
 				}
+				if (blk.Strings.Count > bc.Count && !SameTail(blk.Strings, bc.Count, bc.RemovedBase)) bad.Add("strings " + bc.Count + " on of block " + bc.Block);
 				while (blk.Strings.Count < bc.Count) blk.Strings.Add("");
 				if (blk.Strings.Count > bc.Count) blk.Strings.RemoveRange(bc.Count, blk.Strings.Count - bc.Count);
 				foreach (var st in bc.Set) if (st.Index < blk.Strings.Count) blk.Strings[st.Index] = st.Text;
@@ -144,11 +149,16 @@ namespace UltimateEditor.Modding
 			if (file == null) throw new ModApplyException("not a picture file this program can rebuild");
 			if (file.Records.Count != c.BaseCount) throw new ModApplyException(string.Format("the file has {0} pictures, the mod was made from one with {1}", file.Records.Count, c.BaseCount));
 			var bad = new List<string>();
+			if (c.Count < 0 || c.Count > 0x10000) throw new ModApplyException("a picture count of " + c.Count);
 			foreach (var p in c.Pictures)
 			{
+				if (p.Index < 0 || p.Index >= c.Count) { bad.Add("picture " + p.Index + " (out of range)"); continue; }
 				byte[] old = p.Index < file.Records.Count ? file.Records[p.Index] : null;
 				if (Hashing.Sha256(old) != p.Base) bad.Add("picture " + p.Index);
 			}
+			if (file.Records.Count > c.Count && c.RemovedBase.Count > 0)
+				for (int i = c.Count; i < file.Records.Count; i++)
+					if (i - c.Count >= c.RemovedBase.Count || Hashing.Sha256(file.Records[i]) != c.RemovedBase[i - c.Count]) { bad.Add("picture " + i); break; }
 			if (bad.Count > 0) throw new ModApplyException(Limit(bad) + " not the ones the mod was made from");
 			while (file.Records.Count < c.Count) file.Records.Add(new byte[0]);
 			if (file.Records.Count > c.Count) file.Records.RemoveRange(c.Count, file.Records.Count - c.Count);
@@ -163,8 +173,10 @@ namespace UltimateEditor.Modding
 			var bad = new List<string>();
 			foreach (var g in c.Ranges)
 			{
-				byte[] old = Hashing.FromHex(g.Base), neu = Hashing.FromHex(g.Data);
-				if (old.Length != neu.Length || g.Offset < 0 || g.Offset + old.Length > r.Length) { bad.Add("range at " + g.Offset); continue; }
+				byte[] old, neu;
+				try { old = Hashing.FromHex(g.Base); neu = Hashing.FromHex(g.Data); }
+				catch (Exception) { bad.Add("range at " + g.Offset + " (bad hex)"); continue; }
+				if (old.Length != neu.Length || g.Offset < 0 || (long)g.Offset + old.Length > r.Length) { bad.Add("range at " + g.Offset); continue; }
 				for (int i = 0; i < old.Length; i++) if (r[g.Offset + i] != old[i]) { bad.Add("bytes at 0x" + g.Offset.ToString("X")); break; }
 			}
 			if (bad.Count > 0) throw new ModApplyException(Limit(bad) + " not the ones the mod was made from");
@@ -174,6 +186,17 @@ namespace UltimateEditor.Modding
 				Buffer.BlockCopy(neu, 0, r, g.Offset, neu.Length);
 			}
 			return r;
+		}
+
+		/// <summary>True when the strings from 'from' on are those the hashes name; with no hashes
+		/// (a package made before they were recorded) only the count was checked.</summary>
+		static bool SameTail(List<string> strings, int from, List<string> hashes)
+		{
+			if (hashes == null || hashes.Count == 0) return true;
+			if (strings.Count - from != hashes.Count) return false;
+			for (int i = 0; i < hashes.Count; i++)
+				if (Hashing.Sha256(strings[from + i]) != hashes[i]) return false;
+			return true;
 		}
 
 		static string Limit(List<string> l)

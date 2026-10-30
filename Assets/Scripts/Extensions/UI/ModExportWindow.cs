@@ -45,7 +45,10 @@ namespace UltimateEditor.Uw1.UI
 			string data = ExtensionsMenu.DataFolder;
 			if (data == null) throw new InvalidOperationException("Open the game first (File > Open game...).");
 			string root = Path.GetDirectoryName(Path.GetFullPath(data).TrimEnd('/', '\\'));
-			var s = last != null && last.GameRoot == root ? last : new State { GameRoot = root, Game = LevArk.Game.Kind };
+			// the game is told from the folder itself: before a game is loaded, LevArk.Game is only
+			// its default (UW1)
+			var game = GameProfile.Detect(data);
+			var s = last != null && last.GameRoot == root && last.Game == game ? last : new State { GameRoot = root, Game = game };
 			last = s;
 			if (string.IsNullOrEmpty(s.Output)) s.Output = Path.Combine(Path.GetDirectoryName(root) ?? root, "UW Mods");
 			var w = UiKit.Window("Export as mod (.uwmod)", 820, 640);

@@ -9,13 +9,20 @@ namespace UltimateEditor.Uw1.Zoning
 	/// A small JSON reader and writer (Unity 2020's JsonUtility cannot do dictionaries or
 	/// nested lists). Objects read as Dictionary&lt;string, object&gt;, arrays as List&lt;object&gt;,
 	/// numbers as double, plus string, bool and null.
+	///
+	/// It reads untrusted text (mod packages), so every error, truncation included, is a
+	/// FormatException, and nesting deeper than <see cref="MaxDepth"/> is refused (a deep enough
+	/// nesting would overflow the stack, which can't be caught).
 	/// </summary>
 	public static class MiniJson
 	{
+		public const int MaxDepth = 64;
+
 		public static object Parse(string text)
 		{
+			if (text == null) throw new FormatException("JSON: no text");
 			int i = 0;
-			var v = ParseValue(text, ref i);
+			var v = ParseValue(text, ref i, 0);
 			SkipWs(text, ref i);
 			if (i != text.Length) throw new FormatException("JSON: trailing characters at " + i);
 			return v;
@@ -26,28 +33,35 @@ namespace UltimateEditor.Uw1.Zoning
 			while (i < s.Length && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r')) i++;
 		}
 
-		static object ParseValue(string s, ref int i)
+		/// <summary>The character at i, or a FormatException at the end of the text.</summary>
+		static char At(string s, int i)
 		{
-			SkipWs(s, ref i);
 			if (i >= s.Length) throw new FormatException("JSON: unexpected end");
-			char c = s[i];
+			return s[i];
+		}
+
+		static object ParseValue(string s, ref int i, int depth)
+		{
+			if (depth > MaxDepth) throw new FormatException("JSON: nested more than " + MaxDepth + " deep");
+			SkipWs(s, ref i);
+			char c = At(s, i);
 			if (c == '{')
 			{
 				i++;
 				var d = new Dictionary<string, object>();
 				SkipWs(s, ref i);
-				if (s[i] == '}') { i++; return d; }
+				if (At(s, i) == '}') { i++; return d; }
 				while (true)
 				{
 					SkipWs(s, ref i);
 					string key = ParseString(s, ref i);
 					SkipWs(s, ref i);
-					if (s[i] != ':') throw new FormatException("JSON: ':' expected at " + i);
+					if (At(s, i) != ':') throw new FormatException("JSON: ':' expected at " + i);
 					i++;
-					d[key] = ParseValue(s, ref i);
+					d[key] = ParseValue(s, ref i, depth + 1);
 					SkipWs(s, ref i);
-					if (s[i] == ',') { i++; continue; }
-					if (s[i] == '}') { i++; return d; }
+					if (At(s, i) == ',') { i++; continue; }
+					if (At(s, i) == '}') { i++; return d; }
 					throw new FormatException("JSON: ',' or '}' expected at " + i);
 				}
 			}
@@ -56,13 +70,13 @@ namespace UltimateEditor.Uw1.Zoning
 				i++;
 				var l = new List<object>();
 				SkipWs(s, ref i);
-				if (s[i] == ']') { i++; return l; }
+				if (At(s, i) == ']') { i++; return l; }
 				while (true)
 				{
-					l.Add(ParseValue(s, ref i));
+					l.Add(ParseValue(s, ref i, depth + 1));
 					SkipWs(s, ref i);
-					if (s[i] == ',') { i++; continue; }
-					if (s[i] == ']') { i++; return l; }
+					if (At(s, i) == ',') { i++; continue; }
+					if (At(s, i) == ']') { i++; return l; }
 					throw new FormatException("JSON: ',' or ']' expected at " + i);
 				}
 			}
@@ -73,12 +87,15 @@ namespace UltimateEditor.Uw1.Zoning
 			int start = i;
 			while (i < s.Length && ("+-0123456789.eE".IndexOf(s[i]) >= 0)) i++;
 			if (start == i) throw new FormatException("JSON: unexpected '" + c + "' at " + i);
-			return double.Parse(s.Substring(start, i - start), NumberStyles.Float, CultureInfo.InvariantCulture);
+			double num;
+			if (!double.TryParse(s.Substring(start, i - start), NumberStyles.Float, CultureInfo.InvariantCulture, out num))
+				throw new FormatException("JSON: bad number at " + start);
+			return num;
 		}
 
 		static string ParseString(string s, ref int i)
 		{
-			if (s[i] != '"') throw new FormatException("JSON: string expected at " + i);
+			if (At(s, i) != '"') throw new FormatException("JSON: string expected at " + i);
 			i++;
 			var sb = new StringBuilder();
 			while (true)
@@ -87,7 +104,7 @@ namespace UltimateEditor.Uw1.Zoning
 				char c = s[i++];
 				if (c == '"') return sb.ToString();
 				if (c != '\\') { sb.Append(c); continue; }
-				char e = s[i++];
+				char e = At(s, i++);
 				switch (e)
 				{
 					case '"': sb.Append('"'); break;
@@ -99,7 +116,10 @@ namespace UltimateEditor.Uw1.Zoning
 					case 'r': sb.Append('\r'); break;
 					case 't': sb.Append('\t'); break;
 					case 'u':
-						sb.Append((char)int.Parse(s.Substring(i, 4), NumberStyles.HexNumber));
+						int code;
+						if (i + 4 > s.Length || !int.TryParse(s.Substring(i, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out code))
+							throw new FormatException("JSON: bad \\u escape at " + i);
+						sb.Append((char)code);
 						i += 4;
 						break;
 					default: throw new FormatException("JSON: bad escape at " + i);

@@ -62,31 +62,45 @@ namespace UltimateEditor.Modding
 			return ms.ToArray();
 		}
 
+		/// <summary>The largest entry read (a mod's biggest file is a few MB): a package that
+		/// claims more is refused before anything is allocated.</summary>
+		public const int MaxEntryBytes = 64 * 1024 * 1024;
+
+		/// <summary>The entries of a zip. The package is untrusted: every offset and size is
+		/// checked against the file, so a bad one is an InvalidDataException, never an index
+		/// error or a huge allocation.</summary>
 		public static List<Entry> Read(byte[] zip)
 		{
+			if (zip == null || zip.Length < 22) throw new InvalidDataException("not a zip file (too short)");
 			int end = -1;
 			for (int i = zip.Length - 22; i >= Math.Max(0, zip.Length - 22 - 0xFFFF); i--)
 				if (U32(zip, i) == EndSig) { end = i; break; }
 			if (end < 0) throw new InvalidDataException("not a zip file (no end of central directory)");
 			int count = U16(zip, end + 10);
-			int p = (int)U32(zip, end + 16);
+			long p = U32(zip, end + 16);
 			var list = new List<Entry>(count);
 			for (int k = 0; k < count; k++)
 			{
-				if (U32(zip, p) != CentralSig) throw new InvalidDataException("bad central directory entry");
-				int flags = U16(zip, p + 8), method = U16(zip, p + 10);
-				uint crc = U32(zip, p + 16);
-				int csize = (int)U32(zip, p + 20), usize = (int)U32(zip, p + 24);
-				int nlen = U16(zip, p + 28), xlen = U16(zip, p + 30), clen = U16(zip, p + 32);
-				int local = (int)U32(zip, p + 42);
-				string name = ((flags & 0x800) != 0 ? Encoding.UTF8 : Encoding.GetEncoding(28591)).GetString(zip, p + 46, nlen);
-				p += 46 + nlen + xlen + clen;
+				Need(zip, p, 46, "central directory entry");
+				int at = (int)p;
+				if (U32(zip, at) != CentralSig) throw new InvalidDataException("bad central directory entry");
+				int flags = U16(zip, at + 8), method = U16(zip, at + 10);
+				uint crc = U32(zip, at + 16);
+				long csize = U32(zip, at + 20), usize = U32(zip, at + 24);
+				int nlen = U16(zip, at + 28), xlen = U16(zip, at + 30), clen = U16(zip, at + 32);
+				long local = U32(zip, at + 42);
+				Need(zip, at + 46, nlen, "entry name");
+				string name = ((flags & 0x800) != 0 ? Encoding.UTF8 : Encoding.GetEncoding(28591)).GetString(zip, at + 46, nlen);
+				p = at + 46L + nlen + xlen + clen;
 				if ((flags & 1) != 0) throw new InvalidDataException(name + ": encrypted zip entries are not supported");
-				if (U32(zip, local) != LocalSig) throw new InvalidDataException(name + ": bad local header");
-				int dataAt = local + 30 + U16(zip, local + 26) + U16(zip, local + 28);
+				if (usize > MaxEntryBytes || csize > MaxEntryBytes) throw new InvalidDataException(name + ": larger than " + (MaxEntryBytes >> 20) + " MB");
+				Need(zip, local, 30, name + ": local header");
+				if (U32(zip, (int)local) != LocalSig) throw new InvalidDataException(name + ": bad local header");
+				long dataAt = local + 30 + U16(zip, (int)local + 26) + U16(zip, (int)local + 28);
+				Need(zip, dataAt, method == 0 ? usize : csize, name + ": data");
 				byte[] data;
-				if (method == 0) { data = new byte[usize]; Buffer.BlockCopy(zip, dataAt, data, 0, usize); }
-				else if (method == 8) data = Inflate(zip, dataAt, csize, usize);
+				if (method == 0) { data = new byte[usize]; Buffer.BlockCopy(zip, (int)dataAt, data, 0, (int)usize); }
+				else if (method == 8) data = Inflate(zip, (int)dataAt, (int)csize, (int)usize);
 				else throw new InvalidDataException(name + ": compression method " + method + " is not supported");
 				if (Hashing.Crc32(data) != crc) throw new InvalidDataException(name + ": CRC mismatch");
 				if (name.EndsWith("/")) continue;   // a folder
@@ -116,6 +130,12 @@ namespace UltimateEditor.Modding
 				}
 			}
 			return r;
+		}
+
+		/// <summary>A range that must lie inside the zip.</summary>
+		static void Need(byte[] zip, long at, long length, string what)
+		{
+			if (at < 0 || length < 0 || at + length > zip.Length) throw new InvalidDataException(what + " lies outside the file");
 		}
 
 		static int U16(byte[] b, int p) { return b[p] | b[p + 1] << 8; }

@@ -31,6 +31,9 @@ namespace UltimateEditor.Modding.Exe
 				var c = new ExeParamComponent { Param = StartSquare, File = ExeIdentity.ExeName(game) };
 				c.Value["x"] = mx;
 				c.Value["y"] = my;
+				// the square it was made from: applying refuses an executable another mod moved
+				c.Value["base_x"] = bx;
+				c.Value["base_y"] = by;
 				r.Add(c);
 			}
 			return r;
@@ -51,6 +54,9 @@ namespace UltimateEditor.Modding.Exe
 		{
 			if (c.Param == StartSquare)
 			{
+				int cx, cy;
+				if (c.Value.ContainsKey("base_x") && StartPosition.Read(exe, game, out cx, out cy) && (cx != c.GetInt("base_x") || cy != c.GetInt("base_y")))
+					throw new ModApplyException(string.Format("the start square is ({0}, {1}), the mod was made from one at ({2}, {3}) (another mod moved it?)", cx, cy, c.GetInt("base_x"), c.GetInt("base_y")));
 				if (!StartPosition.Patch(exe, game, c.GetInt("x"), c.GetInt("y")))
 					throw new ModApplyException("the start square's code was not found in " + ExeIdentity.ExeName(game) + " (another release?)");
 				return;

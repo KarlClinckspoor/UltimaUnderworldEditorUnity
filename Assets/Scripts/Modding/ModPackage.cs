@@ -42,13 +42,22 @@ namespace UltimateEditor.Modding
 
 		public static ModPackage Load(string path) { return FromBytes(File.ReadAllBytes(path)); }
 
+		/// <summary>Reads a package. It is untrusted: any fault in it (the zip, mod.json, a path)
+		/// is an InvalidDataException, whatever went wrong inside.</summary>
 		public static ModPackage FromBytes(byte[] zip)
+		{
+			try { return Read(zip); }
+			catch (InvalidDataException) { throw; }
+			catch (Exception e) { throw new InvalidDataException("not a readable mod package: " + e.Message, e); }
+		}
+
+		static ModPackage Read(byte[] zip)
 		{
 			var p = new ModPackage();
 			foreach (var e in MiniZip.Read(zip))
 			{
 				string name = e.Name.Replace('\\', '/');
-				if (name.StartsWith("/") || name.Contains("../") || name.Contains(":")) throw new InvalidDataException("unsafe path in the package: " + e.Name);
+				if (!GameFolder.IsSafeRelative(name)) throw new InvalidDataException("unsafe path in the package: " + e.Name);
 				if (name == ManifestName) p.Manifest = ModManifest.Parse(Encoding.UTF8.GetString(e.Data));
 				else p.Files[name] = e.Data;
 			}
@@ -96,6 +105,8 @@ namespace UltimateEditor.Modding
 				}
 				else if (!GameFolder.IsModFile(c.File)) r.Add("a change to " + (c.File ?? "(no file)") + ", which is not a game file");
 			}
+			foreach (var shot in Manifest.Screenshots)
+				if (!GameFolder.IsSafeRelative(shot)) r.Add("a screenshot at " + shot);
 			return r;
 		}
 

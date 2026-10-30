@@ -78,22 +78,41 @@ namespace UltimateEditor.Modding
 			return r;
 		}
 
-		/// <summary>Writes the save into a slot folder (made if needed), replacing what was there.</summary>
-		public static void Install(SaveComponent c, ModPackage pkg, string slotDir)
+		/// <summary>
+		/// Writes the save into a slot folder, replacing what was there, as the game's own save
+		/// does (GAMEWRAP.C SaveGame: clear_dir, then copy_dir): the slot ends up with the
+		/// package's files only, since the game restores every file in a slot. The new save is
+		/// written to a folder beside the slot first; the old slot is then kept as
+		/// "SAVEn.before-mod-date" (the game looks only at SAVE1 to SAVE4) and the new one put in
+		/// its place, so a failure partway leaves the old save whole.
+		/// </summary>
+		public static string Install(SaveComponent c, ModPackage pkg, string slotDir)
 		{
-			Directory.CreateDirectory(slotDir);
-			var folder = new GameFolder(slotDir);
 			var names = new List<string>(Uw1Files); names.AddRange(Uw2Files);
 			foreach (var f in c.Files)
 				if (f.Name == null || names.IndexOf(f.Name.ToUpperInvariant()) < 0) throw new ModApplyException("a saved game has no file " + f.Name);
+			string full = Path.GetFullPath(slotDir).TrimEnd('/', '\\');
+			string parent = Path.GetDirectoryName(full);
+			string stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+			string fresh = full + ".uwmod-new";
+			if (Directory.Exists(fresh)) Directory.Delete(fresh, true);
+			Directory.CreateDirectory(fresh);
 			foreach (var f in c.Files)
+				File.WriteAllBytes(GameFolder.Inside(fresh, Path.Combine(fresh, f.Name.ToUpperInvariant())), pkg.Payload(f.Data));
+			string kept = null;
+			if (Directory.Exists(full))
 			{
-				string p = GameFolder.Inside(slotDir, folder.Resolve(f.Name) ?? Path.Combine(slotDir, f.Name.ToUpperInvariant()));
-				string tmp = p + ".uwmod-tmp";
-				File.WriteAllBytes(tmp, pkg.Payload(f.Data));
-				if (File.Exists(p)) File.Delete(p);
-				File.Move(tmp, p);
+				kept = full + ".before-mod-" + stamp;
+				for (int n = 1; Directory.Exists(kept); n++) kept = full + ".before-mod-" + stamp + "-" + n;
+				Directory.Move(full, kept);
 			}
+			try { Directory.Move(fresh, full); }
+			catch
+			{
+				if (kept != null && !Directory.Exists(full)) Directory.Move(kept, full);   // put the old save back
+				throw;
+			}
+			return kept;
 		}
 	}
 }

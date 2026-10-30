@@ -23,6 +23,7 @@ namespace UltimateEditor.Modding
 		public static void Classify(ModManifest m, Func<string, byte[]> original, ModPackage pkg)
 		{
 			bool level = false, content = false, exe = false, save = false;
+			var contentFiles = new HashSet<string>(StringComparer.Ordinal);
 			m.Flags = new ModFlags();
 			var needs = new SortedSet<string>(StringComparer.Ordinal);
 			foreach (var c in m.Components)
@@ -44,6 +45,7 @@ namespace UltimateEditor.Modding
 					if (rel == "DATA/LEV.ARK" || rel == "DATA/SCD.ARK") level = true; else content = true;
 				}
 				else { m.Flags.ChangesSaves = true; content = true; }
+				if (rel != "DATA/LEV.ARK" && rel != "DATA/SCD.ARK") contentFiles.Add(rel);
 				if (rel == "DATA/CNV.ARK" && c is ArkBlocksComponent && original != null && pkg != null)
 				{
 					var kind = m.Game == "uw2" ? GameKind.UW2 : GameKind.UW1;
@@ -54,8 +56,10 @@ namespace UltimateEditor.Modding
 			int kinds = (level ? 1 : 0) + (content ? 1 : 0) + (exe ? 1 : 0) + (save ? 1 : 0);
 			if (kinds == 0) m.Type = "";
 			else if (save && kinds == 1) m.Type = SavedGame;
-			else if (kinds > 1 && !(exe && kinds == 2 && level)) m.Type = TotalConversion;
-			else if (level) m.Type = LevelMod;   // a level mod may move the start square with it
+			// levels with changes to several other kinds of file (strings, pictures, objects,
+			// conversations...): a level mod that also edits a book's text is still a level mod
+			else if (level && contentFiles.Count >= 3) m.Type = TotalConversion;
+			else if (level) m.Type = LevelMod;   // it may move the start square and change a few files with it
 			else if (content) m.Type = ContentMod;
 			else m.Type = ExeTweak;
 			m.ExhumedNeeds = new List<string>(needs);

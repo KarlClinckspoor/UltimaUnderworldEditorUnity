@@ -26,24 +26,54 @@ namespace UltimateEditor.Modding
 	/// </summary>
 	public static class ModDiff
 	{
+		/// <summary>
+		/// Only the game's own files are compared (KnownFiles' names): anything else in DATA and
+		/// the other folders (the editor's files, notes, leftovers) is left out with a note. A
+		/// folder or the executable present on one side only is a problem, not a mod: it means
+		/// one of the two installs is incomplete, and would put whole game files into the
+		/// package or make it delete them from players' games. A game file missing from the
+		/// edited game is a problem too.
+		/// </summary>
 		public static ModDiffResult Compare(IFileSource original, IFileSource modded, GameKind game)
 		{
 			var r = new ModDiffResult();
 			var paths = new SortedSet<string>(StringComparer.Ordinal);
-			foreach (var p in original.List()) paths.Add(GameFolder.Normalize(p));
-			foreach (var p in modded.List()) paths.Add(GameFolder.Normalize(p));
+			var inA = new HashSet<string>(StringComparer.Ordinal);
+			var inB = new HashSet<string>(StringComparer.Ordinal);
+			foreach (var p in original.List()) { string n = GameFolder.Normalize(p); paths.Add(n); inA.Add(Top(n)); }
+			foreach (var p in modded.List()) { string n = GameFolder.Normalize(p); paths.Add(n); inB.Add(Top(n)); }
+			foreach (var top in new SortedSet<string>(inA, StringComparer.Ordinal))
+				if (!inB.Contains(top)) r.Problems.Add(Describe(top) + " is in the original but not in the edited game: compare two complete installs.");
+			foreach (var top in new SortedSet<string>(inB, StringComparer.Ordinal))
+				if (!inA.Contains(top)) r.Problems.Add(Describe(top) + " is in the edited game but not in the original: compare two complete installs.");
+			var known = KnownFiles.For(game);
+			var left = new List<string>();
 			foreach (var rel in paths)
 			{
+				if (!inA.Contains(Top(rel)) || !inB.Contains(Top(rel))) continue;   // a problem above
 				byte[] a = original.Read(rel), b = modded.Read(rel);
 				if (a != null && b != null && Equal(a, b)) continue;
 				if (a == null && b == null) continue;
+				if (!known.ContainsKey(rel)) { left.Add(rel); continue; }
+				if (b == null)
+				{
+					r.Problems.Add(rel + " is missing from the edited game. Put it back: a mod can't delete the game's files.");
+					continue;
+				}
 				int before = r.Components.Count;
 				try { CompareFile(rel, a, b, game, r); }
 				catch (Exception e) { r.Problems.Add(rel + ": " + e.Message); }
 				if (r.Components.Count > before || a == null) r.BaseFiles[rel] = Hashing.Sha256(a);
 			}
+			if (left.Count > 0)
+				r.Notes.Add("Left out, not files the game reads: " + string.Join(", ", left.ToArray()));
 			return r;
 		}
+
+		/// <summary>The top folder of a path ("DATA"), or the file itself for one at the top (the executable).</summary>
+		static string Top(string rel) { int i = rel.IndexOf('/'); return i < 0 ? rel : rel.Substring(0, i); }
+
+		static string Describe(string top) { return top.EndsWith(".EXE") ? "The executable " + top : "The " + top + " folder"; }
 
 		static void CompareFile(string rel, byte[] a, byte[] b, GameKind game, ModDiffResult r)
 		{
@@ -131,11 +161,17 @@ namespace UltimateEditor.Modding
 					if (old != null && old == yb.Strings[i]) continue;
 					bc.Set.Add(new StringChanges.StringSet { Index = i, Base = Hashing.Sha256(old), Text = yb.Strings[i] });
 				}
+				if (xb != null)
+					for (int i = yb.Strings.Count; i < xb.Strings.Count; i++) bc.RemovedBase.Add(Hashing.Sha256(xb.Strings[i]));
 				if (bc.Added || bc.Set.Count > 0 || bc.Count != bc.BaseCount) ch.Blocks.Add(bc);
 			}
 			foreach (var xb in x.Blocks)
 				if (y.Find(xb.Number) == null)
-					ch.Blocks.Add(new StringChanges.BlockChange { Block = xb.Number, Removed = true, BaseCount = xb.Strings.Count, Count = 0 });
+				{
+					var gone = new StringChanges.BlockChange { Block = xb.Number, Removed = true, BaseCount = xb.Strings.Count, Count = 0 };
+					foreach (var str in xb.Strings) gone.RemovedBase.Add(Hashing.Sha256(str));
+					ch.Blocks.Add(gone);
+				}
 			if (ch.Blocks.Count == 0) { r.Notes.Add(rel + ": rewritten with the same strings"); return true; }
 			string data = "payload/strings/" + rel.Replace('/', '_') + ".json";
 			r.Payload[data] = System.Text.Encoding.UTF8.GetBytes(ch.ToJson());
@@ -158,6 +194,7 @@ namespace UltimateEditor.Modding
 				r.Payload[data] = q;
 				c.Pictures.Add(new ImagesComponent.Picture { Index = i, Base = Hashing.Sha256(p), Data = data });
 			}
+			for (int i = y.Records.Count; i < x.Records.Count; i++) c.RemovedBase.Add(Hashing.Sha256(x.Records[i]));
 			if (c.Pictures.Count == 0 && c.Count == c.BaseCount) { r.Notes.Add(rel + ": rewritten with the same pictures"); return true; }
 			r.Components.Add(c);
 			return true;
