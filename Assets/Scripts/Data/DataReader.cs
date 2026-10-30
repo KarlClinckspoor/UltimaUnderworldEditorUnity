@@ -1268,16 +1268,14 @@ public static class DataReader {
 
 	public static ConversationFunction[] ReadDefaultConversationFunctions()
 	{
+		// read whole and closed at once: the stream used to stay open (read-write, unshared),
+		// which could block opening the game a second time
 		string filePath = Application.streamingAssetsPath + "/functions.dat";
-		Stream stream = File.Open(filePath, FileMode.Open);
-		BinaryFormatter bf = new BinaryFormatter();
-		ConversationFunction[] funcs = (ConversationFunction[])bf.Deserialize(stream);
-		//Debug.LogFormat("Def conv func : {0}", funcs);
-		//foreach (var fun in funcs)
-		//{
-		//	Debug.LogFormat("fun {0}", fun.Name);
-		//}
-		return funcs;
+		using (var stream = new MemoryStream(File.ReadAllBytes(filePath)))
+		{
+			BinaryFormatter bf = new BinaryFormatter();
+			return (ConversationFunction[])bf.Deserialize(stream);
+		}
 	}
 
 	#endregion

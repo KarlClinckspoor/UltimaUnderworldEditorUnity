@@ -1108,8 +1108,7 @@ public static class ConversationConverter {
 		store(opvar);
 		push_int(arrayStart);
 		push_int(0);    //number of add. arguments
-		op(OperationType.CALLI);
-		conv.Code.Add(0);   //babl_menu
+		calli(0);	// babl_menu
 		pop();				//NEEDS TESTING
 		pop();
 		op(OperationType.PUSH_REG);
@@ -1162,8 +1161,7 @@ public static class ConversationConverter {
 		push_int(flagArray);
 		push_int(stringArray);
 		push_int(0);
-		op(OperationType.CALLI);
-		conv.Code.Add(1);       //babl_fmenu
+		calli(1);	// babl_fmenu
 		pop();
 		pop();
 		pop();
@@ -1955,7 +1953,8 @@ public static class ConversationConverter {
 	private static Word random(List<Word> args)
 	{
 		test_args(args, 1, "Random", "int");
-		push_int(args[0], 1, "Random");
+		// the built-ins read each argument through its address (uw1 conv/BABL.C BabRand: getmem(args[-1]))
+		push_adr(args[0], 1, "Random");
 		push_int(1);
 		calli(5);
 		pop();
@@ -1978,7 +1977,7 @@ public static class ConversationConverter {
 	private static Word getQuest(List<Word> args)
 	{
 		test_args(args, 1, "GetQuest", "int");
-		push_int(args[0], 1, "GetQuest");
+		push_adr(args[0], 1, "GetQuest");	// get_quest reads getmem(args[-1])
 		push_int(1);
 		calli(15);
 		pop();
@@ -1988,8 +1987,8 @@ public static class ConversationConverter {
 	private static void setQuest(List<Word> args)
 	{
 		test_args(args, 2, "SetQuest", "int and int");
-		push_int(args[0], 1, "SetQuest");
-		push_int(args[1], 2, "SetQuest");
+		push_adr(args[0], 1, "SetQuest");	// set_quest: quest = getmem(args[-2]), value = getmem(args[-1])
+		push_adr(args[1], 2, "SetQuest");
 		push_int(2);
 		calli(16);
 		pop();
@@ -2043,8 +2042,10 @@ public static class ConversationConverter {
 	private static Word show_inv(List<Word> args)
 	{
 		test_args(args, 2, "GetInventorySlots", "array and array");
-		push_arr(args[0], 1, "GetInventorySlots", 4);
-		push_arr(args[1], 2, "GetInventorySlots", 4);
+		// show_inv fills 4 entries in UW1 and 6 in UW2 (uw2 conv/CONVERSE.C conv_check_inv)
+		int slots = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? 6 : 4;
+		push_arr(args[0], 1, "GetInventorySlots", slots);
+		push_arr(args[1], 2, "GetInventorySlots", slots);
 		push_int(2);
 		calli(18);
 		pop();
@@ -2062,8 +2063,7 @@ public static class ConversationConverter {
 		push_arr(args[0], 1, "GiveToNPC");
 		push_int(2);
 		calli(19);
-		pop();
-		pop();
+		pop(3);	// the two arguments and the count
 		return return_register();
 	}
 	private static Word count_inv(List<Word> args)
@@ -2172,8 +2172,7 @@ public static class ConversationConverter {
 		push_adr(args[1], 2, "GiveNPCQuantity");
 		push_int(2);
 		calli(20);
-		pop();
-		pop();
+		pop(3);	// the two arguments and the count
 		return return_register();
 	}
 	/// <summary>
@@ -2495,7 +2494,9 @@ public static class ConversationConverter {
 	{
 		test_args(args, 1, "GetSkill", "int");
 		push_adr(args[0], 1, "GetSkill");
-		push_adr(10001);
+		// x_skills only reads with a value outside 0..30 other than 10000; above 10000 UW2
+		// spends a skill point to advance the skill (uw2 conv/BABLHACK.C), so read with -1
+		push_adr(-1);
 		push_int(2);
 		calli(44);
 		pop();
@@ -2729,8 +2730,10 @@ public static class ConversationConverter {
 		if (conv.Dislikes.Count == 0)
 			dislikesStart = operationVars[dislikesEnd];
 
-		push_int(dislikesStart);
+		// set_likes_dislikes(arg2 likes, arg1 dislikes): likes = args[-2], pushed first
+		// (uw1 conv/BARTER.C npc_likes_dislikes)
 		push_int(likesStart);
+		push_int(dislikesStart);
 		push_int(2);
 		calli(36);
 		pop();
@@ -2757,8 +2760,7 @@ public static class ConversationConverter {
 		store(opvar);
 		push_int(arrayStart);
 		push_int(0);    //number of add. arguments
-		op(OperationType.CALLI);
-		conv.Code.Add(0);   //babl_menu
+		calli(0);	// babl_menu
 		pop();              //NEEDS TESTING
 		pop();
 		
@@ -2795,8 +2797,7 @@ public static class ConversationConverter {
 		store(opvar);
 		push_int(arrayStart);
 		push_int(0);    //number of add. arguments
-		op(OperationType.CALLI);
-		conv.Code.Add(0);   //babl_menu
+		calli(0);	// babl_menu
 		pop();              //NEEDS TESTING
 		pop();
 	}

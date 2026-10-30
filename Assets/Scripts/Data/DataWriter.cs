@@ -228,8 +228,6 @@ public static class DataWriter {
 		Stream fs;
 		file = "BABGLOBS.DAT";
 		BackupData(file);
-		if (File.Exists(file))
-			File.Delete(file);
 		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
 		SaveBabglobs(fs, convs);
 		fs.Close();
@@ -1225,18 +1223,6 @@ public static class DataWriter {
 			}
 		}
 	}
-
-	public static void SaveDefaultConversationFunctions(ConversationFunction[] funcs)
-	{
-		string fileName = Application.dataPath + "/Conversations/functions.dat";
-		if (File.Exists(fileName))
-			File.Delete(fileName);
-		FileStream fs = new FileStream(fileName, FileMode.Create);
-		BinaryFormatter bf = new BinaryFormatter();
-		bf.Serialize(fs, funcs);
-		fs.Close();
-	}
-
 
 	#endregion
 

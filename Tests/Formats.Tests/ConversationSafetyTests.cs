@@ -28,6 +28,7 @@ namespace Formats.Tests
 		{
 			string dir = GameData.Copy(game);
 			Application.dataPath = Path.Combine(dir, "unity-data");
+			Application.streamingAssetsPath = Path.Combine(Repo.Root, "Assets", "StreamingAssets");
 			C.FilePath = Path.Combine(dir, "DATA", "LEV.ARK");
 			typeof(C).GetField("uiManager", BindingFlags.NonPublic | BindingFlags.Static)
 				.SetValue(null, RuntimeHelpers.GetUninitializedObject(typeof(current::UIManager)));
@@ -65,6 +66,41 @@ namespace Formats.Tests
 			node.NodeContent.text = content;
 			node.ConditionsGO = new GameObject("conditions");
 			return node;
+		}
+
+		/// <summary>What a built-in call pushes last before its argument count (its last
+		/// argument): CALLI id is preceded by PUSHI count, and that by PUSHI of the argument.</summary>
+		static int? LastArgumentOf(List<int> code, int functionId, int count)
+		{
+			int pushi = (int)current::OperationType.PUSHI, calli = (int)current::OperationType.CALLI;
+			for (int i = 4; i + 1 < code.Count; i++)
+				if (code[i] == calli && code[i + 1] == functionId && code[i - 2] == pushi && code[i - 1] == count && code[i - 4] == pushi)
+					return code[i - 3];
+			return null;
+		}
+
+		[GameFact("UW")]
+		public void Built_ins_get_the_addresses_of_their_arguments()
+		{
+			var sd = LoadStrings("UW");
+			// functions.dat was written by Unity's build (Assembly-CSharp); here the editor is EditorBuild
+			ResolveEventHandler resolve = (o, e) => e.Name.StartsWith("Assembly-CSharp,") ? typeof(Conv).Assembly : null;
+			AppDomain.CurrentDomain.AssemblyResolve += resolve;
+			try { typeof(CMap).GetProperty("ConversationData").SetValue(null, C.LoadConversations()); }
+			finally { AppDomain.CurrentDomain.AssemblyResolve -= resolve; }
+			int empty = Enumerable.Range(1, 255).First(i => !sd.BlockDictionary.ContainsKey(StringBlock.GetConversationBlock(i)));
+			var c = new Conv(ConvState.Unconverted) { Slot = empty };
+			var node = MakeNode("SetQuest(3, 1)\nx = Random(6)\n");
+			Converter.Convert(c, node, new List<Node> { node }, new List<string> { "x" }, "Somebody");
+			Assert.Equal(33, c.MemorySlots);	// 32 imported + x
+			// set_quest reads getmem(args[-2]) and getmem(args[-1]), random getmem(args[-1]):
+			// what is pushed is an address (past the saved variables), not the number 1 or 6
+			var setQuest = LastArgumentOf(c.Code, 16, 2);
+			Assert.NotNull(setQuest);
+			Assert.True(setQuest >= c.MemorySlots, setQuest.ToString());
+			var random = LastArgumentOf(c.Code, 5, 1);
+			Assert.NotNull(random);
+			Assert.True(random >= c.MemorySlots, random.ToString());
 		}
 
 		[GameFact("UW")]
