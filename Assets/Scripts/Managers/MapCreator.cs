@@ -317,6 +317,10 @@ public class MapCreator : MonoBehaviour {
 		if (!mesh)
 			mesh = floor.AddComponent<MeshFilter>();
 		float height = GetTileHeight(tile);
+		// a floor rebuilt in place frees the mesh and material it had (painting rebuilt them every
+		// frame and kept the old ones)
+		if (mesh.sharedMesh)
+			Destroy(mesh.sharedMesh);
 		if (tile.TileType == TileType.Open || tile.TileType == TileType.SlopeUpE || tile.TileType == TileType.SlopeUpW || tile.TileType == TileType.SlopeUpN || tile.TileType == TileType.SlopeUpS)
 			mesh.mesh = CreateSquareFloor(size, height, tile);
 		else if (tile.TileType == TileType.Solid)
@@ -326,6 +330,8 @@ public class MapCreator : MonoBehaviour {
 		MeshRenderer mr = floor.GetComponent<MeshRenderer>();
 		if (!mr)
 			mr = floor.AddComponent<MeshRenderer>();
+		if (mr.sharedMaterial && mr.sharedMaterial != TileMaterial)
+			Destroy(mr.sharedMaterial);
 		mr.material = TileMaterial;
 		mr.material.SetColor("_Color", GetHeightColor(tile));
 		if (tile.TileType == TileType.Solid)
@@ -361,10 +367,14 @@ public class MapCreator : MonoBehaviour {
 		MeshFilter mesh = wall.GetComponent<MeshFilter>();
 		if (!mesh)
 			mesh = wall.AddComponent<MeshFilter>();
+		if (mesh.sharedMesh)
+			Destroy(mesh.sharedMesh);
 		mesh.mesh = walls;
 		MeshRenderer mr = wall.GetComponent<MeshRenderer>();
 		if (!mr)
 			mr = wall.AddComponent<MeshRenderer>();
+		if (mr.sharedMaterial && mr.sharedMaterial != TileMaterial)
+			Destroy(mr.sharedMaterial);
 		mr.material = TileMaterial;
 		mr.material.SetColor("_Color", GetHeightColor(tile));
 		mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

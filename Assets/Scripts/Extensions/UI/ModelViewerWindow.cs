@@ -42,6 +42,7 @@ namespace UltimateEditor.Uw1.UI
 			var raw = picture.gameObject.AddComponent<RawImage>();
 			state.Texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
 			raw.texture = state.Texture;
+			w.Closed += () => { if (state.Texture) UnityEngine.Object.Destroy(state.Texture); };
 			var drag = picture.gameObject.AddComponent<ModelDrag>();
 			var info = UiKit.Paragraph(w.Content, "", 11, UiKit.TextColor);
 

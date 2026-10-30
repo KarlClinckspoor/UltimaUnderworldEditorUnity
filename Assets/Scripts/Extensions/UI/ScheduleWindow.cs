@@ -50,13 +50,9 @@ namespace UltimateEditor.Uw1.UI
 				if (problems.Length > 0) { w.Status.text = "Not saved:" + problems + " Use Sort by time."; return; }
 				var written = ScdArk.Write(arc, blocks);
 				if (written.Count == 0) { w.Status.text = "Nothing changed."; return; }
+				// ScdArk.Write moves the level clocks' "next row" indexes with the rows
 				GameWrite.Write(path, arc.ToArray());
 				w.Status.text = "Saved blocks " + string.Join(", ", written.ConvertAll(x => x.ToString()).ToArray()) + ".";
-				// The level clocks' "next row" indexes are not moved with the rows (the game's
-				// Sched_InsertLong and Sched_Delete do). DATA's file has every clock at 0.
-				foreach (int b in written)
-					foreach (var c in blocks[b].Clocks)
-						if (c != 0) { w.Status.text += " Block " + b + " has running level clocks (a saved game's file?); their next-row indexes were not adjusted."; break; }
 			}, 110, 22, UiKit.AccentColor);
 			UiKit.Button(tools, "Reload", () => { w.Close(); Show(); }, 70, 22);
 			UiKit.Paragraph(w.Toolbar,
@@ -106,7 +102,11 @@ namespace UltimateEditor.Uw1.UI
 			{
 				int v;
 				if (!int.TryParse(s, out v) || v < 0 || v > 0xFFFF || v == r.Time) { refresh(); return; }
+				// a test-variables row (10) takes the disabled rows after it along: it runs them
+				// (SCDEVENT.C), so they must stay right after it
+				int k = blk.Rows.IndexOf(r);
 				r.Time = v;
+				for (int j = k + 1; r.Event == 10 && j < blk.Rows.Count && blk.Rows[j].Event < 0; j++) blk.Rows[j].Time = v;
 				// SCHEDULE.C stops at the first row past the clock, so the rows must stay in time order
 				SortStable(blk);
 				Fill(w, blocks);
@@ -141,13 +141,21 @@ namespace UltimateEditor.Uw1.UI
 			Fill(w, blocks);
 		}
 
+		/// <summary>Sorts by time, keeping rows of the same time in order, and keeping each
+		/// test-variables row (10) with the disabled rows that follow it, which it runs.</summary>
 		static void SortStable(ScdBlock blk)
 		{
-			var keyed = new List<KeyValuePair<int, ScdRow>>();
-			for (int i = 0; i < blk.Rows.Count; i++) keyed.Add(new KeyValuePair<int, ScdRow>(i, blk.Rows[i]));
-			keyed.Sort((a, b) => a.Value.Time != b.Value.Time ? a.Value.Time.CompareTo(b.Value.Time) : a.Key.CompareTo(b.Key));
+			var groups = new List<List<ScdRow>>();
+			foreach (var r in blk.Rows)
+			{
+				if (r.Event < 0 && groups.Count > 0 && groups[groups.Count - 1][0].Event == 10) groups[groups.Count - 1].Add(r);
+				else groups.Add(new List<ScdRow> { r });
+			}
+			var keyed = new List<KeyValuePair<int, List<ScdRow>>>();
+			for (int i = 0; i < groups.Count; i++) keyed.Add(new KeyValuePair<int, List<ScdRow>>(i, groups[i]));
+			keyed.Sort((a, b) => a.Value[0].Time != b.Value[0].Time ? a.Value[0].Time.CompareTo(b.Value[0].Time) : a.Key.CompareTo(b.Key));
 			blk.Rows.Clear();
-			foreach (var k in keyed) blk.Rows.Add(k.Value);
+			foreach (var k in keyed) blk.Rows.AddRange(k.Value);
 		}
 
 		/// <summary>An NPC's name: string whoami + 16 of block 7 (StringData.GetNPCName).</summary>

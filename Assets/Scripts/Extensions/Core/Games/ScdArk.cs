@@ -19,6 +19,37 @@ namespace UltimateEditor.Games
 		public byte Spare;
 		public byte[] Clocks = new byte[80 * 4];
 		public List<ScdRow> Rows = new List<ScdRow>();
+		/// <summary>The rows as read or last written, for <see cref="RemapClocks"/>.</summary>
+		List<ScdRow> written = new List<ScdRow>();
+
+		public int ClockTime(int level) { return Clocks[level * 4] | Clocks[level * 4 + 1] << 8; }
+		public int ClockNext(int level) { return Clocks[level * 4 + 2] | Clocks[level * 4 + 3] << 8; }
+
+		/// <summary>
+		/// Moves each of the 80 level clocks' "next row" index with the rows. A clock's next is
+		/// how many rows that level has already run (SCHEDULE.C FindSCDRowsToExecute starts
+		/// there). After editing, next is put just past the last of those rows, wherever it now
+		/// is: rows already run are not run again, rows removed no longer count, and a row added
+		/// before that point counts as passed, as the game's own Sched_InsertLong treats a row
+		/// inserted at a time the clock has passed (Sched_Delete likewise moves next down).
+		/// </summary>
+		public void RemapClocks()
+		{
+			for (int k = 0; k < 80; k++)
+			{
+				int next = ClockNext(k);
+				if (next == 0) continue;
+				var run = new HashSet<ScdRow>();
+				for (int i = 0; i < next && i < written.Count; i++) run.Add(written[i]);
+				int n = 0;
+				for (int i = 0; i < Rows.Count; i++)
+					if (run.Contains(Rows[i])) n = i + 1;
+				Clocks[k * 4 + 2] = (byte)n; Clocks[k * 4 + 3] = (byte)(n >> 8);
+			}
+		}
+
+		/// <summary>Records the rows as they now are on disk.</summary>
+		public void MarkWritten() { written = new List<ScdRow>(Rows); }
 
 		public static ScdBlock Parse(byte[] d)
 		{
@@ -33,6 +64,7 @@ namespace UltimateEditor.Games
 				Array.Copy(d, HeaderSize + 16 * i, r, 0, 16);
 				b.Rows.Add(new ScdRow(r));
 			}
+			b.MarkWritten();
 			return b;
 		}
 
@@ -184,11 +216,13 @@ namespace UltimateEditor.Games
 			var written = new List<int>();
 			for (int b = 0; b < blocks.Count && b < a.Count; b++)
 			{
+				blocks[b].RemapClocks();
 				var now = blocks[b].ToBytes();
 				var old = a.Has(b) ? a.Read(b) : null;
 				if (old != null && Same(old, now)) continue;
 				if (old == null && blocks[b].Rows.Count == 0) continue;
 				a.Write(b, now);
+				blocks[b].MarkWritten();
 				written.Add(b);
 			}
 			return written;

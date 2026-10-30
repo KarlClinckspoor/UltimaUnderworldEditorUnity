@@ -96,6 +96,7 @@ namespace UltimateEditor.Uw1.UI
 			UiKit.Size(grid.gameObject, 33 * GridCell, 17 * GridCell);
 			st.Grid = new Texture2D(33, 17, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
 			grid.gameObject.AddComponent<RawImage>().texture = st.Grid;
+			w.Closed += () => { if (st.Strip) UnityEngine.Object.Destroy(st.Strip); if (st.Grid) UnityEngine.Object.Destroy(st.Grid); };
 			st.Info = UiKit.Paragraph(gridRow, "", 11, UiKit.TextColor);
 			UiKit.Size(st.Info.gameObject, 420, -1);
 			Redraw(st);

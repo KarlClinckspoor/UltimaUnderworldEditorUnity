@@ -96,7 +96,7 @@ namespace UltimateEditor.Uw1.UI
 			st.NotesPanel = UiKit.Column(w.Content, 2);
 			Action before = () => Apply(st);
 			LevArk.BeforeSave += before;
-			w.Closed += () => { Apply(st); LevArk.BeforeSave -= before; };
+			w.Closed += () => { Apply(st); LevArk.BeforeSave -= before; if (st.Texture) UnityEngine.Object.Destroy(st.Texture); };
 			Load(st, st.Level);
 		}
 

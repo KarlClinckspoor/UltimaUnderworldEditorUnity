@@ -983,22 +983,7 @@ public class UIManager : MonoBehaviour {
 		}
 		if (input.gameObject.name == "Height")
 		{
-			if (value > 15)
-				value = 15;
-			else if (value < 0)
-				value = 0;
-			tile.FloorHeight = value;
-			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
-		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
-			List<StaticObject> doors = tile.GetTileObjects((so) => { return so.IsDoor(); });
-			if (doors == null)
-				return;
-			foreach (var door in doors)
-			{
-				door.ZPos = tile.FloorHeight * 8;
-				MapCreator.SetGOHeight(door);
-				MapCreator.SetDoorGOPosition(door);
-			}
+			setTileHeight(mts, Mathf.Clamp(value, 0, 15));
 		}
 	}
 	public void ChangeTileProperty(Slider slider)
@@ -1015,18 +1000,7 @@ public class UIManager : MonoBehaviour {
 		slider.handleRect.GetComponentInChildren<Text>().text = value.ToString();
 		if (slider.gameObject.name == "Height")
 		{
-			tile.FloorHeight = value;
-			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
-		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
-			List<StaticObject> doors = tile.GetTileObjects((so) => { return so.IsDoor(); });
-			if (doors == null)
-				return;
-			foreach (var door in doors)
-			{
-				door.ZPos = tile.FloorHeight * 8;
-				MapCreator.SetGOHeight(door);
-				MapCreator.SetDoorGOPosition(door);
-			}
+			setTileHeight(mts, value);
 		}
 	}
 
@@ -1039,10 +1013,14 @@ public class UIManager : MonoBehaviour {
 		MapTile tile = mts.MapTile;
 		if (tile)
 		{
+			// painting runs every frame the button is held: a tile already like the template is left alone
+			if (tile.TileType == templateType && tile.FloorHeight == templateHeight && tile.FloorTexture == templateFloor && tile.WallTexture == templateWall)
+				return;
 			tile.TileType = templateType;
-			tile.FloorHeight = templateHeight;
 			tile.FloorTexture = templateFloor;
 			tile.WallTexture = templateWall;
+			if (tile.FloorHeight != templateHeight)
+				setTileHeight(mts, templateHeight);   // moves the tile's objects with the floor
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
 		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
 
@@ -1061,9 +1039,13 @@ public class UIManager : MonoBehaviour {
 		MapTile tile = mts.MapTile;
 		if (tile)
 		{
-			if(TextureTemplateFloorToggle.isOn)
+			bool floor = TextureTemplateFloorToggle.isOn && tile.FloorTexture != templateFloor;
+			bool wall = TextureTemplateWallToggle.isOn && tile.WallTexture != templateWall;
+			if (!floor && !wall)
+				return;   // painting runs every frame the button is held
+			if (floor)
 				tile.FloorTexture = templateFloor;
-			if(TextureTemplateWallToggle.isOn)
+			if (wall)
 				tile.WallTexture = templateWall;
 			MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
 		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
@@ -1096,6 +1078,34 @@ public class UIManager : MonoBehaviour {
 		mts.SetOverlayColor(sec.SectorColor);
 	}
 
+	/// <summary>The one way a tile's floor height changes (the wheel, the properties panel, the
+	/// template brush): its objects move with the floor. One standing on the floor stays on it;
+	/// a raised one (a lever, a bridge, something on a wall) keeps its height above it; traps
+	/// and triggers keep their height, which is data. The wheel flattened every object to the
+	/// floor and the panel moved only doors.</summary>
+	void setTileHeight(MapTileScript mts, int height)
+	{
+		MapTile tile = mts.MapTile;
+		height = Mathf.Clamp(height, 0, 15);
+		int delta = height - tile.FloorHeight;
+		if (delta == 0)
+			return;
+		var objects = tile.GetTileObjects(so => !MapCreator.IsTrapOrTrigger(so)) ?? new List<StaticObject>();
+		var onFloor = new HashSet<StaticObject>();
+		foreach (var so in objects)
+			if (so.ZPos == MapCreator.FloorZ(so, tile)) onFloor.Add(so);
+		tile.FloorHeight = height;
+		foreach (var so in objects)
+		{
+			so.ZPos = onFloor.Contains(so) ? MapCreator.FloorZ(so, tile) : Mathf.Clamp(so.ZPos + delta * 8, 0, 127);
+			MapCreator.SetGOHeight(so);
+			if (so.IsDoor())
+				MapCreator.SetDoorGOPosition(so);
+		}
+		MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
+		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(tile);
+	}
+
 	public void ChangeTileHeight(GameObject tileObj, float val)
 	{
 		MapTileScript mts = tileObj.GetComponent<MapTileScript>();
@@ -1106,10 +1116,9 @@ public class UIManager : MonoBehaviour {
 		else if (val < 0)
 			height--;
 		height = Mathf.Clamp(height, 0, 15);
-		tile.FloorHeight = height;
-		tile.UpdateObjectsHeight();
-		MapCreator.UpdateTileAndNeighbours(CurrentLevel, mts, false);
-		UltimateEditor.Uw1.UI.ZoneTools.TileEdited(mts.MapTile);
+		if (height == tile.FloorHeight)
+			return;
+		setTileHeight(mts, height);
 
 	
 		if (InputManager.SelectedObject)
@@ -2348,7 +2357,11 @@ public class UIManager : MonoBehaviour {
 
 		if(copyObject)
 		{
-			Action copyObjectAct = () => MapCreator.AddObject(tile, spawnPosition, CurrentLevel, copyObject.ObjectID, copyObject);
+			Action copyObjectAct = () =>
+			{
+				var pasted = MapCreator.AddObject(tile, spawnPosition, CurrentLevel, copyObject.ObjectID, copyObject);
+				if (pasted) GiveOwnText(copyObject, pasted);
+			};
 			createButton("Paste object", copyObjectAct, getContextMenuContent(), contextMenu, 3);
 		}
 	}
@@ -3180,8 +3193,53 @@ public class UIManager : MonoBehaviour {
 
 	#region Create Object Menus
 
+	/// <summary>A pasted book, scroll, writing or grave gets a text slot of its own with a copy
+	/// of the text: sharing the original's slot, an edit to either changed both.</summary>
+	void GiveOwnText(StaticObject original, StaticObject pasted)
+	{
+		var sd = MapCreator.StringData;
+		if (sd == null)
+			return;
+		if (pasted.ObjectID == 400)   // text string trap: its string is quality * 32 + owner of block 9
+		{
+			int free = sd.GetNextEmptyTextTrapString();
+			if (free < 0 || free >= 64 * 32) { SpawnPopupMessage("No free text slot: the pasted trap shares the original's text."); return; }
+			string str = sd.GetTextTrapString(original);
+			if (str == "INVALID") return;
+			pasted.Quality = free / 32;
+			pasted.Owner = free % 32;
+			sd.SetTextTrapString(pasted, str != null && str.EndsWith("\n") ? str.Substring(0, str.Length - 1) : str);
+			return;
+		}
+		if (!pasted.IsQuantity || pasted.Special < 512 || pasted.IsEnchanted)
+			return;
+		int slot = -1;
+		string text = null;
+		if (pasted.IsWriting()) { text = sd.GetWriting(original); slot = sd.GetNextEmptyWritingSlot(); }
+		else if (pasted.IsGrave()) { text = sd.GetGrave(original); slot = sd.GetNextEmptyGraveSlot(); }
+		else if (pasted.IsBook() || pasted.IsScroll()) { text = sd.GetScroll(original); slot = sd.GetNextEmptyScrollSlot(); }
+		else return;
+		if (slot < 0)
+		{
+			SpawnPopupMessage("No free text slot: the pasted copy shares the original's text.");
+			return;
+		}
+		pasted.Special = 512 + slot;
+		if (pasted.IsWriting()) sd.SetWriting(pasted, text);
+		else if (pasted.IsGrave()) sd.SetGrave(pasted, text);
+		else sd.SetScroll(pasted, text);
+	}
+
 	public void CreateObject(int id, int level, Vector2Int tilePos, MapTile tile, Action<StaticObject> afterCreatingAct = null)
 	{
+		// the create menus take a slot when "Create" is pressed: refuse at once when there is none
+		var ld = MapCreator.LevelData[level - 1];
+		bool mobile = StaticObject.GetObjectType(id) == ObjectType.Monster;
+		if (mobile ? ld.MobileListStart < 0 : ld.StaticListStart < 0)
+		{
+			SpawnPopupMessage("This level has no free " + (mobile ? "critter" : "object") + " slot left. Delete something first.");
+			return;
+		}
 		ObjectType type = StaticObject.GetObjectType(id);
 		if (type == ObjectType.Monster)
 			createMonster(id, level, tilePos, tile, afterCreatingAct);

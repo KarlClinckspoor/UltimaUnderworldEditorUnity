@@ -1,6 +1,9 @@
+extern alias current;
 using UltimateEditor.Games;
 using UltimateEditor.Modding;
 using Xunit;
+using ScdBlock = current::UltimateEditor.Games.ScdBlock;
+using ScdRow = current::UltimateEditor.Games.ScdRow;
 
 namespace Formats.Tests
 {
@@ -23,6 +26,28 @@ namespace Formats.Tests
 				n.X = px;
 				Assert.Equal((px - 10) / 3 + 1, n.TileX);
 			}
+		}
+
+		static ScdRow Row(int time, int ev) { var r = new ScdRow(new byte[16]); r.Time = time; r.Event = ev; return r; }
+
+		[Fact]
+		public void Editing_a_schedule_moves_the_level_clocks_with_the_rows()
+		{
+			// level 3 has run rows A and B (next = 2); C has not run
+			var b = new ScdBlock();
+			ScdRow a = Row(1, 1), bb = Row(2, 1), c = Row(5, 1);
+			b.Rows.AddRange(new[] { a, bb, c });
+			b.Clocks[3 * 4 + 2] = 2;
+			b = ScdBlock.Parse(b.ToBytes());
+			a = b.Rows[0]; bb = b.Rows[1]; c = b.Rows[2];
+			Assert.Equal(2, b.ClockNext(3));
+			// a row added at the start (a time already passed) and the first run row removed
+			b.Rows.Insert(0, Row(0, 2));
+			b.Rows.Remove(a);
+			b.RemapClocks();
+			Assert.Equal(2, b.ClockNext(3));     // the new row and B are passed; C is next
+			Assert.Same(c, b.Rows[b.ClockNext(3)]);
+			Assert.Equal(0, b.ClockNext(4));     // a clock at 0 stays at 0
 		}
 
 		[Fact]

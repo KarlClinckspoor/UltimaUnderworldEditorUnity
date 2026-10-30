@@ -128,6 +128,13 @@ namespace UltimateEditor.Uw1.UI
 					? "Randomizer tools shown: Sector mode in the mode list, and Tools > Zones and Zone graph. They are a work in progress."
 					: "Randomizer tools hidden.");
 			});
+			EntryAlways(root, ConversationLog.On ? "Stop logging conversation steps" : "Log conversation steps (for debugging)", () =>
+			{
+				ConversationLog.On = !ConversationLog.On;
+				ui.SpawnPopupMessage(ConversationLog.On
+					? "Converting and playing conversations now writes every step to the Unity log (slow)."
+					: "Conversation steps are no longer logged.");
+			});
 			root.SetAsLastSibling();
 		}
 

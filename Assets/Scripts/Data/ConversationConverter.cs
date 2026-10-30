@@ -23,6 +23,23 @@ public enum WordType
 	Punctuation,
 	Surrogate,
 }
+/// <summary>
+/// Whether the conversation converter and player write each step to the Unity log. Off by
+/// default: a conversion logged every token, which made converting a long conversation slow and
+/// buried real warnings. Warnings and errors are always logged.
+/// </summary>
+public static class ConversationLog
+{
+	const string PrefKey = "UltimateEditor.ConversationLog";
+	static int on = -1;
+
+	public static bool On
+	{
+		get { if (on < 0) on = PlayerPrefs.GetInt(PrefKey, 0) == 1 ? 1 : 0; return on == 1; }
+		set { on = value ? 1 : 0; PlayerPrefs.SetInt(PrefKey, on); PlayerPrefs.Save(); }
+	}
+}
+
 public static class ConversationConverter {
 
 	private static Dictionary<string, int> vars = new Dictionary<string, int>();
@@ -586,7 +603,7 @@ public static class ConversationConverter {
 				throw new ConverterException(string.Format("Variable of the same name already exists : {0}", var), currentNode);
 			vars[var] = getNextVarAdress();
 		}
-		Debug.LogFormat("Memory layout : conv.MemorySlots : {0}, savedVars.Count : {1}, localVarsOffset : {3}, operationVarsOffset : {2}", conv.MemorySlots, savedVars.Count, operationVarsOffset, localVarsOffset);
+		if (ConversationLog.On) Debug.LogFormat("Memory layout : conv.MemorySlots : {0}, savedVars.Count : {1}, localVarsOffset : {3}, operationVarsOffset : {2}", conv.MemorySlots, savedVars.Count, operationVarsOffset, localVarsOffset);
 		//Predefined vars
 		vars["response"] = getNextVarAdress();
 		start();
@@ -595,7 +612,7 @@ public static class ConversationConverter {
 		ConversationNode unread = getNextUnreadNode(nodeList);
 		while(unread)
 		{
-			Debug.LogFormat("Found next unconnected node : {0}", unread);
+			if (ConversationLog.On) Debug.LogFormat("Found next unconnected node : {0}", unread);
 			readNode(unread);
 			unread = getNextUnreadNode(nodeList);
 		}
@@ -635,7 +652,7 @@ public static class ConversationConverter {
 	{
 		currentNode = node;
 		nodeAdresses[currentNode] = conv.Code.Count;
-		Debug.LogFormat("Reading next node : {0}, local count : {1}, opvar count : {2}, adress : {3}", node, localCount, operationCount, nodeAdresses[currentNode]);
+		if (ConversationLog.On) Debug.LogFormat("Reading next node : {0}, local count : {1}, opvar count : {2}, adress : {3}", node, localCount, operationCount, nodeAdresses[currentNode]);
 		string str = node.NodeContent.text;
 		clearLocals();
 		readBlock(ref str);
@@ -644,7 +661,7 @@ public static class ConversationConverter {
 			GameObject conditionGO = node.ConditionsGO.transform.GetChild(i).gameObject;
 			ConversationCondition condition = conditionGO.GetComponent<ConversationCondition>();
 			ConversationNode target = condition.GetTarget();
-			Debug.LogFormat("conditionGO : {0}, condition : {1}, target : {2}", conditionGO, condition, target);
+			if (ConversationLog.On) Debug.LogFormat("conditionGO : {0}, condition : {1}, target : {2}", conditionGO, condition, target);
 			if (!target)
 				continue;
 			string con = "";
@@ -657,7 +674,7 @@ public static class ConversationConverter {
 				if (cAct != ConverterAction.If)
 					throw new ConverterException(string.Format("Invalid statement at condition {0}", i + 1), currentNode);
 				List<Word> conditionL = getLine(ref con);
-				Debug.LogFormat("condition...condition : {0}", debugWords(conditionL));
+				if (ConversationLog.On) Debug.LogFormat("condition...condition : {0}", debugWords(conditionL));
 				resolveFunctions(conditionL);
 				Word result = resolveParenthesis(conditionL);
 				fetch(result.S);
@@ -691,7 +708,7 @@ public static class ConversationConverter {
 		while (str.Length > 0)
 		{
 			Word word = getNext(ref str);
-			Debug.Log(word.S + " / " + word.T);
+			if (ConversationLog.On) Debug.Log(word.S + " / " + word.T);
 
 			ConverterAction cact = getAction(word);
 			if (cact == ConverterAction.Invalid)
@@ -707,7 +724,7 @@ public static class ConversationConverter {
 				throw new ConverterException("Invalid statement '" + word.S + "' at line " + currentLine, currentNode);
 			prepareAction(cact, word.S, ref str);
 
-			Debug.Log("------------------NEXT LINE------------------");
+			if (ConversationLog.On) Debug.Log("------------------NEXT LINE------------------");
 			currentLine++;
 
 			if (str.Length == 0)
@@ -918,7 +935,7 @@ public static class ConversationConverter {
 	}
 	private static void prepareAction(ConverterAction cAct, string word, ref string str)
 	{
-		Debug.LogFormat("prepare action : {0}, {1}", cAct, word);
+		if (ConversationLog.On) Debug.LogFormat("prepare action : {0}, {1}", cAct, word);
 		if(cAct == ConverterAction.Invalid)
 		{
 			Debug.LogWarningFormat("Invalid action : {0}", word);
@@ -1072,7 +1089,7 @@ public static class ConversationConverter {
 		}
 		else if(cAct == ConverterAction.If)
 		{
-			Debug.Log("----------------IF start---------------");
+			if (ConversationLog.On) Debug.Log("----------------IF start---------------");
 			List<Word> condition = getLine(ref str);
 			resolveFunctions(condition);
 			Word result = resolveParenthesis(condition);
@@ -1082,7 +1099,7 @@ public static class ConversationConverter {
 			readBlock(ref str, true);
 			branchEnd(start, conv.Code.Count - start);
 			clearOperations();
-			Debug.Log("--------------ENDIF---------------------");
+			if (ConversationLog.On) Debug.Log("--------------ENDIF---------------------");
 		}
 	}
 	private static void setResponses(ref string str)
@@ -1182,7 +1199,7 @@ public static class ConversationConverter {
 		while(str.Length > 0)
 		{
 			Response response = getResponse(ref str);
-			Debug.LogFormat("Got response : {0}", response);
+			if (ConversationLog.On) Debug.LogFormat("Got response : {0}", response);
 			responses.Add(response);
 			clearSeparators(ref str);
 			Word sepOrEnd = getNext(ref str);
@@ -1206,7 +1223,7 @@ public static class ConversationConverter {
 		text = getString(ref str);
 		clearSeparators(ref str);
 		Word next = getNext(ref str, WordType.Word, true);
-		Debug.LogFormat("next in responses : {0}", next);
+		if (ConversationLog.On) Debug.LogFormat("next in responses : {0}", next);
 		if (next == null)
 			return new Response(text);
 		else if (next.S == "if")
@@ -1286,7 +1303,7 @@ public static class ConversationConverter {
 	}
 	private static Word doFunction(string word, List<Word> arguments = null)
 	{
-		Debug.LogFormat("doFunction {0}", word);
+		if (ConversationLog.On) Debug.LogFormat("doFunction {0}", word);
 		if(arguments != null)
 		{
 			string args = "";
@@ -1294,7 +1311,7 @@ public static class ConversationConverter {
 			{
 				args += arg + " ";
 			}
-			Debug.LogFormat("arguments : {0}", args);
+			if (ConversationLog.On) Debug.LogFormat("arguments : {0}", args);
 		}
 		switch (word.ToLower())
 		{
@@ -1369,7 +1386,7 @@ public static class ConversationConverter {
 	/// </summary>
 	private static string getArrayIndex(string var, List<Word> assignment)
 	{
-		Debug.LogFormat("get array index, var : {0}, assignment : {1}", var, debugWords(assignment));
+		if (ConversationLog.On) Debug.LogFormat("get array index, var : {0}, assignment : {1}", var, debugWords(assignment));
 		if (assignment[0].S != "[")
 			throw new ConverterException(string.Format("Invalid array operation {0} at line {1}", assignment[0], currentLine), currentNode);
 		else if (assignment[2].S !="]")
@@ -1446,7 +1463,7 @@ public static class ConversationConverter {
 	}
 	private static Word doAssignment(string var, List<Word> assignment)
 	{
-		Debug.LogFormat("assigment : {0}", debugWords(assignment, true));
+		if (ConversationLog.On) Debug.LogFormat("assigment : {0}", debugWords(assignment, true));
 		if (assignment.Count <= 1)	//If did not assign a number (eg. local myLoc)
 		{
 			push_int(0);
@@ -1459,7 +1476,7 @@ public static class ConversationConverter {
 		if (assignment[0].S != "=")
 			throw new ConverterException("Invalid operator at line " + currentLine, currentNode);
 		assignment.RemoveAt(0);
-		Debug.LogFormat("assignment at start : {0}", debugWords(assignment));
+		if (ConversationLog.On) Debug.LogFormat("assignment at start : {0}", debugWords(assignment));
 		resolveFunctions(assignment);
 		Word result = resolveParenthesis(assignment);
 		if (result == null)
@@ -1477,8 +1494,8 @@ public static class ConversationConverter {
 		}
 		else
 			store(var);
-		Debug.LogFormat("Assign {0} to var {1}", assignment[0], var);
-		Debug.Log("Clearing operation variables");
+		if (ConversationLog.On) Debug.LogFormat("Assign {0} to var {1}", assignment[0], var);
+		if (ConversationLog.On) Debug.Log("Clearing operation variables");
 		clearOperations();
 		return result;
 	}
@@ -1523,14 +1540,14 @@ public static class ConversationConverter {
 						throw new ConverterException(string.Format("Function {0} at line {1} is not a variable, requires '()' to call.", assignment[index].S, currentLine), currentNode);
 					if (assignment[cur].S != ")")
 						throw new ConverterException(string.Format("Function {0} at line {1} is not a variable, requires '()' to call.", assignment[index].S, currentLine), currentNode);
-					Debug.LogFormat("Function arguments : {0}", debugWords(args));
+					if (ConversationLog.On) Debug.LogFormat("Function arguments : {0}", debugWords(args));
 					Word ret = doFunction(fun.Name, args);
 					for (int i = index; i < cur; i++)
 					{
 						assignment.RemoveAt(index);
 					}
 					assignment[index] = ret;
-					Debug.LogFormat("Assignment after removing function : {0}", debugWords(assignment));
+					if (ConversationLog.On) Debug.LogFormat("Assignment after removing function : {0}", debugWords(assignment));
 					index = assignment.FindLastIndex((x) => x.S == fun.Name);
 				}
 			}
@@ -1545,7 +1562,7 @@ public static class ConversationConverter {
 	private static Word resolveParenthesis(List<Word> assignment)
 	{
 		int first = assignment.FindLastIndex((x) => x.S == "(");
-		Debug.LogFormat("Found par at {0}", first);
+		if (ConversationLog.On) Debug.LogFormat("Found par at {0}", first);
 		Word result = null;
 		while(first != -1)
 		{
@@ -1559,7 +1576,7 @@ public static class ConversationConverter {
 					break;
 				}
 			}
-			Debug.LogFormat("Found end par at {0}", second);
+			if (ConversationLog.On) Debug.LogFormat("Found end par at {0}", second);
 			if (second != -1)
 			{
 				List<Word> newAssignment = new List<Word>();
@@ -1567,16 +1584,16 @@ public static class ConversationConverter {
 				{
 					newAssignment.Add(assignment[i]);
 				}
-				Debug.LogFormat("new calculation : {0}", debugWords(newAssignment));
+				if (ConversationLog.On) Debug.LogFormat("new calculation : {0}", debugWords(newAssignment));
 				result = calculate(newAssignment);
 				//action(newAssignment);
-				Debug.LogFormat("calculated : {0}, count {1}", newAssignment[0], newAssignment.Count);
+				if (ConversationLog.On) Debug.LogFormat("calculated : {0}, count {1}", newAssignment[0], newAssignment.Count);
 				assignment[first] = newAssignment[0];
 				for (int i = first + 1; i < second + 1; i++)
 				{
 					assignment.RemoveAt(first + 1);
 				}
-				Debug.LogFormat("after resolving parenthesis : {0}", debugWords(newAssignment));
+				if (ConversationLog.On) Debug.LogFormat("after resolving parenthesis : {0}", debugWords(newAssignment));
 			}
 			else
 				throw new ConverterException(string.Format("Invalid operation '{0}' at {1}", assignment[first], currentLine), currentNode);
@@ -1585,7 +1602,7 @@ public static class ConversationConverter {
 		//THIS NEEDS TESTING!!!
 		if(result == null)
 			result = calculate(assignment);
-		Debug.LogFormat("ending resolve par., result : {0}", result);
+		if (ConversationLog.On) Debug.LogFormat("ending resolve par., result : {0}", result);
 		return result;
 	}
 	private static Word calculate(List<Word> assignment)
@@ -1625,7 +1642,7 @@ public static class ConversationConverter {
 		}
 		if (result == null)
 			result = assignment[0];
-		Debug.LogFormat("ending calculate, result : {0}", result);
+		if (ConversationLog.On) Debug.LogFormat("ending calculate, result : {0}", result);
 		return result;
 	}
 	private static Word prepareOperation(List<Word> assignment, int index)
@@ -1640,7 +1657,7 @@ public static class ConversationConverter {
 		assignment[index - 1] = result;
 		assignment.RemoveAt(index);
 		assignment.RemoveAt(index);
-		Debug.LogFormat("ending prepare operation, result : {0}", result);
+		if (ConversationLog.On) Debug.LogFormat("ending prepare operation, result : {0}", result);
 		return result;
 	}
 	private static Word negation(List<Word> assignment, int index)
@@ -1670,7 +1687,7 @@ public static class ConversationConverter {
 		string newop = createOperationVariable();
 		store(newop);
 		Word result = new Word(newop, WordType.Word);
-		Debug.LogFormat("Ending negation, result : {0}", newop);
+		if (ConversationLog.On) Debug.LogFormat("Ending negation, result : {0}", newop);
 		assignment[index] = result;
 		assignment.RemoveAt(index + 1);
 		return result;
@@ -1681,7 +1698,7 @@ public static class ConversationConverter {
 		int valB = 0;
 		if(first.T == WordType.Word)
 		{
-			Debug.LogFormat("Retrieving value of variable / function {0}", first.S);
+			if (ConversationLog.On) Debug.LogFormat("Retrieving value of variable / function {0}", first.S);
 			//Convert to number or leave as string
 			if (isVariable(first.S))
 				fetch(first.S);
@@ -1699,7 +1716,7 @@ public static class ConversationConverter {
 		}
 		if(second.T == WordType.Word)
 		{
-			Debug.LogFormat("Retrieving value of variable / function {0}", second.S);
+			if (ConversationLog.On) Debug.LogFormat("Retrieving value of variable / function {0}", second.S);
 			//j.w.
 			if(isVariable(second.S))
 				fetch(second.S);
@@ -1721,67 +1738,67 @@ public static class ConversationConverter {
 		string newop = "";
 		if (op == "+")
 		{
-			Debug.LogFormat("Operation : Addition");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Addition");
 			add();
 		}
 		else if (op == "-")
 		{
-			Debug.LogFormat("Operation : Substraction");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Substraction");
 			sub();
 		}
 		else if (op == "*")
 		{
-			Debug.LogFormat("Operation : Multiplication");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Multiplication");
 			mul();
 		}
 		else if (op == "/")
 		{
-			Debug.LogFormat("Operation : Division");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Division");
 			div();
 		}
 		else if (op == "%")
 		{
-			Debug.LogFormat("Operation : Modulo");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Modulo");
 			mod();
 		}
 		else if(op == "==")
 		{
-			Debug.LogFormat("Operation : Equation");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Equation");
 			equal();
 		}
 		else if(op == "!=")
 		{
-			Debug.LogFormat("Operation : Not-equality");
+			if (ConversationLog.On) Debug.LogFormat("Operation : Not-equality");
 			nonEqual();
 		}
 		else if(op == ">")
 		{
-			Debug.LogFormat("Operation : greater than");
+			if (ConversationLog.On) Debug.LogFormat("Operation : greater than");
 			greater();
 		}
 		else if(op == "<")
 		{
-			Debug.LogFormat("Operation : less than");
+			if (ConversationLog.On) Debug.LogFormat("Operation : less than");
 			less();
 		}
 		else if(op == ">=")
 		{
-			Debug.LogFormat("Operation : greater or equal than");
+			if (ConversationLog.On) Debug.LogFormat("Operation : greater or equal than");
 			greaterOrEqual();
 		}
 		else if(op == "<=")
 		{
-			Debug.LogFormat("Operation : less or equal than");
+			if (ConversationLog.On) Debug.LogFormat("Operation : less or equal than");
 			less();
 		}
 		else if(op == "|")
 		{
-			Debug.LogFormat("Operation : or");
+			if (ConversationLog.On) Debug.LogFormat("Operation : or");
 			or();
 		}
 		else if(op == "&")
 		{
-			Debug.LogFormat("Operation : and");
+			if (ConversationLog.On) Debug.LogFormat("Operation : and");
 			and();
 		}
 		else
@@ -1789,7 +1806,7 @@ public static class ConversationConverter {
 
 		newop = createOperationVariable();
 		store(newop);
-		Debug.LogFormat("Ending operation, result : {0}", newop);
+		if (ConversationLog.On) Debug.LogFormat("Ending operation, result : {0}", newop);
 		return new Word(newop, WordType.Word);
 	}
 
@@ -2883,7 +2900,7 @@ public static class ConversationConverter {
 				cutCount++;
 			}
 			str = str.Remove(atIndex, cutCount);
-			Debug.LogFormat("Substitution get : ${0}{1}{2}", type, colon, cur);
+			if (ConversationLog.On) Debug.LogFormat("Substitution get : ${0}{1}{2}", type, colon, cur);
 			string sub = "";
 			if (type == 'G')
 				sub = getGlobal(cur);
@@ -2903,7 +2920,7 @@ public static class ConversationConverter {
 					string arrIndex = "";
 					for (int i = atIndex; i < str.Length; i++)
 					{
-						Debug.LogFormat("getting array in sub, i : {0}, atindex : {1}, cur : {2}, c : {3}, arrIndex : {4}", i, atIndex, cur, str[i], arrIndex);
+						if (ConversationLog.On) Debug.LogFormat("getting array in sub, i : {0}, atindex : {1}, cur : {2}, c : {3}, arrIndex : {4}", i, atIndex, cur, str[i], arrIndex);
 						arrCount++;
 						if (i == atIndex)
 						{
@@ -2933,9 +2950,9 @@ public static class ConversationConverter {
 				sub += "@SI";
 				sub += (getVariableAdress(cur) - conv.MemorySlots);
 			}
-			Debug.LogFormat("Substitution set : {0}, cur : {1}", sub, cur);
+			if (ConversationLog.On) Debug.LogFormat("Substitution set : {0}, cur : {1}", sub, cur);
 			str = str.Insert(atIndex, sub);
-			Debug.LogFormat("string after sub : {0}", str);
+			if (ConversationLog.On) Debug.LogFormat("string after sub : {0}", str);
 			atIndex = str.IndexOf('$');
 		}
 		return str;

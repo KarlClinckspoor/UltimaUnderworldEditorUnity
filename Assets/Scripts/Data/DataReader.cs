@@ -75,16 +75,6 @@ public static class DataReader {
 		return valid;
 	}
 
-	public static GameType GetGameType(string path)
-	{
-		FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-		int test = fs.ReadByte();
-		GameType gameType = GameType.Null;
-		if (test == 135)
-			gameType = GameType.UW1;
-		fs.Close();
-		return gameType;
-	}
 
 	#endregion
 
@@ -100,43 +90,6 @@ public static class DataReader {
 		return LevArk.Load(GameSession.LevelFile(FilePath));
 	}
 
-	/// <summary>The editor's original UW1-only loader, kept for comparison.</summary>
-	public static List<LevelData> LoadLevelsUw1Direct()
-	{
-		FileStream fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-		int blockCount = GetNumberOfBlocks(fs);
-		int levelCount = blockCount / 15;
-		//LevelData[] levelData = new LevelData[levelCount];
-		List<LevelData> levelData = new List<LevelData>();
-		int[] offsets = GetLevelOffsets(fs, levelCount);
-
-		for (int i = 1; i < levelCount + 1; i++)
-		{
-			int levelOffset = offsets[i - 1];
-			MapTile[,] mapData = ReadMapData(i, levelOffset, fs);
-			int mobCount = ReadFreeListStart(i, levelOffset, ListType.MobActive, fs);
-			int freeMob = ReadFreeListStart(i, levelOffset, ListType.Mobile, fs);
-			int freeStat = ReadFreeListStart(i, levelOffset, ListType.Static, fs);
-			int[] free = ReadFreeObjectIndexes(i, levelOffset, fs);
-			int[] mobList = ReadActiveMobs(i, levelOffset, fs);
-
-			StaticObject[] staticObjects = ReadStaticObjects(fs, mapData, levelOffset, i, mobList, mobCount);
-		
-			int animationOffset = offsets[i - 1 + levelCount];
-			AnimationOverlay[] anims = ReadAnimationOverlays(i, animationOffset, fs);
-			int textureOffset = offsets[i - 1 + (levelCount * 2)];
-
-			int[] floortex = ReadFloorTextureMappings(i, textureOffset, fs);
-			int[] walltex = ReadWallTextureMappings(i, textureOffset, fs);
-			int[] doortex = ReadDoorTextureMappings(i, textureOffset, fs);
-
-			LevelData level = new LevelData(i, mapData, staticObjects, floortex, walltex, doortex, free, mobList, freeMob, freeStat, mobCount, anims);
-			//levelData[i - 1] = level;
-			levelData.Add(level);
-		}
-		fs.Close();
-		return levelData;
-	}
 
 	public static StaticObject[] ReadStaticObjects(Stream fs, MapTile[,] mapData, int levelOffset, int level, int[] mobList, int mobCount)
 	{

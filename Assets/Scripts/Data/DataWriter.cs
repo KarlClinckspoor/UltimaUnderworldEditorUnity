@@ -54,56 +54,6 @@ public static class DataWriter {
 		LevArk.Save(levels);
 	}
 
-	/// <summary>The editor's original UW1-only writer (rebuilds the whole file), kept for comparison.</summary>
-	public static void SaveLevelDataUw1Direct(List<LevelData> levels)
-	{
-		FileStream fs = new FileStream(DataReader.FilePath, FileMode.Create);
-		int blockCount = levels.Count * 15;
-		byte b1 = (byte)(blockCount & 0xFF);
-		byte b2 = (byte)((blockCount & 0xFF00) >> 8);
-		fs.WriteByte(b1);
-		fs.WriteByte(b2);
-
-		long currentOffset = 542;
-		for (int i = 0; i < levels.Count; i++)
-		{
-			fs.Position = 2 + i * 4;
-			SaveLevelOffset(fs, currentOffset);
-
-			LevelData level = levels[i];
-			SaveTiles(level.MapTiles, i + 1, currentOffset, fs);
-			SaveObjects(level.Objects, i + 1, currentOffset, fs);
-			SaveFreeObjectIndexes(level.FreeObjects, i + 1, currentOffset, fs);
-			SaveActiveMobs(level.MobList, i + 1, currentOffset, fs);
-			SaveFreeListStart(i + 1, currentOffset, level.ActiveMobs, level.MobileListStart, level.StaticListStart, fs);
-			fs.WriteByte((byte)'w');
-			fs.WriteByte((byte)'u');
-			currentOffset = fs.Position;
-		}
-		for (int i = 0; i < levels.Count; i++)
-		{
-			fs.Position = 2 + (i + levels.Count) * 4;
-			SaveLevelOffset(fs, currentOffset);
-
-			LevelData level = levels[i];
-			SaveAnimationOverlays(currentOffset, level, fs);
-
-			currentOffset = fs.Position;
-		}
-		for (int i = 0; i < levels.Count; i++)
-		{
-			fs.Position = 2 + (i + levels.Count * 2) * 4;
-			SaveLevelOffset(fs, currentOffset);
-
-			LevelData level = levels[i];
-			SaveFloorTextureMappings(i + 1, currentOffset, fs, level.FloorTextures);
-			SaveWallTextureMappings(i + 1, currentOffset, fs, level.WallTextures);
-			SaveDoorTextureMappings(i + 1, currentOffset, fs, level.DoorTextures);
-
-			currentOffset = fs.Position;
-		}
-		fs.Close();
-	}
 	private static void SaveLevelOffset(Stream fs, long offset)
 	{
 		byte b1 = (byte)(offset & 0xFF);
@@ -605,113 +555,9 @@ public static class DataWriter {
 		GameWrite.Write(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), fs.ToArray());
 	}
 
-	public static void SaveOtherTextures(TextureContainer other, Color[] palette)
-	{
-		string file = "TMOBJ.GR";
-		BackupData(file);
-		int oCount = 0, oFirst = 0;
-
-		//FIXME : this does not save offsets ! maybe it's not necessary?
-		int[] oOffsets = DataReader.ReadGraphicOffsets(file, ref oCount, ref oFirst);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Open);
-		for (int i = 0; i < other.Count; i++)
-		{
-			int[] raw = ConvertToRawTexture(other.Textures[i], palette, false);
-			int width = other.Textures[i].width;
-			int height = other.Textures[i].height;
-			int ratio = 1;
-			if (i == 28 || i == 29) //graves
-				ratio = 2;
-			AdditionalTextureInfo ati = new AdditionalTextureInfo(true, width, height, 0, ratio);
-			SaveTexture(fs, file, oOffsets[i], raw, ati);
-		}
-		fs.Close();
-	}
 
 	public static void SaveTexture(Stream fs, string fileName, int offset, int[] rawTex, AdditionalTextureInfo ati) { GraphicsCodec.SaveTexture(fs, fileName, offset, rawTex, ati); }
 
-	public static void SaveObjectGraphics(TextureContainer objects)
-	{
-		string file = "OBJECTS.GR";
-		BackupData(file);
-
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
-		fs.WriteByte(1);
-		int count = 464;
-		byte count_a = (byte)(count & 0xFF);
-		byte count_b = (byte)((count & 0xFF00) >> 8);
-		fs.WriteByte(count_a);
-		fs.WriteByte(count_b);
-		long curOffset = (count+1) * 4 + 3;
-		Dictionary<int, int> same = new Dictionary<int, int>();
-		//for (int i = 320; i < objects.Count; i++)
-		//{
-		//	int[] A = objects.RawTextures[i];
-		//	for (int j = i + 1; j < objects.Count; j++)
-		//	{
-		//		int[] B = objects.RawTextures[j];
-		//		if (compareRaw(A, B))
-		//			same[j] = i;
-		//	}
-		//}
-		Dictionary<int, long> offsets = new Dictionary<int, long>();
-		for (int i = 0; i < objects.Count; i++)
-		{
-			//Debug.LogFormat("Saving object graphic {0}", i);
-			offsets[i] = curOffset;
-			fs.Position = i * 4 + 3;
-			if(same.ContainsKey(i))
-			{
-				long sameOffset = offsets[i];
-				byte a2 = (byte)(sameOffset & 0xFF);
-				byte b2 = (byte)((sameOffset & 0xFF00) >> 8);
-				byte c2 = (byte)((sameOffset & 0xFF0000) >> 16);
-				byte d2 = (byte)((sameOffset & 0xFF000000) >> 24);
-
-				fs.WriteByte(a2);
-				fs.WriteByte(b2);
-				fs.WriteByte(c2);
-				fs.WriteByte(d2);
-				continue;
-			}
-			byte a = (byte)(curOffset & 0xFF);
-			byte b = (byte)((curOffset & 0xFF00) >> 8);
-			byte c = (byte)((curOffset & 0xFF0000) >> 16);
-			byte d = (byte)((curOffset & 0xFF000000) >> 24);
-
-			fs.WriteByte(a);
-			fs.WriteByte(b);
-			fs.WriteByte(c);
-			fs.WriteByte(d);
-
-			fs.Position = curOffset;
-			List<int> nibbles = CompressToRLE(objects.RawTextures[i]);
-			fs.WriteByte(8);
-			fs.WriteByte((byte)objects.Textures[i].width);
-			fs.WriteByte((byte)objects.Textures[i].height);
-			fs.WriteByte((byte)objects.AuxPalettes[i]);
-			byte nib_a = (byte)(nibbles.Count & 0xFF);
-			byte nib_b = (byte)((nibbles.Count & 0xFF00) >> 8);
-			fs.WriteByte(nib_a);
-			fs.WriteByte(nib_b);
-			SaveNibbles(fs, fs.Position, nibbles);
-			curOffset = fs.Position;
-		}
-		for (int i = objects.Count; i < objects.Count + 4; i++)
-		{
-			fs.Position = i * 4 + 3;
-			byte a = (byte)(curOffset & 0xFF);
-			byte b = (byte)((curOffset & 0xFF00) >> 8);
-			byte c = (byte)((curOffset & 0xFF0000) >> 16);
-			byte d = (byte)((curOffset & 0xFF000000) >> 24);
-
-			fs.WriteByte(a);
-			fs.WriteByte(b);
-			fs.WriteByte(c);
-			fs.WriteByte(d);
-		}
-		fs.Close();
-	}
 
 	public static void SaveNibbles(Stream fs, long offset, List<int> nibbles) { GraphicsCodec.SaveNibbles(fs, offset, nibbles); }
 	private static bool compareRaw(int[] A, int[] B)
@@ -747,59 +593,7 @@ public static class DataWriter {
 		return scaledTex;
 	}
 
-	public static void SavePaletteMapping(int[] mapping)
-	{
-		string path = Application.streamingAssetsPath + "/mapping.dat";
-		if(File.Exists(path))
-		{
-			//Check size
-		}
-		else
-		{
-			FileStream fs = new FileStream(path, FileMode.CreateNew);
-			for (int m = 0; m < mapping.Length; m++)
-				fs.WriteByte((byte)mapping[m]);
-			fs.Close();
-		}
-	}
 
-	/// <summary>
-	/// This function is really only used once to generate mapping. It takes over 10 minutes to run!
-	/// </summary>
-	public static int[] MapPalette(Color[] palette)
-	{
-		int[] mapping = new int[256 * 256 * 256];
-
-		int m = 0;
-		Color32 toCompare;
-		Color32 toCompareTo;
-		Color32 currentClosest;
-		int closestIndex;
-		for (int r = 0; r < 256; r++)
-		{
-			for (int g = 0; g < 256; g++)
-			{
-				for (int b = 0; b < 256; b++)
-				{
-					toCompareTo = new Color32((byte)r, (byte)g, (byte)b, 255);
-					currentClosest = palette[0];
-					closestIndex = 0;
-					for (int i = 0; i < 256; i++)
-					{
-						toCompare = palette[i];
-						if(IsCloserToColorThan32(toCompare, toCompareTo, currentClosest))
-						{
-							currentClosest = palette[i];
-							closestIndex = i;
-						}
-					}
-					mapping[m] = closestIndex;
-					m++;
-				}
-			}
-		}
-		return mapping;
-	}
 
 	public static bool IsCloserToColorThan32(Color32 toCompare, Color32 toCompareTo, Color32 currentClosest)
 	{
@@ -910,45 +704,6 @@ public static class DataWriter {
 		}
 		return rawTex;
 	}
-	/// <summary>
-	/// DOES NOT WORK
-	/// </summary>
-	public static int[] ConvertToRawTextureFromAux(Texture2D tex, Color[] auxPalette, bool reverse)
-	{
-		int size = tex.width * tex.height;
-		int[] rawTex = new int[size];
-		int index = 0;
-
-		for (int y = 0; y < tex.height; y++)
-		{
-			for (int x = 0; x < tex.width; x++)
-			{
-				if (!reverse)
-					index = size - (x + y * tex.width) - 1;
-				else
-					index = x + y * tex.height;	//ULTRA BUG
-				Color col = tex.GetPixel(tex.width - x - 1, y);
-				if (col.a == 0)
-					rawTex[index] = 0;
-				else
-				{
-					int auxIndex = 0;
-					for (int i = 0; i < auxPalette.Length; i++)
-					{
-						if (auxPalette[i] == col)
-						{
-							auxIndex = i;
-							break;
-						}
-						else
-							Debug.LogWarningFormat("Failed to find color {0} in aux palette", col);
-					}
-					rawTex[index] = auxIndex;
-				}
-			}
-		}
-		return rawTex;
-	}
 	public static Texture2D ConvertToAuxPalette(Texture2D tex, Color[] auxPal, int[] rawTex, bool reverse)
 	{
 		Texture2D newTex = new Texture2D(tex.width, tex.height);
@@ -1022,13 +777,19 @@ public static class DataWriter {
 
 	public static void ExportDefaultTextures()
 	{
-		ExportDefaultTextures("Export/Floors", DataReader.FloorTextures, DataReader.FloorTextures.Count);
-		ExportDefaultTextures("Export/Walls", DataReader.WallTextures, DataReader.WallTextures.Count);
-		ExportDefaultTextures("Export/Doors", DataReader.DoorTextures, DataReader.DoorTextures.Count);
-		ExportDefaultTextures("Export/Levers", DataReader.LeverTextures, DataReader.LeverTextures.Count);
-		ExportDefaultTextures("Export/Other", DataReader.LeverTextures, DataReader.LeverTextures.Count);
-		ExportDefaultTextures("Export/Portraits", DataReader.Portraits, DataReader.Portraits.Count);
-		ExportDefaultTextures("Export/Objects", DataReader.ObjectGraphics, DataReader.ObjectGraphics.Count);
+		Export("Export/Floors", DataReader.FloorTextures);
+		Export("Export/Walls", DataReader.WallTextures);
+		Export("Export/Doors", DataReader.DoorTextures);
+		Export("Export/Levers", DataReader.LeverTextures);
+		Export("Export/Other", DataReader.OtherTextures);
+		Export("Export/Portraits", DataReader.Portraits);
+		Export("Export/Objects", DataReader.ObjectGraphics);
+	}
+
+	static void Export(string path, List<Texture2D> textures)
+	{
+		if (textures != null)
+			ExportDefaultTextures(path, textures, textures.Count);
 	}
 
 	public static void ExportDefaultTextures(string path, List<Texture2D> resources, int count)
@@ -1041,6 +802,7 @@ public static class DataWriter {
 		for(int i = 0; i < count; i++)
 		{
 			Texture2D tex = resources[i];
+			if (!tex) continue;
 			string fileName = path + "/" + tex.name + ".png";
 			byte[] png = ImageConversion.EncodeToPNG(tex);
 			if(File.Exists(fileName))

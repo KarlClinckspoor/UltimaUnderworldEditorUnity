@@ -189,7 +189,12 @@ public class PropertiesPanel : MonoBehaviour {
 				}
 			};
 			npcTog.onValueChanged.AddListener((b) => npcTogAct(b));
-			npcDrop.onValueChanged.AddListener((i) => changeMobileNPCID(mo, npcIds[npcDrop.options[npcDrop.value].text]));
+			npcDrop.onValueChanged.AddListener((i) =>
+			{
+				int whoami;
+				if (npcIds.TryGetValue(npcDrop.options[npcDrop.value].text, out whoami))   // the "unknown" entry has no id
+					changeMobileNPCID(mo, whoami);
+			});
 		}
 		else if (so.IsFood() || so.IsLight())
 		{
@@ -530,8 +535,8 @@ public class PropertiesPanel : MonoBehaviour {
 			texButton.onClick.AddListener(() => uiManager.CreateTexturePicker(leverTexs, selTexAct, "Textures", "Select lever texture"));
 			if (so.Special > 0)
 			{
-				StaticObject use = so.GetContainedObject();
-				if(use.ObjectID == 418)
+				StaticObject use = so.GetContainedObject();   // null when the link points at an empty slot
+				if(use && use.ObjectID == 418)
 					createLinkingProperties(use);
 			}
 			else
@@ -549,8 +554,8 @@ public class PropertiesPanel : MonoBehaviour {
 			createSliderProperty("Position", BasicPanel.transform, so.Flags, 0, 7.0f, changePos);
 			if (so.Special > 0)
 			{
-				StaticObject use = so.GetContainedObject();
-				if (use.ObjectID == 418)
+				StaticObject use = so.GetContainedObject();   // null when the link points at an empty slot
+				if (use && use.ObjectID == 418)
 					createLinkingProperties(use);
 			}
 			else

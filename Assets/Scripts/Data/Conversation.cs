@@ -211,7 +211,7 @@ public class ConversationManager
 		if (gameVars != null)
 		{
 			Stack.Set(first, gameVars);
-			Debug.LogFormat("Setting game vars from {0}, vars : \n{1}", first, gameVarsStr);
+			if (ConversationLog.On) Debug.LogFormat("Setting game vars from {0}, vars : \n{1}", first, gameVarsStr);
 		}
 		else
 		{
@@ -227,11 +227,11 @@ public class ConversationManager
 			Stack.Set(Conv.FirstMemorySlot, savedVars);
 			for (int i = 0; i < savedVars.Length; i++)
 				savedVarsStr += "[" + (i + first) + "]: " + savedVars[i].ToString() + "\n";
-			Debug.LogFormat("Saved vars preset, setting saved vars from {0}, saved vars : \n{1}", Conv.FirstMemorySlot, savedVarsStr);
+			if (ConversationLog.On) Debug.LogFormat("Saved vars preset, setting saved vars from {0}, saved vars : \n{1}", Conv.FirstMemorySlot, savedVarsStr);
 		}
 		else
 		{
-			Debug.LogFormat("Creating empty saved vars array for conversation");
+			if (ConversationLog.On) Debug.LogFormat("Creating empty saved vars array for conversation");
 			savedVars = new int[Conv.MemorySlots - Conv.FirstMemorySlot];
 			Conv.SavedVars = savedVars;
 		}
@@ -241,10 +241,10 @@ public class ConversationManager
 		string unnamedVarsStr = "";
 		for (int i = 0; i < Conv.UnnamedVars.Length; i++)
 			unnamedVarsStr += "[" + i + "]: " + Conv.UnnamedVars[i].ToString() + "\n";
-		Debug.LogFormat("Unnamed vars : \n{0}", unnamedVarsStr);
+		if (ConversationLog.On) Debug.LogFormat("Unnamed vars : \n{0}", unnamedVarsStr);
 		Stack.Set(0, Conv.UnnamedVars);
 
-		Debug.LogFormat("Conversation memory layout : Conv.MemorySlots : {0}, Conv.FirstMemorySlot : {1}, Conv.SavedVars.Length : {2}, Conv.ImportedVariables : {3}, first : {4}, Conv.UnnamedVars : {5}", Conv.MemorySlots, Conv.FirstMemorySlot, Conv.SavedVars.Length, Conv.ImportedVariables, first, Conv.UnnamedVars.Length);
+		if (ConversationLog.On) Debug.LogFormat("Conversation memory layout : Conv.MemorySlots : {0}, Conv.FirstMemorySlot : {1}, Conv.SavedVars.Length : {2}, Conv.ImportedVariables : {3}, first : {4}, Conv.UnnamedVars : {5}", Conv.MemorySlots, Conv.FirstMemorySlot, Conv.SavedVars.Length, Conv.ImportedVariables, first, Conv.UnnamedVars.Length);
 
 		Base = conv.MemorySlots;
 		Stack.SetPointer(conv.MemorySlots);
@@ -252,7 +252,7 @@ public class ConversationManager
 		string stackStr = "";
 		for (int i = 0; i < conv.MemorySlots + 10; i++)
 			stackStr += Stack[i].ToString() + "\n";
-		Debug.LogFormat("Stack at start to conv.MemorySlots + 10 : \n {0}", stackStr);
+		if (ConversationLog.On) Debug.LogFormat("Stack at start to conv.MemorySlots + 10 : \n {0}", stackStr);
 
 		ConvWindow = convWindow.GetComponent<ConversationWindow>();
 		if(debugWindow)
@@ -553,7 +553,7 @@ public class ConversationManager
 						if ((Conv.Functions[i].Id_Adress == arg1) && (Conv.Functions[i].Type == ConversationFunction.Function))
 						{
 							ConversationFunction convFunc = Conv.Functions[i];
-							Debug.LogFormat("Calling function, current : {0}, function : {1}\n", Current, convFunc.Name);
+							if (ConversationLog.On) Debug.LogFormat("Calling function, current : {0}, function : {1}\n", Current, convFunc.Name);
 							DoFunction(convFunc);
 							//yield return StartCoroutine(run_imported_function(conv[convtodisplay].functions[i]));
 							break;
@@ -670,8 +670,9 @@ public class ConversationManager
 				break;
 			case OperationType.SAVE_REG:
 				{
-					int arg1 = Stack.Pop();
-					convDebug += string.Format("SAVE_REG, setting result register {0} to stack pop {1}\n", ResultRegister, arg1);
+					// the game copies the top of the stack without popping it (BABL.C, OP_SAVE_REG)
+					int arg1 = Stack[Stack.Pointer - 1];
+					convDebug += string.Format("SAVE_REG, setting result register {0} to the stack top {1}\n", ResultRegister, arg1);
 					ResultRegister = arg1;
 				}
 				break;
@@ -741,7 +742,7 @@ public class ConversationManager
 	public void FinishConversation()
 	{
 		finished = true;
-		Debug.LogFormat("Finishing conv, conv.MemorySlots : {0}, Conv.SavedVars.Length : {1}, Conv.ImportedVariables : {2}, conv.FirstMemorySlot : {3}, conv.UnnamedVars.Length", Conv.MemorySlots, Conv.SavedVars.Length, Conv.ImportedVariables, Conv.FirstMemorySlot, Conv.UnnamedVars.Length);
+		if (ConversationLog.On) Debug.LogFormat("Finishing conv, conv.MemorySlots : {0}, Conv.SavedVars.Length : {1}, Conv.ImportedVariables : {2}, conv.FirstMemorySlot : {3}, conv.UnnamedVars.Length", Conv.MemorySlots, Conv.SavedVars.Length, Conv.ImportedVariables, Conv.FirstMemorySlot, Conv.UnnamedVars.Length);
 		for (int i = 0; i < Conv.MemorySlots - Conv.FirstMemorySlot; i++)
 		{
 			//Conv.PrivateGlobals[i] = Stack.At(Conv.ImportedVariables + i);
@@ -810,7 +811,7 @@ public class ConversationManager
 			else
 				break;
 		}
-		Debug.LogFormat("Response count : {0}", count);
+		if (ConversationLog.On) Debug.LogFormat("Response count : {0}", count);
 		return count;
 	}
 	private void SetResponses(string[] responses)
@@ -909,10 +910,10 @@ public class ConversationManager
 			Debug.LogWarningFormat("Replacement failed - empty string, old : {0}, repType : {1}, varType : {2}, Base : {3}, ptr : {4}", old, repType, varType, Base, ptr);
 			replacement = old;
 		}
-		Debug.LogFormat("Searching text for old : {0}", text.IndexOf(old));
+		if (ConversationLog.On) Debug.LogFormat("Searching text for old : {0}", text.IndexOf(old));
 		text = text.Replace(old, replacement);
 		
-		Debug.LogFormat("String has replacement type {0}, of variable {1}, pointer : {2}\nold : {5}, replacement : {3}, replaced text : {4}", repType, varType, num, replacement, text, old);
+		if (ConversationLog.On) Debug.LogFormat("String has replacement type {0}, of variable {1}, pointer : {2}\nold : {5}, replacement : {3}, replaced text : {4}", repType, varType, num, replacement, text, old);
 		return text;
 	}
 
@@ -964,8 +965,18 @@ public class ConversationManager
 			case "find_barter":			Find_Barter();		break;
 			case "find_barter_total":	Find_Barter_Total();break;
 
-			case "pause":
+			case "pause":				break;	// only a delay in the game
 			case "val":					Val();				break;
+			// UW2's own built-ins act on the game world: the player asks for what they return
+			case "babl_hack":
+			case "give_all_stuff":
+			case "set_sequence":
+			case "transform_talker":
+			case "x_clock":
+			case "x_exp":
+			case "teleport_player":
+			case "teleport_talker":
+			case "switch_pic":			GameOnly(func.Name);	break;
 			case "say":
 			case "respond":
 			case "copy":
@@ -985,14 +996,14 @@ public class ConversationManager
 	private void Babl_Menu()
 	{
 		int arrayPointer = Stack[Stack.Pointer - 2];
-		Debug.LogFormat("Babl menu, argStart: {0}, stack ptr : {1}", arrayPointer, Stack.Pointer);
+		if (ConversationLog.On) Debug.LogFormat("Babl menu, argStart: {0}, stack ptr : {1}", arrayPointer, Stack.Pointer);
 		SetResponses(GetResponses(arrayPointer));
 	}
 	private void Babl_FMenu()
 	{
 		int strArrayPointer = Stack[Stack.Pointer - 2];
 		int flagArrayPointer = Stack[Stack.Pointer - 3];
-		Debug.LogFormat("Babl fmenu, strStart : {0}, flagStart : {1}, stack ptr : {2}", strArrayPointer, flagArrayPointer, Stack.Pointer);
+		if (ConversationLog.On) Debug.LogFormat("Babl fmenu, strStart : {0}, flagStart : {1}, stack ptr : {2}", strArrayPointer, flagArrayPointer, Stack.Pointer);
 		Tuple<string, int>[] responses = GetResponses(strArrayPointer);
 		bool[] flags = new bool[responses.Length];
 		for (int i = 0; i < responses.Length; i++)
@@ -1031,17 +1042,18 @@ public class ConversationManager
 		int ptr2 = Stack[Stack[Stack.Pointer - 3]];
 		string str1 = Conv.GetString(ptr1).ToLower();
 		string str2 = Conv.GetString(ptr2).ToLower();
-		Debug.LogFormat("compare, ptr1 : {0}, ptr2 : {1}, str1 : {2}, str2 : {3}", ptr1, ptr2, str1, str2);
+		if (ConversationLog.On) Debug.LogFormat("compare, ptr1 : {0}, ptr2 : {1}, str1 : {2}, str2 : {3}", ptr1, ptr2, str1, str2);
 		if (str1 == str2)
 			ResultRegister = 1;
 		else
 			ResultRegister = 0;
 	}
+	static readonly System.Random rnd = new System.Random();
 	private void Random()
 	{
 		int max = Stack[Stack[Stack.Pointer - 2]];
-		System.Random rnd = new System.Random();
-		ResultRegister = rnd.Next(max + 1);
+		// the game's random is 1 .. max (BABL.C, BabRand)
+		ResultRegister = max < 1 ? 1 : rnd.Next(1, max + 1);
 	}
 	private void Contains()
 	{
@@ -1049,7 +1061,7 @@ public class ConversationManager
 		int ptr2 = Stack[Stack[Stack.Pointer - 3]];
 		string str1 = Conv.GetString(ptr1).ToLower();
 		string str2 = Conv.GetString(ptr2).ToLower();
-		Debug.LogFormat("contains, ptr1 : {0}, ptr2 : {1}, str1 : {2}, str2 : {3}", ptr1, ptr2, str1, str2);
+		if (ConversationLog.On) Debug.LogFormat("contains, ptr1 : {0}, ptr2 : {1}, str1 : {2}, str2 : {3}", ptr1, ptr2, str1, str2);
 		if (str1.Contains(str2))
 			ResultRegister = 1;
 		else
@@ -1060,6 +1072,18 @@ public class ConversationManager
 		int strIndex = Stack[Stack.Pointer - 2];
 		string str = Conv.GetString(strIndex);
 		ResultRegister = str.Length;
+	}
+	/// <summary>A built-in that changes the game (UW2's clocks, teleports, portraits...): shown with
+	/// its arguments, and the value it returns is asked for.</summary>
+	private void GameOnly(string name)
+	{
+		int count = Stack[Stack.Pointer - 1];
+		var args = new List<string>();
+		for (int i = 0; i < count && i < 8 && Stack.Pointer - 2 - i >= 0; i++)
+			args.Add(Stack[Stack[Stack.Pointer - 2 - i]].ToString());
+		ConvWindow.Popup = CreateInputPopup(string.Format("{0}({1})\nThis acts on the game, which the editor does not play.\nEnter the value it returns (0 if none)", name, string.Join(", ", args)),
+			(str) => { int v; ResultRegister = int.TryParse(str, out v) ? v : 0; }, InputField.ContentType.IntegerNumber);
+		PauseConversation();
 	}
 	private void Val()
 	{

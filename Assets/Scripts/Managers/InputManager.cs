@@ -186,7 +186,7 @@ public class InputManager : MonoBehaviour {
 			}
 		}
 		float scroll = Input.GetAxis("Mouse ScrollWheel");
-		if(scroll != 0)
+		if(scroll != 0 && currentObject && GetDataType(currentObject) == DataType.Tile)
 		{
 			clickedObject = currentObject.transform.parent.gameObject;
 			UIManager.ChangeTileHeight(clickedObject, scroll);
