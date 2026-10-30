@@ -119,9 +119,12 @@ public static class DataWriter {
 
 	public static void SaveTextureData(TextureData textures)
 	{
-		// The writers below produce UW1's files (F32/W64 and the rest). UW2: T64.TR is patched
-		// for the textures that were replaced (Uw2T64), and the .GR files are rebuilt with only
-		// their replaced pictures re-encoded (Uw2Graphics).
+		// Both games write only the pictures that were replaced: UW2 patches T64.TR (Uw2T64),
+		// UW1 its four .TR files (Uw1TrFiles), and both rebuild a .GR file with only its
+		// replaced pictures re-encoded (GrPictures). A file with no replaced picture is not
+		// written, so it keeps the shipped bytes.
+		GrPictures.Problems.Clear();
+		var report = new List<string>();
 		if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
 			List<int> changed; List<string> warnings;
@@ -133,41 +136,70 @@ public static class DataWriter {
 				File.WriteAllBytes(Uw2T64.Path, t64);
 				Uw2T64.Saved(t64, textures.Walls, textures.Floors);
 			}
-			foreach (var line in Uw2Graphics.Save(textures, BackupData))
-				Debug.Log(line);
-			SaveTerrainData(textures);
-			return;
+			report.AddRange(GrPictures.Save(textures, BackupData));
 		}
-		SaveTextures("F32.TR", textures.Floors, textures.Palettes[0], 2);
-		SaveTextures("F16.TR", textures.Floors, textures.Palettes[0], 2, 2);
-		SaveTextures("W64.TR", textures.Walls, textures.Palettes[0], 2);
-		SaveTextures("W16.TR", textures.Walls, textures.Palettes[0], 2, 4);
-		SaveTextures("DOORS.GR", textures.Doors, textures.Palettes[0], 1);
-		SaveTextures("TMFLAT.GR", textures.Levers, textures.Palettes[0], 1);
-		SaveTextures("GENHEAD.GR", textures.GenHeads, textures.Palettes[0], 1);
-		SaveTextures("CHARHEAD.GR", textures.NPCHeads, textures.Palettes[0], 1, 0, 56 - textures.NPCHeads.Count);
-		SaveObjectGraphics(textures.Objects);
-		SaveOtherTextures(textures.Other, textures.Palettes[0]);
+		else
+		{
+			// UW1 can add and remove walls, floors, doors and character heads, which changes a
+			// file's list and offsets: such a file is written whole, by the old writers.
+			string dataDir = FileExplorer.GetUpperPath(DataReader.FilePath);
+			if (Uw1TrFiles.CanPatch(true, textures.Walls))
+				Uw1TrFiles.Save(true, textures.Walls, BackupData, report);
+			else
+			{
+				SaveTextures("W64.TR", textures.Walls, textures.Palettes[0], 2);
+				SaveTextures("W16.TR", textures.Walls, textures.Palettes[0], 2, 4);
+				Uw1TrFiles.RememberWalls(dataDir, textures.Walls.Textures);
+				report.Add("W64.TR and W16.TR: written whole (the number of textures changed)");
+			}
+			if (Uw1TrFiles.CanPatch(false, textures.Floors))
+				Uw1TrFiles.Save(false, textures.Floors, BackupData, report);
+			else
+			{
+				SaveTextures("F32.TR", textures.Floors, textures.Palettes[0], 2);
+				SaveTextures("F16.TR", textures.Floors, textures.Palettes[0], 2, 2);
+				Uw1TrFiles.RememberFloors(dataDir, textures.Floors.Textures);
+				report.Add("F32.TR and F16.TR: written whole (the number of textures changed)");
+			}
+			var whole = new List<string>();
+			if (!GrPictures.CanPatch("DOORS.GR", textures.Doors))
+			{
+				SaveTextures("DOORS.GR", textures.Doors, textures.Palettes[0], 1);
+				GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), textures.Doors.Textures, textures.Palettes[0]);
+				whole.Add("DOORS.GR");
+			}
+			if (!GrPictures.CanPatch("CHARHEAD.GR", textures.NPCHeads))
+			{
+				SaveTextures("CHARHEAD.GR", textures.NPCHeads, textures.Palettes[0], 1, 0, 56 - textures.NPCHeads.Count);
+				GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), textures.NPCHeads.Textures, textures.Palettes[0]);
+				whole.Add("CHARHEAD.GR");
+			}
+			foreach (var f in whole) report.Add(f + ": written whole (the number of pictures changed)");
+			report.AddRange(GrPictures.Save(textures, BackupData, whole));
+		}
+		foreach (var line in report) Debug.Log(line);
 		SaveTerrainData(textures);
 	}
-
 	public static void SaveStringData(StringData strings)
 	{
 		string file = "STRINGS.PAK";
-		BackupData(file);
-		if (File.Exists(file))
-			File.Delete(file);
+		string path = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file);
+		// Nothing changed since the strings were read or last saved: the file is as they are.
+		if (File.Exists(path) && !strings.ChangedSinceSnapshot())
+			return;
 		strings.SortBlocks();
 		// Check every string before touching the file: a character the Huffman tree cannot
 		// encode used to stop the block half written, leaving garbage offsets behind it.
 		foreach (var block in strings.Blocks)
 			for (int i = 0; i < block.StringCount; i++)
-				if (ConvertString(block.Strings[i], strings.Nodes) == null)
+				if (!StringsPak.CanEncode(block.Strings[i], strings.Nodes))
 					throw new InvalidDataException(string.Format("String {0} of block {1} has a character STRINGS.PAK cannot encode:\n{2}", i, block.BlockNumber, block.Strings[i]));
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
+		BackupData(file);
+		FileStream fs = new FileStream(path, FileMode.Create);
 		long tableStart = SaveHuffmanNodes(fs, strings.Nodes);
 		SaveStringBlocks(fs, strings.Blocks, strings.Nodes, tableStart);
 		fs.Close();
+		strings.TakeSnapshot();
 		//StreamWriter sw = new StreamWriter(Application.dataPath + "/strings.txt");
 		//foreach (var block in strings.Blocks)
 		//{
@@ -203,6 +235,13 @@ public static class DataWriter {
 		SaveCommonData(objDat);
 		SaveObjectData(objDat);
 		SaveMonsterSpriteInfo(objDat);
+	}
+
+	static bool SameBytes(byte[] a, byte[] b)
+	{
+		if (a.Length != b.Length) return false;
+		for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+		return true;
 	}
 
 	public static void BackupData(string toBackup)
@@ -554,6 +593,8 @@ public static class DataWriter {
 		{
 			Texture2D tex = scaleFactor > 0 ? ScaleDownTexture(textures.Textures[i], scaleFactor) : textures.Textures[i];	//Only for floors and walls
 			int[] raw = ConvertToRawTexture(tex, palette, reverse);
+			if (scaleFactor > 0)
+				UnityEngine.Object.Destroy(tex);	// the scaled copy is only for this file
 			SaveTexture(fs, file, floorOffsets[i], raw, textures.ATI);
 		}
 		fs.Close();
@@ -791,15 +832,61 @@ public static class DataWriter {
 
 		return 0;
 	}
+	static byte[] paletteMapping;
+
+	/// <summary>The editor's palette table (StreamingAssets/mapping.dat): the palette 0 index of
+	/// every 24-bit colour, 16 MB, read once. It used to be read with a seek per pixel, which
+	/// made a UW1 save take seconds. Null when the file is missing.</summary>
+	static byte[] PaletteMapping
+	{
+		get
+		{
+			if (paletteMapping == null)
+			{
+				string path = Application.streamingAssetsPath + "/mapping.dat";
+				if (File.Exists(path))
+					paletteMapping = File.ReadAllBytes(path);
+			}
+			return paletteMapping;
+		}
+	}
+
+	/// <summary>Palette 0 index of an opaque colour, through the editor's palette table; -1 when
+	/// the table is missing.</summary>
+	public static int PaletteIndex(Color32 c)
+	{
+		var map = PaletteMapping;
+		return map == null ? -1 : map[c.r * 65536 + c.g * 256 + c.b];
+	}
+
+	/// <summary>A picture's palette indices, top row first (as the .TR and .GR files hold them):
+	/// transparent pixels are 0, the others go through the palette table. Null when the table
+	/// is missing.</summary>
+	public static int[] ToPaletteIndexes(Texture2D tex)
+	{
+		var map = PaletteMapping;
+		if (map == null) return null;
+		int w = tex.width, h = tex.height;
+		var raw = new int[w * h];
+		Color32[] px = tex.GetPixels32();	// bottom row first
+		for (int y = 0; y < h; y++)
+			for (int x = 0; x < w; x++)
+			{
+				Color32 c = px[x + (h - 1 - y) * w];
+				raw[x + y * w] = c.a == 0 ? 0 : map[c.r * 65536 + c.g * 256 + c.b];
+			}
+		return raw;
+	}
+
 	public static int[] ConvertToRawTexture(Texture2D tex, Color[] palette, bool reverse)
 	{
-		string path = Application.streamingAssetsPath + "/mapping.dat";
-		if (!File.Exists(path))
+		var map = PaletteMapping;
+		if (map == null)
 			return null;
-		FileStream fs = new FileStream(path, FileMode.Open);
 		int size = tex.width * tex.height;
 		int[] rawTex = new int[size];
 		int index = 0;
+		Color32[] px = tex.GetPixels32();	// row by row from the bottom, as GetPixel(x, y) counts
 
 		for (int y = 0; y < tex.height; y++)
 		{
@@ -809,14 +896,13 @@ public static class DataWriter {
 					index = size - (x + y * tex.width) - 1;
 				else
 					index = x + y * tex.height;
-				Color32 col = tex.GetPixel(tex.width - x - 1, y);
+				Color32 col = px[(tex.width - x - 1) + y * tex.width];
 				if (col.a == 0)
 					rawTex[index] = 0;
 				else
-					rawTex[index] = DataReader.ReadPaletteMapping(fs, col.r, col.g, col.b);
+					rawTex[index] = map[col.r * 65536 + col.g * 256 + col.b];
 			}
 		}
-		fs.Close();
 		return rawTex;
 	}
 	/// <summary>
@@ -961,8 +1047,8 @@ public static class DataWriter {
 	public static void SaveTerrainData(TextureData texData)
 	{
 		string file = "TERRAIN.DAT";
-		BackupData(file);
-		FileStream fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file), FileMode.Create);
+		string path = GameFiles.Resolve(FileExplorer.GetUpperPath(DataReader.FilePath) + "/" + file);
+		var fs = new MemoryStream();
 
 		for (int i = 0; i < 256; i++)
 		{
@@ -979,7 +1065,12 @@ public static class DataWriter {
 			fs.WriteByte(a);
 			fs.WriteByte(b);
 		}
-		fs.Close();
+		byte[] now = fs.ToArray();
+		// written only when a value changed, so an unchanged file keeps its date
+		if (File.Exists(path) && SameBytes(File.ReadAllBytes(path), now))
+			return;
+		BackupData(file);
+		File.WriteAllBytes(path, now);
 	}
 
 	#endregion

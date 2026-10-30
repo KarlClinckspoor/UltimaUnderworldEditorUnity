@@ -17,6 +17,50 @@ public class StringData
 		StringBlock.NpcName = slot => MapCreator.StringData.GetNPCName(slot);
 	}
 
+	// The strings as last read or saved (block number, then its strings), so a save can tell
+	// whether STRINGS.PAK needs writing at all (DataWriter.SaveStringData).
+	List<KeyValuePair<int, string[]>> snapshot;
+
+	/// <summary>Remembers the strings as they are now: called after reading and after saving.</summary>
+	public void TakeSnapshot()
+	{
+		snapshot = new List<KeyValuePair<int, string[]>>(Blocks.Count);
+		foreach (var b in Blocks)
+			snapshot.Add(new KeyValuePair<int, string[]>(b.BlockNumber, Take(b)));
+	}
+
+	static string[] Take(StringBlock b)
+	{
+		int n = b.Strings == null ? 0 : System.Math.Min(b.StringCount, b.Strings.Count);
+		var s = new string[n];
+		for (int i = 0; i < n; i++) s[i] = b.Strings[i];
+		if (b.Strings != null && b.StringCount > b.Strings.Count) System.Array.Resize(ref s, b.StringCount);   // keeps the count in the comparison
+		return s;
+	}
+
+	/// <summary>Whether any block, string or string count differs from the last snapshot (true
+	/// when none was taken). Block order does not count: the file is written sorted.</summary>
+	public bool ChangedSinceSnapshot()
+	{
+		if (snapshot == null || snapshot.Count != Blocks.Count) return true;
+		var byNumber = new Dictionary<int, string[]>();
+		foreach (var kv in snapshot)
+		{
+			if (byNumber.ContainsKey(kv.Key)) return true;
+			byNumber[kv.Key] = kv.Value;
+		}
+		foreach (var b in Blocks)
+		{
+			string[] was;
+			if (!byNumber.TryGetValue(b.BlockNumber, out was)) return true;
+			string[] now = Take(b);
+			if (now.Length != was.Length) return true;
+			for (int i = 0; i < now.Length; i++)
+				if (!string.Equals(now[i], was[i], System.StringComparison.Ordinal)) return true;
+		}
+		return false;
+	}
+
 	public void SortBlocks()
 	{
 		Blocks.Sort((a, b) => a.BlockNumber.CompareTo(b.BlockNumber));

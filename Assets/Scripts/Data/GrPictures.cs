@@ -5,14 +5,20 @@ using UltimateEditor.Games;
 using UnityEngine;
 
 /// <summary>
-/// Saves UW2's .GR pictures: DOORS.GR, TMFLAT.GR (levers and switches), TMOBJ.GR (wall
-/// decals), GENHEAD.GR and CHARHEAD.GR (portraits) and OBJECTS.GR. The writers in DataWriter
-/// produce UW1's files from scratch; for UW2 the file is rebuilt with only the replaced
-/// pictures re-encoded (GrFile.Rebuild), so everything else keeps its bytes and empty
-/// pictures stay empty. A picture counts as replaced when its texture object was swapped
-/// (MapCreator.UpdateTexture), as for T64.TR (Uw2T64).
+/// Saves the .GR pictures of both games: DOORS.GR, TMFLAT.GR (levers and switches), TMOBJ.GR
+/// (wall decals), GENHEAD.GR and CHARHEAD.GR (portraits) and OBJECTS.GR. A file is rebuilt
+/// with only the replaced pictures re-encoded (GrFile.Rebuild), so everything else keeps its
+/// bytes and empty pictures stay empty; a file with no replaced picture is not written at all.
+/// A picture counts as replaced when its texture object was swapped (MapCreator.UpdateTexture),
+/// as for the textures (Uw2T64, Uw1TrFiles).
+///
+/// UW1 can also add and remove doors and character heads (MapCreator.AddTexture,
+/// RemoveTexture), which changes the file's list: DataWriter rewrites such a file whole and
+/// calls Remember again (CanPatch says when). 8-bit pictures map colours through
+/// <see cref="ColorToIndex"/> when it is set (UW1: the editor's palette table, as UW1's old
+/// writer did), otherwise to the palette's own colour or the nearest one (UW2).
 /// </summary>
-public static class Uw2Graphics
+public static class GrPictures
 {
 	sealed class Tracked
 	{
@@ -24,6 +30,32 @@ public static class Uw2Graphics
 	static readonly Dictionary<string, Tracked> files = new Dictionary<string, Tracked>();
 	static Color[] palette;
 
+	/// <summary>Palette index of an opaque colour for 8-bit pictures, or null for the palette's
+	/// own colour or the nearest one.</summary>
+	public static Func<Color32, int> ColorToIndex;
+
+	/// <summary>The .GR files this class writes, with the texture list each is shown as.</summary>
+	public static KeyValuePair<string, TextureContainer>[] Files(TextureData t)
+	{
+		return new[]
+		{
+			new KeyValuePair<string, TextureContainer>("DOORS.GR", t.Doors),
+			new KeyValuePair<string, TextureContainer>("TMFLAT.GR", t.Levers),
+			new KeyValuePair<string, TextureContainer>("TMOBJ.GR", t.Other),
+			new KeyValuePair<string, TextureContainer>("GENHEAD.GR", t.GenHeads),
+			new KeyValuePair<string, TextureContainer>("CHARHEAD.GR", t.NPCHeads),
+			new KeyValuePair<string, TextureContainer>("OBJECTS.GR", t.Objects),
+		};
+	}
+
+	/// <summary>Whether the file can be patched: it was read, and its list has the length it
+	/// had then (no picture added or removed).</summary>
+	public static bool CanPatch(string fileName, TextureContainer c)
+	{
+		Tracked tr;
+		return c != null && files.TryGetValue(fileName, out tr) && tr.Bytes != null && c.Count == tr.Original.Length;
+	}
+
 	/// <summary>What the last Save could not write, for the message after saving.</summary>
 	public static readonly List<string> Problems = new List<string>();
 
@@ -32,6 +64,7 @@ public static class Uw2Graphics
 		files.Clear();
 		Problems.Clear();
 		palette = null;
+		ColorToIndex = null;
 	}
 
 	/// <summary>Called at load with the textures as read and the main palette.</summary>
@@ -47,23 +80,16 @@ public static class Uw2Graphics
 	}
 
 	/// <summary>Writes the files that have replaced pictures. backup is called with a file
-	/// name before that file is written. Returns one line per file written or problem found.</summary>
-	public static List<string> Save(TextureData t, Action<string> backup)
+	/// name before that file is written; skip names files the caller writes itself. Returns
+	/// one line per file written or problem found. Problems is not cleared here: the caller
+	/// clears it once per save (DataWriter.SaveTextureData).</summary>
+	public static List<string> Save(TextureData t, Action<string> backup, ICollection<string> skip = null)
 	{
 		var report = new List<string>();
-		Problems.Clear();
-		var all = new[]
-		{
-			new KeyValuePair<string, TextureContainer>("DOORS.GR", t.Doors),
-			new KeyValuePair<string, TextureContainer>("TMFLAT.GR", t.Levers),
-			new KeyValuePair<string, TextureContainer>("TMOBJ.GR", t.Other),
-			new KeyValuePair<string, TextureContainer>("GENHEAD.GR", t.GenHeads),
-			new KeyValuePair<string, TextureContainer>("CHARHEAD.GR", t.NPCHeads),
-			new KeyValuePair<string, TextureContainer>("OBJECTS.GR", t.Objects),
-		};
 		// one file failing (unreadable, in use) must not stop the rest of the save
-		foreach (var f in all)
+		foreach (var f in Files(t))
 		{
+			if (skip != null && skip.Contains(f.Key)) continue;
 			try { SaveFile(f.Key, f.Value, f.Key == "OBJECTS.GR", report, backup); }
 			catch (Exception e) { Warn(report, f.Key + ": not written (" + e.Message + ")"); }
 		}
@@ -120,7 +146,7 @@ public static class Uw2Graphics
 		report.Add(name + ": " + replace.Count + " picture(s) written");
 	}
 
-	static void Warn(List<string> report, string line)
+	public static void Warn(List<string> report, string line)
 	{
 		report.Add(line);
 		Problems.Add(line);
@@ -136,11 +162,13 @@ public static class Uw2Graphics
 		var lookup = new Dictionary<Color32, int>();
 		for (int i = palette.Length - 1; i >= 1; i--) lookup[(Color32)palette[i]] = i;
 		Color32[] px = tex.GetPixels32();   // bottom row first
+		var map = ColorToIndex;
 		for (int y = 0; y < h; y++)
 			for (int x = 0; x < w; x++)
 			{
 				Color32 c = px[x + (h - 1 - y) * w];
-				raw[x + y * w] = c.a == 0 ? 0 : Nearest(c, lookup);
+				int k = c.a == 0 ? 0 : map != null ? map(c) : -1;
+				raw[x + y * w] = k >= 0 ? k : Nearest(c, lookup);   // no table: the nearest colour
 			}
 		return raw;
 	}

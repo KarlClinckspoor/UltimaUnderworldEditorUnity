@@ -775,19 +775,26 @@ public static class DataReader {
 
 		fs.Close();
 
-		if (game.Kind == UltimateEditor.Games.GameKind.UW2)
 		{
-			// UW2's pictures are written back by patching their files (Data/Uw2Graphics.cs).
+			// Both games' pictures are written back by patching their files (Data/GrPictures.cs,
+			// Data/Uw1TrFiles.cs, Data/Uw2T64.cs), so the files are remembered as read.
 			// After fs.Close(): on Windows, OBJECTS.GR cannot be read again while that stream
 			// (opened for writing too) holds it.
 			string dataDir = FileExplorer.GetUpperPath(FilePath);
-			Uw2Graphics.Reset();
-			Uw2Graphics.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), doortex, pals[0]);
-			Uw2Graphics.Remember("TMFLAT.GR", GameFiles.Resolve(dataDir + "/TMFLAT.GR"), levertex, pals[0]);
-			Uw2Graphics.Remember("TMOBJ.GR", GameFiles.Resolve(dataDir + "/TMOBJ.GR"), othertex, pals[0]);
-			Uw2Graphics.Remember("GENHEAD.GR", GameFiles.Resolve(dataDir + "/GENHEAD.GR"), portrTex, pals[0]);
-			Uw2Graphics.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
-			Uw2Graphics.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
+			GrPictures.Reset();
+			if (game.Kind == UltimateEditor.Games.GameKind.UW1)
+			{
+				// UW1's 8-bit pictures go through the editor's palette table, as its old writers did
+				GrPictures.ColorToIndex = DataWriter.PaletteIndex;
+				Uw1TrFiles.Reset();
+				Uw1TrFiles.Remember(dataDir, walls.Textures, floors.Textures);
+			}
+			GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), doortex, pals[0]);
+			GrPictures.Remember("TMFLAT.GR", GameFiles.Resolve(dataDir + "/TMFLAT.GR"), levertex, pals[0]);
+			GrPictures.Remember("TMOBJ.GR", GameFiles.Resolve(dataDir + "/TMOBJ.GR"), othertex, pals[0]);
+			GrPictures.Remember("GENHEAD.GR", GameFiles.Resolve(dataDir + "/GENHEAD.GR"), portrTex, pals[0]);
+			GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
+			GrPictures.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
 		}
 		fs = new FileStream(GameFiles.Resolve(FileExplorer.GetUpperPath(FilePath) + "/TERRAIN.DAT"), FileMode.Open);
 		int[] wallDat = new int[256];
@@ -1018,6 +1025,7 @@ public static class DataReader {
 		}
 		fs.Close();
 		StringData strData = new StringData(pair.Item1, blockPair.Item1, blockPair.Item2);
+		strData.TakeSnapshot();
 		return strData;
 	}
 

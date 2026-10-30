@@ -142,7 +142,7 @@ namespace UltimateEditor.Uw1.UI
 			if (!ok) return;    // Save has shown what failed
 			lastAutosave = DateTime.Now;
 			string text = "Autosaved at " + lastAutosave.Value.ToString("HH:mm");
-			int problems = Uw2Graphics.Problems.Count;
+			int problems = GrPictures.Problems.Count;
 			if (problems > 0)
 				text += "; " + problems + (problems == 1 ? " picture was" : " pictures were") + " not written (File > Save lists them)";
 			ShowToast(text);

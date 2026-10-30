@@ -494,7 +494,7 @@ public class UIManager : MonoBehaviour {
 		yield return StartCoroutine(Save());
 		if (!lastSaveOk)
 			yield break;
-		if (Uw2Graphics.Problems.Count == 0)
+		if (GrPictures.Problems.Count == 0)
 		{
 			after();
 			yield break;
@@ -502,7 +502,7 @@ public class UIManager : MonoBehaviour {
 		// opening reloads the scene at once, so ask here rather than leave a popup nobody sees
 		if (popup) Destroy(popup);
 		var w = UltimateEditor.Uw1.UI.UiKit.Window("Saved, with problems", 480, 240);
-		UltimateEditor.Uw1.UI.UiKit.Paragraph(w.Content, "Everything was saved except these pictures:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), 11, Color.white);
+		UltimateEditor.Uw1.UI.UiKit.Paragraph(w.Content, "Everything was saved except these pictures:\n" + string.Join("\n", GrPictures.Problems.ToArray()), 11, Color.white);
 		var row = UltimateEditor.Uw1.UI.UiKit.Row(w.Content, 24);
 		UltimateEditor.Uw1.UI.UiKit.Button(row, "Open anyway", () => { w.Close(); after(); }, 120, 22);
 		UltimateEditor.Uw1.UI.UiKit.Button(row, "Stay here", w.Close, 100, 22);
@@ -604,8 +604,8 @@ public class UIManager : MonoBehaviour {
 			if (!quiet) Destroy(popup);
 			lastSaveOk = true;
 			if (Saved != null) Saved();
-			if (!quiet && Uw2Graphics.Problems.Count > 0)
-				SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", Uw2Graphics.Problems.ToArray()), null, true);
+			if (!quiet && GrPictures.Problems.Count > 0)
+				SpawnPopupMessage("Saved. Some pictures were not written:\n" + string.Join("\n", GrPictures.Problems.ToArray()), null, true);
 		}
 		finally
 		{
@@ -5185,10 +5185,8 @@ public class UIManager : MonoBehaviour {
 
 	private void updateSectorDropdown(int levelNumber)
 	{
-		Debug.Log($"updateSectorDropdown, {levelNumber}, CurrentLevel {CurrentLevel}");
 		if (levelNumber == CurrentLevel)
 		{
-			Debug.Log($"Updating");
 			SectorDropdown.ClearOptions();
 			MapCreator.LevelData[CurrentLevel - 1].Sectors.ForEach(s => SectorDropdown.options.Add(new Dropdown.OptionData(s.Name)));			
 			SectorDropdown.value = 0;			

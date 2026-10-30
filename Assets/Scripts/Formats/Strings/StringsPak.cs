@@ -9,8 +9,10 @@ namespace UltimateEditor.Games
 	/// four bytes a node), a block table (word count, then word block number and doubleword
 	/// offset), and each block (word string count, word offsets, then the bit stream).
 	///
-	/// The methods are DataReader's and DataWriter's string code, moved here unchanged so they
-	/// build without Unity; DataReader and DataWriter call them. Logging goes through FormatsLog.
+	/// The methods are DataReader's and DataWriter's string code, moved here so they build
+	/// without Unity; DataReader and DataWriter call them. Logging goes through FormatsLog. Since
+	/// the move, ConvertString uses a code table per tree (the same bytes, several times faster)
+	/// and CanEncode checks a string without encoding it.
 	/// </summary>
 	public static class StringsPak
 	{
@@ -171,7 +173,95 @@ namespace UltimateEditor.Games
 			}
 			return (char)curNode.Char;
 		}
+		/// <summary>Each leaf's code (its path from the root, the first step in the highest bit)
+		/// for the tree in use, worked out once per tree instead of walking up the tree for every
+		/// character of every string.</summary>
+		sealed class CodeTable
+		{
+			public HuffmanNode[] Nodes;
+			public readonly Dictionary<char, KeyValuePair<ulong, int>> Codes = new Dictionary<char, KeyValuePair<ulong, int>>();
+		}
+		static CodeTable codes;
+
+		static CodeTable Codes(HuffmanNode[] nodes)
+		{
+			var t = codes;
+			if (t != null && ReferenceEquals(t.Nodes, nodes)) return t;
+			t = new CodeTable { Nodes = nodes };
+			codes = t;
+			return t;
+		}
+
+		/// <summary>The code of a character (bits, length), or length -1 when the tree has no leaf
+		/// for it. Same walk as before: from the leaf up to the root, right child = 1.</summary>
+		static KeyValuePair<ulong, int> Code(HuffmanNode[] nodes, char c)
+		{
+			var t = Codes(nodes);
+			KeyValuePair<ulong, int> code;
+			if (t.Codes.TryGetValue(c, out code)) return code;
+			HuffmanNode node = GetNode(nodes, c);
+			if (node == null) { code = new KeyValuePair<ulong, int>(0, -1); t.Codes[c] = code; return code; }
+			ulong bits = 0;
+			int len = 0;
+			int current = node.Current;
+			int nextParent = node.Parent;
+			do
+			{
+				node = nodes[nextParent];
+				nextParent = node.Parent;
+				// bit len is the step len levels above the leaf, so the highest bit is the
+				// root's step: written from the highest bit down, the code goes root first
+				if (len < 64 && current == node.Right) bits |= 1UL << len;
+				len++;
+				current = node.Current;
+			}
+			while (nextParent != 255 && len <= 64);
+			if (len > 64) { code = new KeyValuePair<ulong, int>(0, -2); t.Codes[c] = code; return code; }
+			code = new KeyValuePair<ulong, int>(bits, len);
+			t.Codes[c] = code;
+			return code;
+		}
+
+		/// <summary>Whether every character of the string, and the terminator, has a code.</summary>
+		public static bool CanEncode(string str, HuffmanNode[] nodes)
+		{
+			if (Code(nodes, '|').Value < 0) return false;
+			foreach (char c in str)
+				if (Code(nodes, c).Value < 0) return false;
+			return true;
+		}
+
+		/// <summary>The string's bytes: each character's code and then the terminator '|',
+		/// packed from the highest bit, the last byte padded with zeros. Null when a character
+		/// has no code.</summary>
 		public static List<int> ConvertString(string str, HuffmanNode[] nodes)
+		{
+			var convString = new List<int>(str.Length / 2 + 2);
+			int cur = 0, bit = 8;   // bits still free in cur
+			for (int i = 0; i < str.Length + 1; i++)
+			{
+				char c = i == str.Length ? '|' : str[i];
+				var code = Code(nodes, c);
+				if (code.Value == -2)
+					return ConvertStringSlow(str, nodes);   // a code longer than 64 bits: walk it
+				if (code.Value < 0)
+				{
+					FormatsLog.Error(string.Format("Couldn't get node for char {0}, string \n{1}\ni : {2}", c, str, i));
+					return null;
+				}
+				for (int k = code.Value - 1; k >= 0; k--)
+				{
+					if (bit == 0) { convString.Add(cur); cur = 0; bit = 8; }
+					if ((code.Key & (1UL << k)) != 0) cur |= 1 << (bit - 1);
+					bit--;
+				}
+			}
+			convString.Add(cur);
+			return convString;
+		}
+
+		/// <summary>The original bit-by-bit encoder, kept for codes over 64 bits.</summary>
+		static List<int> ConvertStringSlow(string str, HuffmanNode[] nodes)
 		{
 			List<bool> curBits = new List<bool>();
 			List<bool> bits = new List<bool>();

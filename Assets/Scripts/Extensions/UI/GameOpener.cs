@@ -188,7 +188,8 @@ namespace UltimateEditor.Uw1.UI
 			LevArk.Reset();
 			CnvArk.Reset();
 			Uw2T64.Reset();
-			Uw2Graphics.Reset();
+			GrPictures.Reset();
+			Uw1TrFiles.Reset();
 			StartPosition.ExeX = null;
 			StartPosition.ExeY = null;
 			HuffmanNode.SetTree(null);
