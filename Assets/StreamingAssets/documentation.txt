@@ -70,15 +70,16 @@ Contents
 
 2.3) Object mode
   Left click selects an object and shows its properties (top right). Drag an object to move it:
-  the drag starts after the mouse has moved 5 pixels, so a click never moves anything. A green
-  shadow shows where it will land. Dropping it on a container, a critter, a door, a wand or a
-  lever puts it inside (a sack holds items, a critter carries them, a door takes locks and door
-  traps, a wand takes a spell, a lever takes triggers). Traps and triggers lying on the floor
-  are not drop targets: add objects to them from their properties panel. Dropping off the map
-  puts the object back.
+  the drag starts after the mouse has moved 5 pixels, so a click never moves anything. A faint
+  copy of the object shows where it will land. Dropping it on a container, a critter, a door,
+  a wand or a lever puts it inside (a sack holds items, a critter carries them, a door takes
+  locks and door traps, a wand takes a spell, a lever takes triggers). Traps and triggers
+  lying on the floor are not drop targets: add objects to them from their properties panel.
+  Dropping off the map puts the object back.
   Moving a trap or trigger keeps its height and fine position (several traps keep data there).
-  Right click: add an object, delete, copy and paste, select an object inside another, link a
-  trigger to a trap.
+  Right click an object: "Copy", "Remove", "Add trigger", "Inventory" (select an object inside
+  it), and "Link trigger", "Link trap" or "Link lever" depending on the object. Right click a
+  tile: "Add object", "Add move trigger", "Add trap", "Paste object".
 
 2.4) Tile mode
   Left click selects a tile and shows its properties. Holding the right button paints tiles with
@@ -955,8 +956,8 @@ Contents
     - a lock (0x10F): bit 9 is "locked", bit 10 "can be locked again" (7.4);
     - an eight-position lever or switch (0x161, 0x162): the position, 0-7;
     - writings, gravestones, bridges and pillars: which picture is shown;
-    - UW2: on a book, bit 10 makes it play a cutscene; on a red potion, bit 11 lets hack trap
-      38 spoil it (9.7).
+    - a book or scroll: bit 10 makes it play a cutscene (both games); UW2: on a red potion,
+      bit 11 lets hack trap 38 spoil it (9.7).
 
   Door (bit 13)
     The record's "doordir" bit. It does two things in the game's code:
@@ -998,7 +999,8 @@ Contents
     0-7, eighths of a turn: 0 north (+y), 2 east (+x), 4 south (-y), 6 west (-x), so 1 is
     north-east and so on, clockwise (inferred from the movement code [sys/UTIL.C move_along];
     every aimed trap in the shipped levels agrees). Levers, switches and writings use it to
-    face away from their wall; traps use it as a parameter.
+    point at their wall (a lever on the west wall, fine x 0, has heading 6; the editor's "Snap
+    to nearest wall" does the same); traps use it as a parameter.
     For an item, the game uses the heading to remember what the player has learnt about it
     with the Lore skill: bit 2 means it has been examined, bits 0-1 hold the best lore result
     (3 = identified) [ui/INTERACT.C inv_look]. So heading 7 means "examined and identified":
@@ -1262,14 +1264,14 @@ Contents
   The player       needs bit 11 ("The player can set it off").
                    A look trigger whose z is above 0 also needs a Search roll: Search - z +
                    a random 0-30 must be above 15, so the chance is (15 + Search - z) / 31:
-                   certain when z <= Search - 15, impossible when z >= Search + 16. z is
+                   certain when z <= Search - 16, impossible when z >= Search + 15. z is
                    the raw field, not a height above the floor. The Reveal spell rolls with
                    Search 45. Shipped UW1 look triggers use z 0 (most), 3, 7, 8, 10 and 96.
   A critter        needs the enchanted bit ("Creatures can set it off"). The game also tests
                    whether the trigger itself is of the door class, which a trigger never
                    is, so that test has no effect: triggers inside doors work for critters.
   Anything else    UW1: goes off UNLESS the trigger is enchanted and lacks bit 11. So a
-  (objects,        thrown object sets off almost any UW1 trigger (189 of the 190 shipped
+  (objects,        thrown object sets off almost any UW1 trigger (188 of the 189 shipped
   nobody)          move triggers), and a critters-only trigger ignores objects. Bit 9 means
                    nothing on a UW1 trigger.
                    UW2: needs bit 9 ("Objects and nobody (...) can set it off"). UW2 code that acts
@@ -1324,15 +1326,21 @@ Contents
       level 7 trap has 15 triggers).
     The trap panel shows how many triggers point at it and the count (0-15), and fixes the
     count on a click; linking with "Link trigger" updates it; Tools > Fixes checks every
-    trap. Chain steps that no trigger links to directly keep count 0.
+    trap. The game reads the count only on the first trap of a chain (the one a trigger
+    links to). Chain steps made with "Add next trap / trigger" get count 1, which is
+    harmless; leave it. Do NOT set a chain-step create object trap with a critter template
+    to 0: at 0 it also becomes a wandering monster spawner (9.11). A create object trap
+    placed with "Add trap" starts at 0, so it is a spawner until a trigger is linked to it.
   UW1 bug: in any one object list (a tile or a container), the game stops removing at the
   first trigger it removes there, so a second one-shot trigger for the same trap later in
   the same list survives (13.4).
 
-  A single trigger can also be removed by a disarm, by the destruction of the object holding
-  it, or by a delete object trap. UW2 then lowers the trap's count by one, or deletes the
-  trap when it was the last trigger [trigger_obj_del, trap_obj_del]; a UW1 delete object trap
-  does not change the count.
+  A single trigger can also be removed by a disarm (10.6), by the destruction of the object
+  holding it, or by a delete object trap. When the game frees it as part of its holder's
+  contents (both games) or with a UW2 delete object trap, it lowers the trap's count by one,
+  or deletes the trap when it was the last trigger [trigger_obj_del, trap_obj_del;
+  obj/OBJECTS.C Obj_FreeChain]; a UW1 delete object trap aimed at the trigger itself does not
+  change the count.
 
 8.5) UW1 trigger kinds (0x1A0-0x1A6)
   The kind of event each trigger waits for comes from a table in OBJECTS.DAT [event/TRIGGER.C
@@ -1533,8 +1541,8 @@ Contents
   4. The chain ends when a trap ends it or has no link.
 
   A trap's link is a private list, like a container's contents: the next trap of a chain
-  lies INSIDE the previous one, not on any tile (every one of the 338 trap links in the
-  shipped UW2 levels, measured; UW1 chains are built the same way). In the editor, select
+  lies INSIDE the previous one, not on any tile (so are the shipped levels' chains in both
+  games, measured). In the editor, select
   the trap and use "Add next trap / trigger" in its panel; that creates the next step inside
   it. Only the first trap of a chain lies on the map (on the trigger's target square).
 
@@ -1712,9 +1720,9 @@ Contents
     0x3F (63)  The end of the game: the ending plays and the game returns to the menu.
   Shipped: 3 x4 (level 1), 0x18 x4 (level 4), 5 x2, 2 x2, 0x2A, 0x28, 0x32, 0x3F.
   Panel: "Special trap" picks the case; the owner appears as "Race wronged (owner)",
-  "Earthquake strength (owner)", "End game mode - 1 (owner)" (any value works) or
-  "Parameter (owner)". Hacks 2, 3 and 4 also read z, fine x/y and heading: set them in the
-  Advanced tab.
+  "Earthquake strength (owner)", "End game mode - 1 (owner; any value)", "Bullfrog mode
+  (owner)" or "Parameter (owner)". Hacks 2, 3 and 4 also read z, fine x/y and heading: set
+  them in the Advanced tab.
 
   UW2 (quality in decimal) [event/TRIGGER.C do_trap_hack; event/WORLDEV.C]:
     2   Crystal ball, as UW1's (nothing happens if the player's Search is exactly 45).
@@ -1817,7 +1825,8 @@ Contents
     - heading 7 with an odd quality: type 15, read as "unchanged": only the height and
       textures change (stairs that rise).
     - quality 22, heading 0: type solid (a dam, a sealed passage).
-  Panel: "Size X", "Size Y" (0-7: 1-8 squares), "New floor height" or "Keep the tile's
+  Panel: "Extra tiles X (size - 1)", "Extra tiles Y (size - 1)" (0-7: 1-8 squares; the
+  create window calls them "Size X", "Size Y"), "New floor height" or "Keep the tile's
   height", "New tile type" (with "Keep the tile's type"), "Floor texture" or "Use current
   floor texture", "Wall texture" or "Use current wall texture".
 
@@ -1879,11 +1888,15 @@ Contents
     - UW1 every 24 slow updates (8 minutes of game time), UW2 every 30 (10 minutes), each
       time with chance 1 in 4, for spawners 8 or more squares from the player on either
       axis;
-    - and every time the player sleeps, for all spawners on the level, wherever they are.
+    - and every time the player's sleep is not interrupted, for all spawners on the level,
+      wherever they are.
     The template is marked temporary, so its copies are temporary and the crowding test
     stops them piling up. The quality still gives the chance per run (shipped spawners use
-    29-60). UW2 considers only the first create object trap of each square (inferred).
-    Shipped: 34 in UW1 (example: level 1 (47, 4), quality 31), 48 in UW2.
+    29-60 in UW1, 0-60 in UW2). Both games look only at the first create object trap found
+    on each square, and the search goes inside objects, so a create object trap that is a
+    chain step (inside another trap) with count 0 and a critter template is a spawner too
+    [obj/OBJECTS.C Obj_FindInMap]. Shipped: 34 in UW1 (example: level 1 (47, 4), quality
+    31), 49 in UW2 (one of them a chain step after a skill trap, level 65 (60, 57)).
     So a create object trap meant for a trigger must keep its trigger count right: at 0 it
     becomes a spawner.
 
@@ -1948,6 +1961,7 @@ Contents
     the reverse of what you might expect.
   - Testing the number 15 with heading 1 is a plain random chance: difficulty 15 passes
     15 times in 31, 21 passes 9 in 31. Seven of the 12 shipped skill traps do this.
+  - Always give it a link: the game branches without checking for one (null pointer).
 
 9.15) 0x18B Delete object trap (both)
   Removes one particular object from the map.
@@ -1979,10 +1993,11 @@ Contents
   - UW1: if it is missing, or the stack holds fewer than z, the chain ENDS; otherwise it
     continues. There is no else branch.
   - UW2: missing, not worn when asked, or too few: BRANCH (the second object); otherwise
-    go on.
+    go on. Always give a UW2 inventory trap a link: the game branches without checking for
+    one (null pointer).
   Shipped: UW1 level 7 (20, 42): a crystal splinter (0x111), z 1, makes rocks part (11.14
   shows the UW2 form). UW2 Britannia level 4: the jewelled dagger opens a wall (12.9).
-  Panel: "Item to check", "At least this many (Z, 0 any)".
+  Panel: "Item to check", "At least this many in a stack (Z, 0 any)".
 
 9.17) 0x18D Set variable trap (both)
   Changes one of the game's variables or quest flags, which other traps, conversations and
@@ -2111,6 +2126,7 @@ Contents
     (fine y not 0 or height > z). Both fine x and fine y set: any height.
   - Inside: go on. Outside: branch.
   - Set off by nobody, it reads a null pointer: don't use it in scheduled chains.
+  - Always give it a link: the game branches without checking for one (null pointer).
 
 9.26) 0x197 Pit trap (UW2)
   Toggles square x, y between height 0 and a stored height: a floor that drops away and
@@ -2232,8 +2248,9 @@ Contents
   UW1
     Special deaths [event/WORLDEV.C death_check]:
       whoami 0x1B (Garamon)   dying clears the "talismans may be destroyed" flag.
-      0xE7 (Tyball)           cutscene 2; the first active critter of each of Tyball's
-                              allies is removed; every move trigger on square (23, 56) is
+      0xE7 (Tyball)           cutscene 2; dreams bit 2 set; the first active critter of 9
+                              of his 10 ally kinds is removed (a loop slip skips whoami
+                              0xDE); every move trigger on square (23, 56) is
                               freed (12.14). Their traps stay, with their counts unchanged.
       0x16                    never dies: surrenders once (500 experience) and talks.
       0x0B                    talks and is left with 60 hit points.
@@ -2279,8 +2296,9 @@ Contents
     UW1 has no timer triggers and no schedules: nothing happens by the clock except
     - wandering monsters: every 24 slow updates (8 minutes of game time), chance 1 in 4,
       every spawner at least 8 squares from the player runs (9.11);
-    - sleep: every spawner runs, wherever it is; and every open door closes with chance 3
-      in 10 (unless its tile has door bit 1), without firing any trigger.
+    - sleep: every open door closes with chance 3 in 10 (unless its tile has door bit 1),
+      without firing any trigger; and if the sleep is not interrupted, every spawner runs,
+      wherever it is.
     For anything repeating, the player must set it off: repeatable move triggers (a row of
     them for a corridor), levers, buttons.
   UW2
@@ -2288,8 +2306,9 @@ Contents
     - X clock 0 (the time of day) steps every 20 minutes, and block 0 of the schedules runs
       then (10.5). Sleep and jail pass time and run all schedules.
     - Wandering monsters: every 30 slow updates (10 minutes), chance 1 in 4, spawners 8 or
-      more squares away; at sleep, all.
-    - Doors close by themselves with chance 3 in 10 at sleep, and by schedule hack 4; their
+      more squares away; at a sleep that is not interrupted, all.
+    - Doors close by themselves with chance 3 in 10 when the player goes to sleep, and by
+      schedule hack 4; their
       close triggers fire as nobody.
     - Killorn's countdown runs on the 20-second slow update (12.6).
 
@@ -2380,8 +2399,8 @@ Contents
     variable with a number 0-6.
 
   Pitfalls
-    - An event code of 12 or more does not get skipped: it stops the block AND every later
-      block, every time the schedules run, for good.
+    - An event code of 12 or more does not get skipped: when its level matches the player's,
+      it stops the block AND every later block, every time the schedules run, for good.
     - Block 0 times must be 0-71.
     - Setting an X clock BACK reruns every row up to the new time, including the non-once
       rows. Use "once" for anything that must happen only once.
@@ -2456,13 +2475,16 @@ Contents
        made from the object list offer "Add use trigger to lever" in their create window.
   3. Link: right click the trigger, "Link trigger", and click the trap (or the door). The
      target square becomes the trap's square and the trap's trigger count is updated. For a
-     lever, right click the lever and choose "Link lever".
+     lever, right click the lever and choose "Link lever". A trigger inside any other object
+     is not on the map, so it has no right click menu: select it (the editor selects it when
+     "Add trigger" makes it) and press "Create new link" in its panel instead.
   4. Further steps: select the trap and press "Add next trap / trigger"; the new trap is
      made inside it and selected. Repeat from the new one.
   5. Set the fields in the Basic tab; fine x/y, z and heading in the Advanced tab where the
      Basic tab has no control for them.
   6. Check: in the trigger's panel the right "can set it off" boxes and the keep box; in the
-     trap's panel "Triggers pointing here" equal to the count; Tools > Fixes for the level.
+     first trap's panel "Triggers pointing here" equal to the count (chain steps: leave the
+     1 the editor gives them, see 8.4); Tools > Fixes for the level.
   Remember: a trigger's chain runs at its target square; a create object, delete object or
   door trap ends the chain; a one-shot trigger deletes its chain even if nothing happened.
 
@@ -2569,7 +2591,8 @@ Contents
       to make the floor texture step when pressed).
     - A spell trap (0x186) on a square at the end of the corridor: Quality 5, Owner 3
       (fireball) or 2 (lightning bolt), Heading back along the corridor towards the plate,
-      Z about two steps above the floor (the Tomb uses 112-116 on floors of height 12).
+      Z about two steps above the floor (the Tomb uses 96-116, mostly 112, on floors of
+      height 12).
     - Link every plate to its spell trap (several plates may share one trap).
     - A second shot: "Add next trap / trigger" on the spell trap, another spell trap.
     It fires on every step onto the plate.
@@ -2604,10 +2627,11 @@ Contents
   Place:
     - The decoration: Add Object, a special texture object (0x16E, "Texture" picks the wall
       picture), on the wall face of the hidden square (Tile Pos on the edge, "Direction"
-      facing the corridor, "Height").
+      pointing at the wall, "Height"; the shipped one at (37, 9) has fine y 7, heading 0).
     - Right click it, "Add trigger", "look trigger". Its "Search difficulty (Z)": 0 is
       always noticed; otherwise the chance is (15 + Search - z) / 31.
-    - A change terrain trap on the hidden square: "Size X" 0, "Size Y" 0, "New tile type"
+    - A change terrain trap on the hidden square: "Extra tiles X" 0, "Extra tiles Y" 0 (in
+      the create window "Size X", "Size Y"), "New tile type"
       Open, "New floor height" = the corridor's, "Use current floor texture" and "Use
       current wall texture" on (or new textures).
     - Link the look trigger to the change terrain trap.
@@ -2626,7 +2650,7 @@ Contents
   heights 5, 7 and 9: stairs. A lever at (58, 34) opens a 2 x 4 area at height 8.
   Place:
     - A lever with a use trigger ("One time only" for permanent stairs).
-    - A change terrain trap on the first square: "Size X/Y" for the area that takes ONE
+    - A change terrain trap on the first square: "Extra tiles X/Y" for the area that takes ONE
       height, "New floor height", "Keep the tile's type" (or a slope type), textures kept.
     - Right click the lever, "Link lever", click the trap.
     - Each further height needs its own change terrain trap on its own square. Either give
@@ -2649,7 +2673,8 @@ Contents
 11.9) A combination puzzle with set and check variable
   Shipped models: UW1 level 3, three buttons at (5, 7) change game variable 16 (one xors it
   with 3, one sets it to 56, one shifts it left by 1); the door at (6, 8) toggles when the
-  variable is 3, and a wrong state creates a skeleton at (1, 8) through the else branch. UW1
+  xor button leaves the variable at 51 (set, shift, xor: 56, 48, 51), and a wrong state
+  creates a skeleton at (1, 8) through the else branch. UW1
   level 5, the Ring of Humility (12.11).
   Design (UW1 values; one unused game variable, say 40):
     - "Digit" levers: each holds a use trigger ("Unlimited") linked to a set variable trap
@@ -2709,12 +2734,13 @@ Contents
 11.11) A wandering monster spawner
   Place a create object trap with NO trigger (count 0) and a critter template, somewhere the
   player rarely stands:
-    - "Spawn chance": the chance per run (shipped spawners use quality 29-60, i.e. 52% to 5%).
+    - "Spawn chance": the chance per run (shipped UW1 spawners use quality 29-60, i.e. 54% to
+      5%; UW2's 0-60).
     - The template as in 11.2, with Home (X / Y) = the trap's square.
   The game runs it every 8 minutes of game time in UW1 (10 in UW2) with chance 1 in 4 while
   the player is 8 or more squares away, and every time the player sleeps. Its copies are
   temporary and a new one is not made while one is within 4 squares of the template's home.
-  Shipped: UW1 level 1 (47, 4), quality 31; 34 in UW1, 48 in UW2.
+  Shipped: UW1 level 1 (47, 4), quality 31; 34 in UW1, 49 in UW2.
   Pitfall: never leave a create object trap meant for a trigger at count 0.
 
 11.12) UW2: bobbing stepping stones (timer -> oscillator)
@@ -2892,7 +2918,7 @@ Contents
   The castle: level 1 (Britannia, level 1), castle clock 16
     Nystul's conversation (0x82) tells of "Four o'clock in the morning... in the throne
     room", reads X clock 1, adds 1 and writes it back (15 -> 16), and describes soldiers
-    pouring out of the gem. When the conversation ends the schedules run: block 1, rows 56-77,
+    pouring out of the gem. When the conversation ends the schedules run: block 1, rows 57-77,
     time 16, level 1, all once:
       rows 57, 58   remove the two throne guards at (30, 52) and (32, 52);
       rows 59-70    teleport the household to the throne room ("unseen", "home"): Nystul
@@ -2962,9 +2988,10 @@ Contents
   Recipe: 11.15.
 
 12.3) The blackrock gem's facets (UW2)
-  - Timer trigger #1000 at (28, 39) on level 5, z 27 -> hack trap #990, quality 54 (the gem
-    shows its next facet). With z + 1 = 28 it fires 4 times every 32 seconds, about every
-    8 s; walkthroughs also say the facets change every 8 seconds.
+  - Timer trigger #1000 at (28, 40) (the gem's square) on level 5, z 27, target (28, 39) ->
+    hack trap #990, quality 54 (the gem shows its next facet). With z + 1 = 28 it fires 4
+    times every 32 seconds, about every 8 s; walkthroughs also say the facets change every 8
+    seconds.
   - Which facets open depends on the castle clock [event/WORLDEV.C black_gem_rotate]: below
     4 only facet 0 (the Prison Tower); below 8 facets 0-2 (adds Killorn Keep and the Ice
     Caverns); below 13 facets 0-5 (adds Talorus, the Scintillus Academy and the Pits of
@@ -3104,10 +3131,11 @@ Contents
   A vanishing floor (level 3)
     - (41..45, 57..60) in a corridor of height 12: pit traps (quality 2, owner 0, fine x 4,
       fine y 1) toggle each square between height 12 with floor 0, and height 0 with floor 2
-      (#945 at (45, 58) has quality 63: its floor is left alone).
-    - Each has its own timer with z between 31 and 53 (periods of 8 to 13.5 seconds), all
-      different, so the squares drop and return out of step: for example #1002 -> #694 at
-      (41, 57), z 47; #641 -> #806 at (42, 57), z 53; #768 -> #950 at (44, 59), z 31.
+      (#948 at (45, 58) has quality 63: its floor is left alone).
+    - Each has its own timer with z between 31 and 53 (periods of 8 to 13.5 seconds), 14
+      different values for 16 squares, so the squares drop and return out of step: for
+      example #1002 -> #694 at (41, 57), z 47; #641 -> #806 at (42, 57), z 53; #768 -> #950
+      at (44, 59), z 31.
   A wall that opens for the jewelled dagger (level 4)
     - Timer #763 at (57, 13), z 7 (every 2 s), target (58, 12) -> inventory trap #764 (item
       0x00A, "a jewelled dagger", z 1) -> change terrain #765: height 11, open, floor 0. The
@@ -3132,7 +3160,7 @@ Contents
       a pressure plate (0x1B4) at each crossing: flags 6 (repeatable, player), z 96 (floor
       height 12), fine y 6 (heavy, floor texture steps); the lattice plates are also
       enchanted. Each fires spell traps with quality 5 and owner 3 (fireball, F) or 2
-      (lightning bolt, L), z 106-116, aimed back down the corridor at the plate:
+      (lightning bolt, L), z 96-116, aimed back down the corridor at the plate:
         Plate                     Spell trap (heading)
         (43, 31), (43, 34), (43, 37)  (43, 41) #1008 F (4) -> chained #1007 L (4); count 3
         (46, 31)                  (42, 31) #1014 F (2)
@@ -3198,7 +3226,8 @@ Contents
   - A second move trigger on the same square, #888, closes the portcullis at (24, 56)
     through door trap #889 (quality 2), which gives the portcullis a copy of lock #819.
   - Tyball's death [event/WORLDEV.C TyballDeath]: cutscene 2; the first active critter of
-    each of his allies is removed; and every move trigger on (23, 56) is freed, so after his
+    9 of his 10 ally kinds is removed (whoami 0xDE is skipped by a loop slip); and every move
+    trigger on (23, 56) is freed, so after his
     death the portcullis no longer slams shut. Those triggers' traps are not deleted and
     their counts are not lowered.
   - UW1 has no sleeping critters; a guard "waiting" with goal 7 woken by hack 0x32 is the
@@ -3219,8 +3248,9 @@ Contents
     - Garamon: the grave must have the link value 0x221 and the bones owner 0x3E; using them
       fires the first object on square (54, 52) of the current level and runs conversation
       0x1B; whoami 0x1B's death clears the talisman flag.
-    - Tyball (whoami 0xE7): his death plays cutscene 2, removes his allies (a fixed list of
-      whoami) and frees every move trigger on square (23, 56).
+    - Tyball (whoami 0xE7): his death plays cutscene 2, removes one critter of each of his
+      allies' kinds (a fixed list of whoami, one skipped) and frees every move trigger on
+      square (23, 56).
     - Special deaths for whoami 0x16, 0x0B, 0x6E, 0x8E and 0x18 (10.3).
     - Level 7: arriving without having destroyed Tyball's orb sets the player's maximum mana
       to 0 (given back, at a quarter, when he leaves); the orb (0x117) and the orb rock undo
