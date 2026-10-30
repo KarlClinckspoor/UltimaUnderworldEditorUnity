@@ -372,7 +372,11 @@ public class StringData
 		{
 			int blockIndex = BlockDictionary[blockNumber];
 			Blocks.RemoveAt(blockIndex);
-			BlockDictionary.Remove(blockNumber);
+			// every later block moved down one place: the dictionary is rebuilt, or the next
+			// AddNewBlock would replace the block after the one it names
+			BlockDictionary.Clear();
+			for (int i = 0; i < Blocks.Count; i++)
+				BlockDictionary[Blocks[i].BlockNumber] = i;
 			Debug.LogFormat("Removing block, block number : {0}", blockNumber);
 		}
 		else

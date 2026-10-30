@@ -95,6 +95,9 @@ public class Conversation  {
 	{
 		State = state;
 	}
+	/// <summary>Puts back the state a failed conversion found (ConversationConverter.Convert).</summary>
+	public void RestoreState(ConversationState state) { State = state; }
+
 	public void SetConverted()
 	{
 		State = ConversationState.Converted;

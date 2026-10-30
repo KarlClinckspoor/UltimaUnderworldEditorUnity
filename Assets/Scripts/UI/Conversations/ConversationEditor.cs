@@ -59,8 +59,9 @@ public class ConversationEditor : ResizableWindow {
 		{
 			if (string.IsNullOrEmpty(str))
 				return;
-			//globalVariableCount = int.Parse(str);
-			ChangePrivates(int.Parse(str));
+			int n;
+			if (int.TryParse(str, out n) && n >= 0)
+				ChangePrivates(n);
 		};
 		PrivateCountField.onEndEdit.AddListener((str) => changePrivates(str));
 		Action<string> changeName = (str) =>
@@ -80,7 +81,8 @@ public class ConversationEditor : ResizableWindow {
 		for (int i = 0; i < min; i++)
 			newList[i] = GlobalVariables[i];
 		GlobalVariables = newList.ToList();
-		Conv.MemorySlots = newCount + 32;
+		// The conversation's own count (MemorySlots) changes only when it is converted:
+		// changing it alone would move the game's stack over variables the code still uses.
 		Debug.LogFormat("private globs count {0}", GlobalVariables.Count);
 	}
 
@@ -90,13 +92,20 @@ public class ConversationEditor : ResizableWindow {
 			return null;
 		return GetConversationFile(Conv.Slot);
 	}
+	/// <summary>The editor's source of a conversation it made: beside CNV.ARK, in the game's
+	/// DATA folder, so each game copy has its own (it used to be one folder for every game,
+	/// which made other games' conversations in the same slots look editor-made).</summary>
 	public static string GetConversationFile(int slot)
 	{
-		return Application.dataPath + "/Conversations/conversation_" + slot + ".dat";
+		if (string.IsNullOrEmpty(DataReader.FilePath))
+			return null;
+		return FileExplorer.GetUpperPath(DataReader.FilePath) + "/conversation_" + slot + ".dat";
 	}
 
 	public void Save()
 	{
+		if (GetConversationFile() == null)
+			return;
 		ConversationStructure str = CreateStructure();
 		if (File.Exists(GetConversationFile()))
 			File.Delete(GetConversationFile());
@@ -123,7 +132,6 @@ public class ConversationEditor : ResizableWindow {
 			PrivateCountField.text = (str.PrivateGlobalCount - 32).ToString();
 			NameField.text = str.NPCName;
 
-			Conv.MemorySlots = str.PrivateGlobalCount;
 			Conv.BarterStrings = str.BarterStrings;
 			Conv.Likes = str.Likes;
 			Conv.Dislikes = str.Dislikes;
@@ -190,7 +198,6 @@ public class ConversationEditor : ResizableWindow {
 		}
 		else
 			uiManager.SpawnPopupMessage("No starting node!");
-		ConversationConverter.Reset();
 	}
 	private void convert()
 	{
@@ -207,9 +214,10 @@ public class ConversationEditor : ResizableWindow {
 		}
 		catch (Exception e)
 		{
-			uiManager.SpawnPopupMessage("Error\n" + e.Message);
-			ConverterException ce = (ConverterException)e;
-			if(ce && ce.Node)
+			// the conversation is as it was before (ConversationConverter.Convert puts it back)
+			uiManager.SpawnPopupMessage("Not converted; the conversation is unchanged.\n" + e.Message);
+			ConverterException ce = e as ConverterException;
+			if(ce != null && ce.Node)
 			{
 				errorNode = ce.Node;
 				centerOnNode(errorNode);
@@ -258,9 +266,7 @@ public class ConversationEditor : ResizableWindow {
 
 	public void GlobalVariableList()
 	{
-		int count = 0;
-		if (!string.IsNullOrEmpty(PrivateCountField.text))
-			count = int.Parse(PrivateCountField.text);
+		int count = GlobalVariables.Count;
 		//Debug.LogFormat("var list, count : {0}, priv.globs count : {1}", count, GlobalVariables.Count);
 		string title = "List of conversation variables";
 		string descr = "These variables are stored after conversation ends.";
@@ -280,13 +286,11 @@ public class ConversationEditor : ResizableWindow {
 		str.Connections = new List<ConversationConnectionStructure>();
 		str.GlobalVariables = GlobalVariables;
 		str.LocalVariables = LocalVariables;
-		str.PrivateGlobalCount = int.Parse(PrivateCountField.text) + 32;
+		str.PrivateGlobalCount = GlobalVariables.Count + 32;
 		str.NPCName = npcName;
 		str.BarterStrings = Conv.BarterStrings;
 		str.Likes = Conv.Likes;
 		str.Dislikes = Conv.Dislikes;
-
-		Conv.MemorySlots = str.PrivateGlobalCount;  //?????
 
 		//MapCreator.StringData.SetNPCName(Conv.Slot, str.NPCName);
 		Dictionary<GameObject, ConversationNodeStructure> nodeDict = new Dictionary<GameObject, ConversationNodeStructure>();

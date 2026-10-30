@@ -142,6 +142,7 @@ public static class ConversationConverter {
 		nodeList = new List<ConversationNode>();
 		nodeAdresses = new Dictionary<ConversationNode, int>();
 		jumps = new Dictionary<ConversationNode, List<int>>();
+		arrayPointers = new Dictionary<string, string>();
 		//genderDict = new Dictionary<string, int>();
 		operationCount = 0;
 		localCount = 0;
@@ -467,7 +468,93 @@ public static class ConversationConverter {
 		conv.Code.Add((int)OperationType.EXIT_OP);
 	}
 	#endregion
+	/// <summary>The game's limits for a conversation block (uw1 and uw2 src/conv/BABL.C,
+	/// load_script): it is read whole into a buffer of 0x4000 bytes in UW1, 0x5000 in UW2.</summary>
+	public static int MaxBlockBytes { get { return LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 ? 0x5000 : 0x4000; } }
+	/// <summary>A string id is block << 9 | index (uw1/src/ui/GAMESTRN.C): 512 strings per block.</summary>
+	public const int MaxStrings = 512;
+	/// <summary>The menu arrays hold 10 entries with the terminating 0 (CONVERSE.C, bablOptionIds).</summary>
+	public const int MaxAnswers = 9;
+
+	/// <summary>Compiles the editor's nodes into the conversation. Nothing changes unless it
+	/// succeeds: on an error the conversation, its string block and its NPC name are put back
+	/// as they were, and the exception is passed on. The number of saved variables
+	/// (MemorySlots) is set here, from savedVars, and only by a successful conversion.</summary>
 	public static void Convert(Conversation _conv, ConversationNode startNode, List<ConversationNode> nodes, List<string> savedVars, string npcname)
+	{
+		Reset();	// whatever an earlier conversion left (jump patches, variables, arrays)
+		var undo = new Undo(_conv);
+		try
+		{
+			ConvertInner(_conv, startNode, nodes, savedVars, npcname);
+			CheckLimits(_conv);
+		}
+		catch
+		{
+			undo.Restore();
+			throw;
+		}
+		finally
+		{
+			Reset();
+		}
+	}
+
+	/// <summary>What a conversion changes, to put back when it fails.</summary>
+	sealed class Undo
+	{
+		readonly Conversation c;
+		readonly int unk00, codeSize, stringBlock, first, slots, imported;
+		readonly List<int> code;
+		readonly ConversationFunction[] functions;
+		readonly ConversationState state;
+		readonly StringBlock block;
+		readonly int blockNumber;
+		readonly string npcName;
+
+		public Undo(Conversation conv)
+		{
+			c = conv;
+			unk00 = conv.Unk00; codeSize = conv.CodeSize; stringBlock = conv.StringBlock;
+			first = conv.FirstMemorySlot; slots = conv.MemorySlots; imported = conv.ImportedFunctionsAndVariables;
+			code = conv.Code; functions = conv.Functions; state = conv.State;
+			blockNumber = StringBlock.GetConversationBlock(conv.Slot);
+			int i;
+			var sd = MapCreator.StringData;
+			block = sd.BlockDictionary.TryGetValue(blockNumber, out i) ? sd.Blocks[i] : null;
+			npcName = sd.GetNPCName(conv.Slot);
+		}
+
+		public void Restore()
+		{
+			c.Unk00 = unk00; c.CodeSize = codeSize; c.StringBlock = stringBlock;
+			c.FirstMemorySlot = first; c.MemorySlots = slots; c.ImportedFunctionsAndVariables = imported;
+			c.Code = code; c.Functions = functions; c.RestoreState(state);
+			var sd = MapCreator.StringData;
+			if (block != null)
+			{
+				int i;
+				if (sd.BlockDictionary.TryGetValue(blockNumber, out i)) sd.Blocks[i] = block;
+				else { sd.Blocks.Add(block); sd.SortBlocks(); }
+			}
+			else
+				sd.RemoveBlock(blockNumber);
+			sd.SetNPCName(c.Slot, npcName);
+		}
+	}
+
+	static void CheckLimits(Conversation c)
+	{
+		int bytes = 16 + c.CodeSize * 2;
+		if (c.Functions != null)
+			foreach (var f in c.Functions) bytes += 2 + f.NameLength + 8;
+		if (bytes > MaxBlockBytes)
+			throw new ConverterException(string.Format("The compiled conversation is {0} bytes; the game reads at most {1} (0x{1:X}). Split it or shorten it.", bytes, MaxBlockBytes), startingNode);
+		if (sb != null && sb.Strings.Count > MaxStrings)
+			throw new ConverterException(string.Format("The conversation has {0} strings; a conversation can have at most {1}.", sb.Strings.Count, MaxStrings), startingNode);
+	}
+
+	static void ConvertInner(Conversation _conv, ConversationNode startNode, List<ConversationNode> nodes, List<string> savedVars, string npcname)
 	{
 		conv = _conv;
 		sb = MapCreator.StringData.AddNewBlock(conv.Slot);
@@ -475,11 +562,8 @@ public static class ConversationConverter {
 		MapCreator.StringData.SetNPCName(conv.Slot, npcname);
 		conv.StringBlock = sb.BlockNumber;
 		conv.FirstMemorySlot = 32;
-		if (conv.MemorySlots != savedVars.Count + conv.FirstMemorySlot)
-		{
-			Debug.LogErrorFormat("conv.PrivateGlobalCount {0} != savedVars.Count {1}", conv.MemorySlots, savedVars.Count);
-			return;
-		}
+		// the saved variables follow the 32 imported ones: the game puts its stack after them
+		conv.MemorySlots = savedVars.Count + conv.FirstMemorySlot;
 		currentNode = startNode;
 		startingNode = startNode;
 		nodeList = nodes;
@@ -604,7 +688,6 @@ public static class ConversationConverter {
 
 	private static void readBlock(ref string str, bool endIf = false)
 	{
-		int safe = 500;
 		while (str.Length > 0)
 		{
 			Word word = getNext(ref str);
@@ -621,10 +704,7 @@ public static class ConversationConverter {
 					break;
 			}
 			if (cact == ConverterAction.Null)
-			{
-				Debug.LogErrorFormat("Invalid statement '{0}'", word.S);
-				return;
-			}
+				throw new ConverterException("Invalid statement '" + word.S + "' at line " + currentLine, currentNode);
 			prepareAction(cact, word.S, ref str);
 
 			Debug.Log("------------------NEXT LINE------------------");
@@ -632,13 +712,6 @@ public static class ConversationConverter {
 
 			if (str.Length == 0)
 				currentLine = 0;
-
-			safe--;
-			if (safe == 0)
-			{
-				Debug.LogError("Failed");
-				return;
-			}
 		}
 	}
 
@@ -1017,6 +1090,8 @@ public static class ConversationConverter {
 		List<Response> responses = getResponses(ref str);
 		if (responses == null || responses.Count == 0)
 			throw new ConverterException(string.Format("Failed to get responses at line {0}", currentLine), currentNode);
+		if (responses.Count > MaxAnswers)
+			throw new ConverterException(string.Format("{0} answers at line {1}; the game shows at most {2}", responses.Count, currentLine, MaxAnswers), currentNode);
 		int arrayStart = 0;
 		string opvar = "";
 		for (int i = 0; i < responses.Count; i++)
@@ -1045,6 +1120,8 @@ public static class ConversationConverter {
 		List<Response> responses = getResponses(ref str);
 		if (responses == null || responses.Count == 0)
 			throw new ConverterException(string.Format("Failed to get responses at line {0}", currentLine), currentNode);
+		if (responses.Count > MaxAnswers)
+			throw new ConverterException(string.Format("{0} answers at line {1}; the game shows at most {2}", responses.Count, currentLine, MaxAnswers), currentNode);
 		int stringArray = 0;
 		int flagArray = 0;
 		int stringOffset = 0;
