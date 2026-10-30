@@ -116,9 +116,11 @@ namespace UltimateEditor.Games
 		public byte[] Raw;
 		string rawText;
 
-		/// <summary>The tile under the note's position (the map is drawn at px = 3x + 10, py = 3y + 7).</summary>
-		public int TileX { get { return (X - 10) / 3; } set { X = value * 3 + 10; } }
-		public int TileY { get { return (Y - 7) / 3; } set { Y = value * 3 + 7; } }
+		/// <summary>The tile under the note's position. The game draws tile (x, y) in the three
+		/// pixels from px = (x - 1) * 3 + 10, py = (y - 1) * 3 + 7 (uw1 and uw2 ui/AUTOMAP.C,
+		/// DoTile), so a note at px is on tile (px - 10) / 3 + 1.</summary>
+		public int TileX { get { return (X - 10) / 3 + 1; } set { X = (value - 1) * 3 + 10; } }
+		public int TileY { get { return (Y - 7) / 3 + 1; } set { Y = (value - 1) * 3 + 7; } }
 
 		public static List<MapNote> ParseAll(byte[] data)
 		{

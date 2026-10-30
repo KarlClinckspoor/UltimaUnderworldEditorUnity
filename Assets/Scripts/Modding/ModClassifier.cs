@@ -45,7 +45,11 @@ namespace UltimateEditor.Modding
 				}
 				else { m.Flags.ChangesSaves = true; content = true; }
 				if (rel == "DATA/CNV.ARK" && c is ArkBlocksComponent && original != null && pkg != null)
-					m.Flags.BreaksConversations.AddRange(VariableCountChanges((ArkBlocksComponent)c, original(rel), pkg, m.Game == "uw2" ? GameKind.UW2 : GameKind.UW1));
+				{
+					var kind = m.Game == "uw2" ? GameKind.UW2 : GameKind.UW1;
+					m.Flags.BreaksConversations.AddRange(VariableCountChanges((ArkBlocksComponent)c, original(rel), pkg, kind));
+					m.Flags.NewConversations.AddRange(AddedConversations((ArkBlocksComponent)c));
+				}
 			}
 			int kinds = (level ? 1 : 0) + (content ? 1 : 0) + (exe ? 1 : 0) + (save ? 1 : 0);
 			if (kinds == 0) m.Type = "";
@@ -75,6 +79,15 @@ namespace UltimateEditor.Modding
 			return r;
 		}
 
+		/// <summary>Conversation slots the mod fills that the original has empty (their base is "absent").</summary>
+		public static List<int> AddedConversations(ArkBlocksComponent c)
+		{
+			var r = new List<int>();
+			foreach (var b in c.Blocks)
+				if (!b.Delete && b.Base == "absent") r.Add(b.Index);
+			return r;
+		}
+
 		/// <summary>What the player is told, one line each.</summary>
 		public static List<string> Warnings(ModManifest m)
 		{
@@ -83,6 +96,8 @@ namespace UltimateEditor.Modding
 			if (m.Flags.ChangesSaves) w.Add("It also changes games in progress: strings, pictures, objects and conversations are read during play.");
 			if (m.Flags.BreaksConversations.Count > 0)
 				w.Add("Saved games will have the wrong conversation memory for conversation slot(s) " + string.Join(", ", m.Flags.BreaksConversations) + " (their variable count changed).");
+			if (m.Flags.NewConversations.Count > 0)
+				w.Add("Conversation slot(s) " + string.Join(", ", m.Flags.NewConversations) + " are new: games in progress keep no memory for them; start a new game.");
 			return w;
 		}
 	}

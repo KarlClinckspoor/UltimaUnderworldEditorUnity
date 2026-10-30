@@ -367,16 +367,18 @@ public class PropertiesPanel : MonoBehaviour {
 		else if(so.IsGrave())
 		{
 			createDirectionDropdown(so);
-			Sprite curSprite = Sprite.Create(MapCreator.TextureData.Other.Textures[so.Flags + 28], new Rect(0, 0, 16.0f, 32.0f), Vector2.zero);
-			Button texButton = createImageButtonProperty("Texture", BasicPanel.transform, curSprite);
+			// the picker offers the grave pictures, and the preview shows the same list
+			List<Texture2D> graveTex = uiManager.GetGraveTextures();
+			Func<Sprite> graveSprite = () => Sprite.Create(graveTex[Mathf.Clamp(so.Flags, 0, graveTex.Count - 1)], new Rect(0, 0, 16.0f, 32.0f), Vector2.zero);
+			Button texButton = createImageButtonProperty("Texture", BasicPanel.transform, graveSprite());
 			Action<int> selTexAct = (i) =>
 			{
 				so.Flags = i;
 				Flags.text = so.Flags.ToString();
-				texButton.GetComponent<Image>().sprite = Sprite.Create(MapCreator.TextureData.Other.Textures[so.Flags + 28], new Rect(0, 0, 16.0f, 32.0f), Vector2.zero);
+				texButton.GetComponent<Image>().sprite = graveSprite();
 				Destroy(uiManager.TexturePicker);
 			};
-			texButton.onClick.AddListener(() => uiManager.CreateTexturePicker(uiManager.GetWritingTextures(), selTexAct, "Textures", "Select grave texture"));
+			texButton.onClick.AddListener(() => uiManager.CreateTexturePicker(graveTex, selTexAct, "Textures", "Select grave texture"));
 			createLargeInputProperty("Description", BasicPanel.transform, MapCreator.StringData.GetGrave(so), (str) => MapCreator.StringData.SetGrave(so, str));
 		}
 		else if(so.ObjectID == 356)	//Bridge
@@ -397,13 +399,15 @@ public class PropertiesPanel : MonoBehaviour {
 		{
 			//This as a model will have also height and direction
 			List<Texture2D> pillartex = uiManager.GetPillarTextures();
-			Sprite curSprite = Sprite.Create(pillartex[so.Flags], new Rect(0, 0, 8.0f, 32.0f), Vector2.zero);
-			Button texButton = createImageButtonProperty("Texture", BasicPanel.transform, curSprite);
+			// UW2's pillars use flags up to 7, beyond the editor's four pictures: the preview shows
+			// the last one, and the value is kept unless another picture is chosen
+			Func<Sprite> pillarSprite = () => Sprite.Create(pillartex[Mathf.Clamp(so.Flags, 0, pillartex.Count - 1)], new Rect(0, 0, 8.0f, 32.0f), Vector2.zero);
+			Button texButton = createImageButtonProperty(so.Flags < pillartex.Count ? "Texture" : "Texture (flags " + so.Flags + ")", BasicPanel.transform, pillarSprite());
 			Action<int> selTexAct = (i) =>
 			{
 				so.Flags = i;
 				Flags.text = so.Flags.ToString();
-				texButton.GetComponent<Image>().sprite = Sprite.Create(pillartex[so.Flags], new Rect(0, 0, 8.0f, 32.0f), Vector2.zero);
+				texButton.GetComponent<Image>().sprite = pillarSprite();
 				Destroy(uiManager.TexturePicker);
 			};
 			texButton.onClick.AddListener(() => uiManager.CreateTexturePicker(pillartex, selTexAct, "Textures", "Select pillar texture"));
@@ -475,6 +479,15 @@ public class PropertiesPanel : MonoBehaviour {
 				Quality.text = so.Quality.ToString();
 			};
 			createDropdownProperty("Action type", BasicPanel.transform, doorTrapTypes[Mathf.Clamp(so.Quality - 1, 0, 2)], doorTrapTypes, changeDoorTrapTypeAct);
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+			{
+				// UW2 (uw2/src/event/TRIGGER.C, TRAP_DOOR): the door's lock is replaced by the
+				// trap's own (or removed when the trap has none) only when the owner is not 0
+				string what = UltimateEditor.Games.Uw2Traps.Describe(so.ObjectID);
+				if (what != null)
+					panelParagraph("UW2: " + what, 11, Color.white);
+				createToggleProperty("Replace the door's lock", BasicPanel.transform, so.Owner != 0, (b) => changeObjectOwner(so, b ? 1 : 0));
+			}
 			StaticObject lockObj = so.GetLock();
 			if (lockObj)
 				createLinkProperty(so, lockObj, "Door lock", "Select", "Destroy", (next) => destroyContainedObject(so, next));

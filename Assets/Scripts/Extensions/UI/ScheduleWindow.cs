@@ -150,13 +150,12 @@ namespace UltimateEditor.Uw1.UI
 			foreach (var k in keyed) blk.Rows.Add(k.Value);
 		}
 
+		/// <summary>An NPC's name: string whoami + 16 of block 7 (StringData.GetNPCName).</summary>
 		static string NpcName(int whoami)
 		{
 			var sd = MapCreator.StringData;
-			if (sd == null || sd.Blocks == null) return null;
-			foreach (var b in sd.Blocks)
-				if (b.BlockNumber == 7) return whoami >= 0 && whoami < b.Strings.Count ? b.Strings[whoami] : null;
-			return null;
+			if (sd == null || sd.Blocks == null || whoami < 0 || whoami > 255) return null;
+			try { return sd.GetNPCName(whoami); } catch (System.Exception) { return null; }
 		}
 
 		public static string Hex(byte[] b, int from, int count)

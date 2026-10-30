@@ -511,8 +511,13 @@ public class MapCreator : MonoBehaviour {
 		}
 	}
 
+	/// <summary>UW1 only: UW2's picture files hold fixed lists (T64.TR's 256 textures, the .GR
+	/// files), which the editor patches in place, so textures are replaced there, never added
+	/// or removed.</summary>
 	public static bool AddTexture(TextureType texType, Texture2D tex)
 	{
+		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW1)
+			return false;
 		if (texType == TextureType.Floor)
 		{
 			if (TextureData.Floors.Count > 255)
@@ -542,6 +547,8 @@ public class MapCreator : MonoBehaviour {
 
 	public static bool RemoveTexture(TextureType texType)
 	{
+		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW1)
+			return false;
 		if (texType == TextureType.Floor)
 		{
 			if (TextureData.Floors.Textures.Count == 52)

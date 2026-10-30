@@ -105,21 +105,34 @@ namespace UltimateEditor.Uw1.UI
 				for (int k = i; k < Math.Min(i + 4, r.Words.Length); k++)
 				{
 					int idx = k;
-					UiKit.Label(row, VarName(idx), 10, FontStyle.Normal, UiKit.DimTextColor, 90);
+					UiKit.Label(row, VarName(r.Slot, idx), 10, FontStyle.Normal, UiKit.DimTextColor, 90);
 					UiKit.Input(row, r.Words[idx].ToString(), t => { int v; if (int.TryParse(t, out v) && v >= -32768 && v <= 65535) r.Words[idx] = (short)v; else w.Status.text = "Variables are 16-bit numbers."; }, 60);
 				}
 			}
 		}
 
-		static string VarName(int i) { return "var " + i; }
+		/// <summary>A word of a conversation's record: below the conversation's first own variable
+		/// it is one of the imported variables the game fills in at every talk (shown by name,
+		/// from the script's import table); from there on, the conversation's own variables,
+		/// counted from 0.</summary>
+		static string VarName(int slot, int i)
+		{
+			var cd = MapCreator.ConversationData;
+			var conv = cd != null && cd.Conversations != null && slot >= 0 && slot < cd.Conversations.Length ? cd.Conversations[slot] : null;
+			if (conv == null || conv.FirstMemorySlot <= 0) return "word " + i;
+			if (i >= conv.FirstMemorySlot) return "var " + (i - conv.FirstMemorySlot);
+			if (conv.Functions != null)
+				foreach (var f in conv.Functions)
+					if (f.Type == ConversationFunction.Variable && f.Id_Adress == i) return f.Name + " (imported)";
+			return "word " + i + " (imported)";
+		}
 
+		/// <summary>The NPC name of a conversation slot: string slot + 16 of block 7 (StringData.GetNPCName).</summary>
 		static string NpcName(int slot)
 		{
 			var sd = MapCreator.StringData;
-			if (sd == null || sd.Blocks == null) return null;
-			foreach (var b in sd.Blocks)
-				if (b.BlockNumber == 7) return slot >= 0 && slot < b.Strings.Count ? b.Strings[slot] : null;
-			return null;
+			if (sd == null || sd.Blocks == null || slot < 0 || slot > 255) return null;
+			try { return sd.GetNPCName(slot); } catch (System.Exception) { return null; }
 		}
 	}
 }

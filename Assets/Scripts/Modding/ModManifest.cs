@@ -151,6 +151,9 @@ namespace UltimateEditor.Modding
 		/// <summary>Conversations whose saved-variable count changed: a saved game's record for
 		/// them has the old size (the game reads min(count, size) words).</summary>
 		public List<int> BreaksConversations = new List<int>();
+		/// <summary>Conversations the mod adds to empty slots: a saved game has no record for them
+		/// (uw1 conv/BABL.C bab_get_globals), so their variables are neither set nor kept there.</summary>
+		public List<int> NewConversations = new List<int>();
 
 		public Dictionary<string, object> ToJson()
 		{
@@ -160,6 +163,9 @@ namespace UltimateEditor.Modding
 			var l = new List<object>();
 			foreach (var s in BreaksConversations) l.Add(s);
 			o["breaks_conversations"] = l;
+			var n = new List<object>();
+			foreach (var s in NewConversations) n.Add(s);
+			o["new_conversations"] = n;
 			return o;
 		}
 
@@ -171,6 +177,8 @@ namespace UltimateEditor.Modding
 			f.ChangesSaves = MiniJson.Bool(o, "changes_saves");
 			var a = MiniJson.Arr(MiniJson.Get(o, "breaks_conversations"));
 			if (a != null) foreach (var x in a) f.BreaksConversations.Add(ModManifest.Int(x));
+			var nc = MiniJson.Arr(MiniJson.Get(o, "new_conversations"));
+			if (nc != null) foreach (var x in nc) f.NewConversations.Add(ModManifest.Int(x));
 			return f;
 		}
 	}

@@ -1249,7 +1249,8 @@ public class UIManager : MonoBehaviour {
 				//texItem = CreateTextureItem(list[i], i, texExp.Content.transform, (x) => CreateTexturePicker(GetTextures(texType, true), (y) => LoadTextureAction(texType, y, new_i, (newTex) => changeSpriteAct(texItem, newTex)), secondTitle, secondDescr, size), changeItemDescr, fontSize);
 				texItem = CreateTextureItem(list[i], i, texExp.Content.transform, (x) => CreateTexturePicker(GetTextures(texType, true), loadTexAct, secondTitle, secondDescr, size), changeItemDescr, fontSize);
 			}
-			if (texType == TextureType.Floor || texType == TextureType.Wall || texType == TextureType.Door || texType == TextureType.NPCHead)
+			// adding and removing is for UW1 only: UW2's picture files hold fixed lists (MapCreator.AddTexture)
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW1 && (texType == TextureType.Floor || texType == TextureType.Wall || texType == TextureType.Door || texType == TextureType.NPCHead))
 			{
 				GameObject addItem = null;
 				Action<int> add = (x) =>
@@ -4293,12 +4294,14 @@ public class UIManager : MonoBehaviour {
 		createMenuGO = Instantiate(CreateObjectPrefab, transform);
 		createMenuGO.transform.Find("TopBar/Title").gameObject.GetComponent<Text>().text = "Create damage trap";
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
-		Dropdown owner = addDropdownToCreateMenu("Damage type", mainPanelGO.transform, new string[] { "Health", "Poison" });
-		Slider quality = addSliderToCreateMenu("Damage value", mainPanelGO.transform, 0, 63.0f);
+		// TRIGGER.C, TRAP_DAMAGE: quality is the damage, and a non-zero owner heals instead (as
+		// the properties panel shows it; this menu offered "Health / Poison", and Poison healed)
+		Slider quality = addSliderToCreateMenu("Damage (or healing)", mainPanelGO.transform, 0, 63.0f);
+		Toggle heals = addToggleToCreateMenu("Heals instead of hurting", mainPanelGO.transform, false);
 		Action createDamageTrapAct = () =>
 		{
 			StaticObject damTrap = MapCreator.AddObject(tile, tilePos, level, id);
-			damTrap.SetProperties(false, true, true, false, 1, (int)quality.value, owner.value, 0);
+			damTrap.SetProperties(false, true, true, false, 1, (int)quality.value, heals.isOn ? 1 : 0, 0);
 			Destroy(createMenuGO);
 			afterCreatingAct?.Invoke(damTrap);
 		};
@@ -4336,7 +4339,7 @@ public class UIManager : MonoBehaviour {
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
 		addDescriptionToCreateMenu("Sets or changes a 'trap' variable or a 'quest' variable", mainPanelGO.transform);
 		addDescriptionToCreateMenu("Warning - do not change this object position in map - it's variable is partially saved in it's position.", mainPanelGO.transform);
-		Slider slider = addSliderToCreateMenu("Variable index", mainPanelGO.transform, 1.0f, 127.0f, 1.0f);
+		Slider slider = addSliderToCreateMenu("Variable index", mainPanelGO.transform, 1.0f, 63.0f, 1.0f);	// the game has 64 (player.h game_vars)
 		Toggle toggle = addToggleToCreateMenu("Set quest variables", mainPanelGO.transform, false, (b) => slider.interactable = !b);
 		InputField input = addInputToCreateMenu("Value / quest", mainPanelGO.transform);
 		//Slider varValue = addSliderToCreateMenu("Value / quest index", mainPanelGO.transform, 0, 63.0f);
@@ -4375,7 +4378,7 @@ public class UIManager : MonoBehaviour {
 		addDescriptionToCreateMenu("When range > 0, variable values are added in the range. If 'shift instead' is on, value is composed from 3 lower bits of every variable in range.", mainPanelGO.transform);
 		addDescriptionToCreateMenu("If the variable is equal to value, it triggers first trigger in inventory, if is not equal, it triggers second trigger if present.", mainPanelGO.transform);
 		addDescriptionToCreateMenu("Warning - do not change this object position in map - it's variable is partially saved in it's position.", mainPanelGO.transform);
-		Slider varIndex = addSliderToCreateMenu("Variable index", mainPanelGO.transform, 1.0f, 127.0f, 1.0f);
+		Slider varIndex = addSliderToCreateMenu("Variable index", mainPanelGO.transform, 1.0f, 63.0f, 1.0f);	// the game has 64 (player.h game_vars)
 		Slider varRange = addSliderToCreateMenu("Variable range", mainPanelGO.transform, 0, 7.0f, 0);
 		Toggle checkType = addToggleToCreateMenu("Shift instead", mainPanelGO.transform, false);
 		InputField input = addInputToCreateMenu("Value checked for", mainPanelGO.transform);
@@ -4591,7 +4594,8 @@ public class UIManager : MonoBehaviour {
 		GameObject mainPanelGO = createMenuGO.transform.Find("MainPanel").gameObject;
 		addDescriptionToCreateMenu("Changes terrain.", mainPanelGO.transform);
 		//Slider height = addSliderToCreateMenu("Height", mainPanelGO.transform, 0, 7.0f, 0);
-		Slider height = addSliderToCreateMenu("Target height", mainPanelGO.transform, 0, 7.0f, 0);
+		// change_terrain (event/WORLDEV.C): the new height is Z >> 3, 0 to 13
+		Slider height = addSliderToCreateMenu("New floor height", mainPanelGO.transform, 0, 13.0f, 0);
 		Action<bool> useTriggerAct = (b) => height.interactable = !b;
 		Toggle useTrigger = addToggleToCreateMenu("Use trigger height", mainPanelGO.transform, false, useTriggerAct);
 		Slider rangeX = addSliderToCreateMenu("Size X", mainPanelGO.transform, 0, 7.0f, 0);
@@ -4627,7 +4631,7 @@ public class UIManager : MonoBehaviour {
 			if (useTrigger.isOn)
 				terrainTrap.ZPos = 120;
 			else
-				terrainTrap.ZPos = (int)(height.value * 16);
+				terrainTrap.ZPos = (int)height.value << 3;
 			if (useCurrentFloor.isOn)
 				floorIndex = 11;
 			int qual = tileType.value + (floorIndex << 1);

@@ -79,7 +79,7 @@ namespace UltimateEditor.Uw1
 						roles.Add(R("Flag 10", "Stays after being unlocked (otherwise removed).", "obj/USEITEMS.C checkLock"));
 						roles.Add(R("Z", "Pick difficulty: skill check against Z * 3; 14 needs Pick Lock 31, 15 cannot be picked.", "obj/USEITEMS.C checkLock"));
 					}
-					else if (item == 0x10E)
+					else if (item == 0x101)
 						roles.Add(R("Use", "The lockpick: Pick Lock skill against the lock's Z.", "obj/USEITEMS.C"));
 					else
 						roles.Add(R("Owner", "Number of the lock it opens (matches the lock's link).", "obj/USEITEMS.C UseKey"));
