@@ -78,7 +78,7 @@ public class PropertiesPanel : MonoBehaviour {
 		for (int i = 0; i < statics.Count; i++)
 		{
 			int staticID = statics[i];
-			Dropdown.OptionData option = new Dropdown.OptionData(StaticObject.GetName(staticID));
+			Dropdown.OptionData option = new Dropdown.OptionData(TypeLabel(staticID));
 			StaticTypes.Add(option);
 			TypeLinks[option] = staticID;
 			ObjectIDToDropdownIndex[staticID] = i;
@@ -87,11 +87,30 @@ public class PropertiesPanel : MonoBehaviour {
 		for (int i = 0; i < mobiles.Count; i++)
 		{
 			int mobileID = mobiles[i];
-			Dropdown.OptionData option = new Dropdown.OptionData(StaticObject.GetName(mobileID));
+			Dropdown.OptionData option = new Dropdown.OptionData(TypeLabel(mobileID));
 			MobileTypes.Add(option);
 			TypeLinks[option] = mobileID;
 			ObjectIDToDropdownIndex[mobileID] = i;
 		}
+	}
+
+	/// <summary>An id's name for the type list; ids with no name (several in UW2) get their number.</summary>
+	static string TypeLabel(int id)
+	{
+		string name = StaticObject.GetName(id);
+		return string.IsNullOrEmpty(name) ? string.Format("(no name, 0x{0:X3})", id) : name;
+	}
+
+	/// <summary>Shows the object's id in the type list. Setting the list's value runs
+	/// UIManager.SetObjectType, which writes the id back, so an id the list lacks must not move
+	/// the list to another entry (that would change the object): it is left as it is.</summary>
+	void ShowType(StaticObject so)
+	{
+		int index;
+		if (ObjectIDToDropdownIndex.TryGetValue(so.ObjectID, out index) && index < Types.options.Count)
+			Types.value = index;
+		else
+			Debug.LogWarningFormat("Object id 0x{0:X3} is not in the type list", so.ObjectID);
 	}
 
 	private void Start()
@@ -398,7 +417,7 @@ public class PropertiesPanel : MonoBehaviour {
 			Action<int> selDoorTex = (i) =>
 			{
 				so.SetID((isDoorOpen ? 328 : 320) + i);
-				Types.value = ObjectIDToDropdownIndex[so.ObjectID];
+				ShowType(so);
 				selectTexButton.GetComponent<Image>().sprite = Sprite.Create(so.GetDoorTexture(), new Rect(0, 0, 32.0f, 64.0f), new Vector2(0, 0));
 				MapCreator.UpdateGODoorTexture(so, so.CurrentLevel);
 				Destroy(uiManager.TexturePicker);
@@ -490,7 +509,7 @@ public class PropertiesPanel : MonoBehaviour {
 			Action<int> selTexAct = (i) =>
 			{
 				so.SetID(368 + i);
-				Types.value = ObjectIDToDropdownIndex[so.ObjectID];
+				ShowType(so);
 				texButton.GetComponent<Image>().sprite = Sprite.Create(leverTexs[so.ObjectID - 368], new Rect(0, 0, 16.0f, 16.0f), Vector2.zero);
 				MapCreator.SetGOSprite(so);
 				Destroy(uiManager.TexturePicker);
@@ -1572,7 +1591,7 @@ public class PropertiesPanel : MonoBehaviour {
 
 			SetMobileProperties(false);
 		}
-		Types.value = ObjectIDToDropdownIndex[so.ObjectID];
+		ShowType(so);
 	}
 
 	private void SetInventory(StaticObject so)

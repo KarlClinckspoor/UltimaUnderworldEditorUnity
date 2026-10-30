@@ -2116,10 +2116,11 @@ public class StaticObject {
 		return options;
 	}
 
+	/// <summary>Every item id that is not a creature: 0-511 without 64-127 (both games).</summary>
 	public static List<int> GetStaticTypes()
 	{
 		List<int> statics = new List<int>();
-		for (int i = 0; i < 461; i++)
+		for (int i = 0; i < 512; i++)
 		{
 			if (i >= 64 && i <= 127)
 				continue;
@@ -2128,10 +2129,12 @@ public class StaticObject {
 		return statics;
 	}
 
+	/// <summary>Every creature id, 64-127: UW2's levels hold 0x7C and 0x7D in mobile slots, and
+	/// 0x7F (the adventurer) is the create object trap's template for a random monster.</summary>
 	public static List<int> GetMobileTypes()
 	{
 		List<int> mobiles = new List<int>();
-		for (int i = 64; i < 125; i++)
+		for (int i = 64; i < 128; i++)
 			mobiles.Add(i);
 		return mobiles;
 	}
