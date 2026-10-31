@@ -124,28 +124,48 @@ public class InputManager : MonoBehaviour {
 				Vector3 mousePos = MapCreator.GetWorldPosition(Input.mousePosition, false);
 				clickedObject.transform.position = mousePos;
 				MapTile tile = MapCreator.GetTile(basePos, UIManager.CurrentLevel);
-				if (tile)
+				if (tile && shadowObject)
 				{
-					float step_x = (mousePos.x % step) < (step / 2) ? (mousePos.x % step) : (mousePos.x % step) - step;
-					float step_y = (mousePos.y % step) < (step / 2) ? (mousePos.y % step) : (mousePos.y % step) - step;
-					shadowObject.transform.position = new Vector3(mousePos.x, mousePos.y, MapCreator.GetTileHeight(tile)) - new Vector3(step_x + offset, step_y + offset, 0);
+					StaticObject dragged = clickedObject.GetComponent<StaticObjectScript>().StaticObject;
+					if (MapCreator.FinePositionIsData(dragged))
+					{
+						// only the square changes: show it at its own fine position there
+						float ts = MapCreator.TileSize * 2.0f;
+						shadowObject.transform.position = new Vector3(tile.Position.x * ts + dragged.XPos / 7.0f * ts, tile.Position.y * ts + dragged.YPos / 7.0f * ts, MapCreator.GetTileHeight(tile));
+					}
+					else
+					{
+						float step_x = (mousePos.x % step) < (step / 2) ? (mousePos.x % step) : (mousePos.x % step) - step;
+						float step_y = (mousePos.y % step) < (step / 2) ? (mousePos.y % step) : (mousePos.y % step) - step;
+						shadowObject.transform.position = new Vector3(mousePos.x, mousePos.y, MapCreator.GetTileHeight(tile)) - new Vector3(step_x + offset, step_y + offset, 0);
+					}
 				}
 			}
 
 		}
 		if (Input.GetMouseButtonUp(0))
 		{
-			ObjectModeClickUp();
-			SelectObject();
-
-			dragStart = Vector3.zero;
-			clickedObject = null;
-			draggedFromTile = null;
-			isDragging = false;
-			if(triggerLink)
-				Destroy(triggerLink.gameObject);
-			UIManager.StopLinking();
-			triggerLink = null;
+			// The drag state is always cleared, even when dropping or selecting fails: left set,
+			// the next drag on empty floor dragged the last object again, without its shadow.
+			try
+			{
+				ObjectModeClickUp();
+				SelectObject();
+			}
+			finally
+			{
+				if (shadowObject)
+					Destroy(shadowObject);
+				shadowObject = null;
+				dragStart = Vector3.zero;
+				clickedObject = null;
+				draggedFromTile = null;
+				isDragging = false;
+				if(triggerLink)
+					Destroy(triggerLink.gameObject);
+				UIManager.StopLinking();
+				triggerLink = null;
+			}
 		}
 		if(Input.GetMouseButtonDown(1))
 		{
@@ -297,17 +317,10 @@ public class InputManager : MonoBehaviour {
 			//Debug.LogFormat("shadowObject.transform.position.x : {0}, tilePosition.x + 1 : {1}", shadowObject.transform.position.x / tileSize, tile.Position.x + 1);
 			//Debug.LogFormat("shadowObject.transform.position.y : {0}, tilePosition.y + 1 : {1}", shadowObject.transform.position.y / tileSize, tile.Position.y + 1);
 
-			newOffsets.x = Convert.ToInt32((shadowObject.transform.position.x % tileSize) / step);
-			newOffsets.y = Convert.ToInt32((shadowObject.transform.position.y % tileSize) / step);
-
-			if (newOffsets.x == 0 && Convert.ToInt32(shadowObject.transform.position.x / tileSize) == tile.Position.x + 1)
-				newOffsets.x = 7;
-			else if (newOffsets.x == 7 && Convert.ToInt32(shadowObject.transform.position.x / tileSize) == tile.Position.x)
-				newOffsets.x = 0;
-			if (newOffsets.y == 0 && Convert.ToInt32(shadowObject.transform.position.y / tileSize) == tile.Position.y + 1)
-				newOffsets.y = 7;
-			else if (newOffsets.y == 7 && Convert.ToInt32(shadowObject.transform.position.y / tileSize) == tile.Position.y)
-				newOffsets.y = 0;
+			// where the shadow showed it, or the mouse if there is no shadow
+			Vector3 drop = shadowObject ? shadowObject.transform.position : mousePos;
+			newOffsets.x = Mathf.Clamp(Convert.ToInt32((drop.x - tile.Position.x * tileSize) / step), 0, 7);
+			newOffsets.y = Mathf.Clamp(Convert.ToInt32((drop.y - tile.Position.y * tileSize) / step), 0, 7);
 			//Debug.LogFormat("newOffsets : {0}", newOffsets);
 			MapTile from = draggedFromTile;
 			UIManager.Undoable(so.CurrentLevel, "Move " + so.Name, () => ObjectList.Move(so, from, tile, newOffsets));

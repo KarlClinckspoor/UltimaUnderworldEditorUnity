@@ -69,7 +69,18 @@ public class PropertiesPanel : MonoBehaviour {
 	public List<Dropdown.OptionData> StaticTypes = new List<Dropdown.OptionData>();
 	public List<Dropdown.OptionData> MobileTypes = new List<Dropdown.OptionData>();
 
-	private UIManager uiManager;
+	// Looked up when first needed: the panel can be asked to show an object in the same frame
+	// it is first activated, before its Start has run (a lever selected first crashed here).
+	private UIManager uiManagerCache;
+	private UIManager uiManager
+	{
+		get
+		{
+			if (!uiManagerCache)
+				uiManagerCache = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
+			return uiManagerCache;
+		}
+	}
 
 	private void Awake()
 	{
@@ -113,10 +124,6 @@ public class PropertiesPanel : MonoBehaviour {
 			Debug.LogWarningFormat("Object id 0x{0:X3} is not in the type list", so.ObjectID);
 	}
 
-	private void Start()
-	{
-		uiManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
-	}
 
 	private void clearBasicPanel()
 	{
@@ -617,13 +624,6 @@ public class PropertiesPanel : MonoBehaviour {
 			else if (so.ObjectID == 385)    //Teleport
 			{
 				bool teleInThisLvl = so.ZPos == 0 ? true : false;
-				// In v0.2, sometimes when this is called, uiManager wasn't initialized yet.
-				// For instance, the teleport trap in Lvl3, idx 974.
-				// This would lead to a null reference exception, and the UI would become wonky.
-				// This fix is hacky, as this should've been called automatically, I think.
-				// TODO: Figure out why this is needed.
-				if (!uiManager)
-					Start();
 				GameObject targetLevel = createSliderProperty("Target level", BasicPanel.transform, so.ZPos, 1.0f, uiManager.MapCreator.GetLevelCount(), (f) => changeObjectZPos(so, (int)f));
 				UIManager.NameLevelSlider(targetLevel.GetComponentInChildren<Slider>(), "Target level");
 				if (teleInThisLvl)

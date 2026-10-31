@@ -1458,6 +1458,29 @@ public class MapCreator : MonoBehaviour {
 	/// <summary>Item ids 0x180 to 0x1BF: traps and triggers.</summary>
 	public static bool IsTrapOrTrigger(StaticObject so) { return so.ObjectID >= 0x180 && so.ObjectID < 0x1C0; }
 
+	/// <summary>Traps and triggers whose fine x and y are settings, not where they stand, so
+	/// moving them must not change them (event/TRIGGER.C and WORLDEV.C of both games).
+	/// UW1: change terrain (area), set and check variable (value bits, sum flag).
+	/// UW2 also: teleport (arrival flags), hack (cycling floors' area), inventory (worn),
+	/// change from (area), oscillator (mode and direction), proximity (sides), pit (height),
+	/// and pressure plates (pressed state, weight, floor stepping).</summary>
+	public static bool FinePositionIsData(StaticObject so)
+	{
+		int id = so.ObjectID;
+		if (id == 0x185 || id == 0x18D || id == 0x18E)
+			return true;
+		if (LevArk.Game.Kind != UltimateEditor.Games.GameKind.UW2)
+			return false;
+		switch (id)
+		{
+			case 0x181: case 0x183: case 0x18C: case 0x193:
+			case 0x195: case 0x196: case 0x197:
+			case 0x1A4: case 0x1A5: case 0x1B4: case 0x1B5:
+				return true;
+		}
+		return false;
+	}
+
 	/// <summary>The height of an object standing on a tile's floor, as the editor has always
 	/// placed it: floor * 8, one step more on a slope, and an open portcullis 24 higher.</summary>
 	public static int FloorZ(StaticObject so, MapTile tile)
@@ -1475,11 +1498,19 @@ public class MapCreator : MonoBehaviour {
 		//pos = new Vector3((pos.x / 0.6f - Mathf.Floor(pos.x / 0.6f)) * 0.7f, (pos.y / 0.6f - Mathf.Floor(pos.y / 0.6f)) * 0.7f, 0);
 		//so.XPos = (int)(pos.x * 10.0f);
 		//so.YPos = (int)(pos.y * 10.0f);
-		// Traps and triggers keep their fields as they are: their height and fine position are
-		// data (a teleport's level, a variable trap's index and value, a terrain trap's area;
-		// uw1/src/event/TRIGGER.C), not where they stand. Other objects standing on the floor
-		// stay on it; raised ones (levers, bridges, things on walls) keep their height above it.
-		if (!IsTrapOrTrigger(so))
+		// Traps and triggers keep their height: it is data (a teleport's level, a variable
+		// trap's index, a look trigger's difficulty). They take the drop's fine position unless
+		// that is data too (FinePositionIsData). Other objects standing on the floor stay on it;
+		// raised ones (levers, bridges, things on walls) keep their height above it.
+		if (IsTrapOrTrigger(so))
+		{
+			if (!FinePositionIsData(so))
+			{
+				so.XPos = offsets.x;
+				so.YPos = offsets.y;
+			}
+		}
+		else
 		{
 			int oldFloor = oldTile != null ? FloorZ(so, oldTile) : -1;
 			so.XPos = offsets.x;

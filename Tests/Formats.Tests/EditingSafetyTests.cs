@@ -166,18 +166,30 @@ namespace Formats.Tests
 		}
 
 		[GameFact("UW")]
-		public void A_moved_trap_keeps_its_height_and_fine_position()
+		public void A_moved_trap_keeps_its_height_and_its_fine_position_only_where_that_is_data()
 		{
 			string dir;
 			var levels = Load("UW", out dir);
-			var trap = levels.SelectMany(l => l.Objects).First(o => o != null && o.ObjectID == 0x181 && o.Tile != null && o.ZPos != o.Tile.FloorHeight * 8);	// a teleport trap to another level
+			// a teleport trap to another level: z is the level, fine x and y are only where it lies
+			var trap = levels.SelectMany(l => l.Objects).First(o => o != null && o.ObjectID == 0x181 && o.Tile != null && o.ZPos != o.Tile.FloorHeight * 8);
 			var ld = levels[trap.CurrentLevel - 1];
 			int x = trap.XPos, y = trap.YPos, z = trap.ZPos;
 			var to = ld.MapTiles[trap.Tile.Position.x == 1 ? 2 : 1, 1];
 			CMap.ObjectToGO[trap] = new GameObject("trap");
-			CMap.SetNewPosition(trap, trap.Tile, to, new Vector2Int((x + 3) % 8, (y + 3) % 8));
-			Assert.Equal(new[] { x, y, z }, new[] { trap.XPos, trap.YPos, trap.ZPos });
+			var drop = new Vector2Int((x + 3) % 8, (y + 3) % 8);
+			CMap.SetNewPosition(trap, trap.Tile, to, drop);
+			Assert.Equal(new[] { drop.x, drop.y, z }, new[] { trap.XPos, trap.YPos, trap.ZPos });
 			Assert.Same(to, trap.Tile);
+
+			// a set variable trap: fine y is part of the value (uw1 TRIGGER.C TRAP_SET_VARIABLE)
+			var setVar = levels.SelectMany(l => l.Objects).First(o => o != null && o.ObjectID == 0x18D && o.Tile != null);
+			ld = levels[setVar.CurrentLevel - 1];
+			x = setVar.XPos; y = setVar.YPos; z = setVar.ZPos;
+			to = ld.MapTiles[setVar.Tile.Position.x == 1 ? 2 : 1, 1];
+			CMap.ObjectToGO[setVar] = new GameObject("trap");
+			CMap.SetNewPosition(setVar, setVar.Tile, to, new Vector2Int((x + 3) % 8, (y + 3) % 8));
+			Assert.Equal(new[] { x, y, z }, new[] { setVar.XPos, setVar.YPos, setVar.ZPos });
+			Assert.Same(to, setVar.Tile);
 		}
 
 		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]

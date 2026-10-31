@@ -76,7 +76,12 @@ Contents
   locks and door traps, a wand takes a spell, a lever takes triggers). Traps and triggers
   lying on the floor are not drop targets: add objects to them from their properties panel.
   Dropping off the map puts the object back.
-  Moving a trap or trigger keeps its height and fine position (several traps keep data there).
+  Moving a trap or trigger keeps its height, which is data for many of them (a teleport's
+  level, a variable's number). It lands where you drop it, except the traps whose fine position
+  is data too: they keep it and only change square (the shadow shows them at their kept spot).
+  These are the change terrain, set variable and check variable traps, and in UW2 also the
+  teleport, hack, inventory, change from, oscillator, proximity and pit traps and the pressure
+  plates. A trigger's target square (quality, owner) does not follow it: change it in its panel.
   Right click an object: "Copy", "Remove", "Add trigger", "Inventory" (select an object inside
   it), and "Link trigger", "Link trap" or "Link lever" depending on the object. Right click a
   tile: "Add object", "Add move trigger", "Add trap", "Paste object".
