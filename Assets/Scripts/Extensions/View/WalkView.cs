@@ -297,19 +297,23 @@ namespace UltimateEditor.View
 					// the frame (model 1) in the square's wall texture, up to the ceiling; its
 					// opening runs from x -0.1875 to 0.3125, where the leaf (0.5 wide, from its
 					// hinge at x 0) goes
+					// An open door's object is 24 (3 steps) higher than the closed door: opening
+					// raises it (obj/USEITEMS.C OpenDoor) and the game draws it 3 steps lower again
+					// (3d/DRAWOBJ.C do_door). A portcullis is drawn where it is: raised.
+					bool open = MapCreator.IsOpenDoorItem(so);
+					bool portcullis = (so.ObjectID & 7) == 6;
+					Vector3 floorAt = at;
+					if (MapCreator.IsRaisedOpenDoor(so))
+						floorAt.y -= 0.75f;
 					if (models != null && models.Models.Count > 1)
-						WalkObjects.AddModel(models.Models[1], at, heading, palette, plain, texPart(Repeat01(SafeWall(tiles[x, y].WallTexture))), Color.white, WalkGeometry.Ceiling - at.y);
+						WalkObjects.AddModel(models.Models[1], floorAt, heading, palette, plain, texPart(Repeat01(SafeWall(tiles[x, y].WallTexture))), Color.white, WalkGeometry.Ceiling - floorAt.y);
 					var leaf = usable ? m : (models != null && models.Models.Count > 0xE ? models.Models[0xE] : null);
 					if (leaf != null && leaf.Faces.Count > 0)
 					{
-						bool open = so.ObjectID >= 0x148;
-						bool portcullis = (so.ObjectID & 7) == 6;
-						Vector3 hinge = at + Quaternion.Euler(0, heading, 0) * new Vector3(-0.1875f, 0, 0);
+						Vector3 hinge = (portcullis ? at : floorAt) + Quaternion.Euler(0, heading, 0) * new Vector3(-0.1875f, 0, 0);
 						float leafHeading = heading;
-						if (open && portcullis)
-							hinge.y += 0.75f;
-						else if (open)
-							leafHeading -= 90f;   // swung open about its hinge
+						if (open && !portcullis)
+							leafHeading -= Math.Max(1, so.Flags & 7) * 22.5f;   // turned about its hinge by flags & 7 sixteenths
 						WalkObjects.AddModel(leaf, hinge, leafHeading, palette, plain, texPart(Repeat01(so.GetDoorTexture())), Color.white);
 					}
 					return;
@@ -318,14 +322,14 @@ namespace UltimateEditor.View
 					{
 						var t = MapCreator.TextureData.Levers;
 						int i = so.ObjectID & 0xF;
-						WalkObjects.AddModel(m, at, heading, palette, plain, texPart(i < t.Count ? Repeat01(t.Textures[i]) : null), Color.white);
+						WalkObjects.AddModel(m, OffWall(at, heading), heading, palette, plain, texPart(i < t.Count ? Repeat01(t.Textures[i]) : null), Color.white);
 						return;
 					}
 					break;
 				case WalkObjects.Kind.TmapWall:
 					if (usable)
 					{
-						WalkObjects.AddModel(m, at, heading, palette, plain, texPart(Repeat01(SafeWall(so.Owner))), Color.white);
+						WalkObjects.AddModel(m, OffWall(at, heading), heading, palette, plain, texPart(Repeat01(SafeWall(so.Owner))), Color.white);
 						return;
 					}
 					break;
@@ -336,7 +340,10 @@ namespace UltimateEditor.View
 						int tex = WalkObjects.ModelTexture(model, so.Flags, uw2, out floorTex);
 						Texture2D t = null;
 						if (tex >= 0)
-							t = floorTex ? SafeFloor(tex) : TmObj(tex);
+							t = floorTex ? SafeFloor(tex) : TmObj(tex, uw2);
+						// writings, switches and UW2's paintings hang on walls
+						if (model == 0x0D || model == 0x10 || model == 0x11 || model == 0x12)
+							at = OffWall(at, heading);
 						// the pillar, like the door frame, reaches the ceiling in the game
 						WalkObjects.AddModel(m, at, heading, palette, plain, texPart(Repeat01(t)), Color.white, model == 0x0A ? WalkGeometry.Ceiling - at.y : -1f);
 						return;
@@ -357,14 +364,23 @@ namespace UltimateEditor.View
 		}
 
 		/// <summary>The renderer's object textures: 0-0x0F TMFLAT (levers, switches), from 0x10
-		/// TMOBJ (writings, the bridge...), from 0x30 the doors (gfx/LOADGR.C first_tmobj).</summary>
-		static Texture2D TmObj(int t)
+		/// TMOBJ (writings, the bridge, UW2's paintings...), then the doors: from 0x30 in UW1,
+		/// 0x40 in UW2 (gfx/LOADGR.C first_tmobj; DRAWOBJ.C do_door).</summary>
+		static Texture2D TmObj(int t, bool uw2)
 		{
 			var td = MapCreator.TextureData;
 			if (td == null) return null;
+			int doors = uw2 ? 0x40 : 0x30;
 			if (t < 0x10) return t < td.Levers.Count ? td.Levers.Textures[t] : null;
-			if (t < 0x30) return t - 0x10 < td.Other.Count ? td.Other.Textures[t - 0x10] : null;
-			return t - 0x30 < td.Doors.Count ? td.Doors.Textures[t - 0x30] : null;
+			if (t < doors) return t - 0x10 < td.Other.Count ? td.Other.Textures[t - 0x10] : null;
+			return t - doors < td.Doors.Count ? td.Doors.Textures[t - doors] : null;
+		}
+
+		/// <summary>A wall object's face lies exactly on the wall (its model's face 1/16 from the
+		/// object, which is 1/16 from the wall): drawn a hair in front so the wall can't cover it.</summary>
+		static Vector3 OffWall(Vector3 at, float heading)
+		{
+			return at - Quaternion.Euler(0, heading, 0) * new Vector3(0, 0, 0.01f);
 		}
 
 		void AddSprite(StaticObject so, Vector3 at, Transform parent, bool critter)

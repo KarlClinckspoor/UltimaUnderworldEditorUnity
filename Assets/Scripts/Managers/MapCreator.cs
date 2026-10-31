@@ -1571,6 +1571,17 @@ public class MapCreator : MonoBehaviour {
 		return null;
 	}
 
+	/// <summary>Items 0x148-0x14F: the open doors (0x14E the open portcullis).</summary>
+	public static bool IsOpenDoorItem(StaticObject so) { return so.ObjectID >= 0x148 && so.ObjectID < 0x150; }
+
+	/// <summary>An open door whose height is the 24 above its floor that opening it added.</summary>
+	public static bool IsRaisedOpenDoor(StaticObject so)
+	{
+		if (!IsOpenDoorItem(so) || so.Tile == null) return false;
+		int floor = so.Tile.FloorHeight * 8 + (so.Tile.IsSlope() ? 8 : 0);
+		return so.ZPos - floor >= 24;
+	}
+
 	/// <summary>Item ids 0x180 to 0x1BF: traps and triggers.</summary>
 	public static bool IsTrapOrTrigger(StaticObject so) { return so.ObjectID >= 0x180 && so.ObjectID < 0x1C0; }
 
@@ -1598,11 +1609,11 @@ public class MapCreator : MonoBehaviour {
 	}
 
 	/// <summary>The height of an object standing on a tile's floor, as the editor has always
-	/// placed it: floor * 8, one step more on a slope, and an open portcullis 24 higher.</summary>
+	/// placed it: floor * 8, one step more on a slope, and an open door 24 higher.</summary>
 	public static int FloorZ(StaticObject so, MapTile tile)
 	{
 		int z = tile.FloorHeight * 8;
-		if (so.ObjectID == 334)	// open portcullis
+		if (IsOpenDoorItem(so))	// an open door: opening raised it 24 (obj/USEITEMS.C OpenDoor)
 			z += 24;
 		if (tile.IsSlope())
 			z += 8;
@@ -1906,8 +1917,11 @@ public class MapCreator : MonoBehaviour {
 		StaticObjectScript sos = parent.GetComponent<StaticObjectScript>();
 
 		float objHei = GetObjectHeight(so);
-		//float floorZ = so.ObjectID >= 328 ? 0.4f : 0;
-		if (so.ObjectID == 334)
+		// An open door's object is 24 higher than the closed one (obj/USEITEMS.C OpenDoor raises it;
+		// the shipped open doors are too), and the game draws it 3 steps lower again (3d/DRAWOBJ.C
+		// do_door): the door and its frame stand on the floor.
+		bool raised = IsRaisedOpenDoor(so);
+		if (raised)
 			objHei += 0.30f;
 		sos.DoorFrameObject = CreateDoorMeshGO(so, obj.transform, level, GetWallTextureFromIndex(so.Tile.WallTexture, level), () => CreateDoorFrameMesh(TileSize, 0, -CeilingZ - objHei), "DoorFrame");
 		Texture2D doorTex = so.GetDoorTexture();
@@ -1915,7 +1929,7 @@ public class MapCreator : MonoBehaviour {
 			sos.DoorObject = CreateDoorMeshGO(so, obj.transform, level, doorTex, () => CreateDoorMesh(TileSize, 0), "Door");
 		obj.transform.localEulerAngles = new Vector3(0, 0, GetObjectDirection(so));
 		sos.DoorContainerObject = obj;
-		if (so.ObjectID == 334)
+		if (raised)
 			obj.transform.Translate(new Vector3(0, 0, 0.30f), Space.Self);
 		return obj;
 	}
