@@ -10,7 +10,8 @@ on MediaFire, a file host that may vanish, so this repository was created to kee
 He also made two videos, [one about traps](https://www.youtube.com/watch?v=u94tdpnkd3g) and
 [one about the conversation engine](https://www.youtube.com/watch?v=fh0s3iswLYA).
 
-Since then the editor has gained UW2 support, saved games, mod export and safer saving (0.4).
+Since then the editor has gained UW2 support, saved games, mod export and safer saving (0.4), and a
+walk-around view, trigger and trap navigation and tools for a save's game state (0.4.1).
 
 ## What it can do
 
@@ -24,6 +25,11 @@ Since then the editor has gained UW2 support, saved games, mod export and safer 
   the character (attributes, skills, position), and edit UW2's schedules.
 - **Tools:** an object field inspector, a search across all levels, consistency checks with fixes, the
   automap and map notes, the new-game start square, and a viewer for the built-in 3D models.
+- **Walk around:** a first-person view of a level at eye height, with objects drawn as the game draws
+  them (wall levers and pictures, doors, furniture as the built-in 3D models).
+- **Triggers and traps:** what links to an object, the squares it acts on (marked on the map), and a
+  list of every trigger chain in the level. A save's quest flags, variables and X clocks can be
+  edited; UW2's dark and lit squares (DL.DAT and the tiles' light flag) too.
 - **Mods:** export your changes as a `.uwmod` package for the mod manager.
 - **Safety:** files are written only when they change, through a temporary file. The originals are
   kept as `.BKP`, older versions go in `Editor backups`, autosaves are written to separate copies,

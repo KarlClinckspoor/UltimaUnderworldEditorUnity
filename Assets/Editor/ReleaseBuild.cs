@@ -7,7 +7,8 @@ using UnityEngine;
 /// <summary>
 /// Tools > Release > Build Windows x64: builds the editor into
 /// Builds/UltimateEditor_&lt;Edition&gt;_&lt;version&gt;/ next to Assets, using the scenes in the
-/// build settings and the version in Player Settings (bundleVersion).
+/// build settings. The version is <see cref="Version"/>: the build writes it into Player
+/// Settings (bundleVersion), so the version is bumped here rather than in ProjectSettings.asset.
 /// </summary>
 public static class ReleaseBuild
 {
@@ -16,10 +17,14 @@ public static class ReleaseBuild
 
 	public const string ExeName = "UltimateUnderworldEditor.exe";
 
+	/// <summary>The release's version, shown in the editor (Application.version).</summary>
+	public const string Version = "0.4.1";
+
 	[MenuItem("Tools/Release/Build Windows x64")]
 	public static void BuildWindows()
 	{
-		string version = PlayerSettings.bundleVersion;
+		PlayerSettings.bundleVersion = Version;
+		string version = Version;
 		string root = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Builds"));
 		string dir = Path.Combine(root, "UltimateEditor_" + Edition + "_" + version);
 		if (Directory.Exists(dir))
