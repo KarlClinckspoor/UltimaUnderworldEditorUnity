@@ -90,13 +90,15 @@ public class PropertiesPanel : MonoBehaviour {
 	{
 		var panelRect = transform as RectTransform;
 		if (panelRect)
-			panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * WidthScale, panelRect.sizeDelta.y);
-		// the rows of the basic panel stretch to its width
-		var rows = BasicPanel ? BasicPanel.GetComponent<VerticalLayoutGroup>() : null;
-		if (rows)
 		{
-			rows.childControlWidth = true;
-			rows.childForceExpandWidth = true;
+			float original = panelRect.sizeDelta.x;
+			// the tab buttons and the advanced panel's fields keep their places relative to the
+			// width, then the panel is widened
+			FitToWidth(panelRect, original);
+			Transform advanced = transform.Find("Panels/Advanced");
+			if (advanced)
+				FitToWidth((RectTransform)advanced, original);
+			panelRect.sizeDelta = new Vector2(original * WidthScale, panelRect.sizeDelta.y);
 		}
 		//Types.AddOptions(StaticObject.GetTypes());
 		List<int> statics = StaticObject.GetStaticTypes();
@@ -139,8 +141,68 @@ public class PropertiesPanel : MonoBehaviour {
 	}
 
 
+	/// <summary>
+	/// Makes the children of parent (laid out for a parent originalWidth wide, each anchored at
+	/// one point) follow its width: each child keeps the same share of the width it had, so
+	/// labels, fields and buttons widen together and stay lined up. Narrow children (toggles,
+	/// pictures) keep their size and their relative place. Children already stretched are left.
+	/// </summary>
+	static void FitToWidth(RectTransform parent, float originalWidth)
+	{
+		if (originalWidth < 1f)
+			return;
+		for (int i = 0; i < parent.childCount; i++)
+		{
+			var c = parent.GetChild(i) as RectTransform;
+			if (!c || c.anchorMin.x != c.anchorMax.x)
+				continue;
+			float w = c.sizeDelta.x;
+			float left = c.anchorMin.x * originalWidth + c.anchoredPosition.x - c.pivot.x * w;
+			float l = left / originalWidth, r = (left + w) / originalWidth;
+			if (w < 70f)
+			{
+				float mid = (l + r) / 2f;
+				c.anchorMin = new Vector2(mid, c.anchorMin.y);
+				c.anchorMax = new Vector2(mid, c.anchorMax.y);
+				c.anchoredPosition = new Vector2((c.pivot.x - 0.5f) * w, c.anchoredPosition.y);
+			}
+			else
+			{
+				c.anchorMin = new Vector2(l, c.anchorMin.y);
+				c.anchorMax = new Vector2(r, c.anchorMax.y);
+				c.sizeDelta = new Vector2(0f, c.sizeDelta.y);
+				c.anchoredPosition = new Vector2(0f, c.anchoredPosition.y);
+			}
+		}
+	}
+
+	readonly HashSet<Transform> fittedRows = new HashSet<Transform>();
+
+	/// <summary>The rows of the basic panel are made for the panel's original width: each new
+	/// one is fitted to the wider panel before it is drawn.</summary>
+	private void LateUpdate()
+	{
+		if (!BasicPanel)
+			return;
+		var panelRect = transform as RectTransform;
+		float width = panelRect ? panelRect.sizeDelta.x : 0f;
+		Transform rows = BasicPanel.transform;
+		for (int i = 0; i < rows.childCount; i++)
+		{
+			var row = rows.GetChild(i) as RectTransform;
+			if (!row || fittedRows.Contains(row) || row.name == "Note")
+				continue;
+			fittedRows.Add(row);
+			if (row.anchorMin.x != row.anchorMax.x || width < 1f)
+				continue;
+			FitToWidth(row, row.sizeDelta.x);
+			row.sizeDelta = new Vector2(width, row.sizeDelta.y);
+		}
+	}
+
 	private void clearBasicPanel()
 	{
+		fittedRows.RemoveWhere(t => t == null);
 		BasicInfo.transform.parent.SetAsFirstSibling();
 		for (int i = 1; i < BasicPanel.transform.childCount; i++)
 			Destroy(BasicPanel.transform.GetChild(i).gameObject);

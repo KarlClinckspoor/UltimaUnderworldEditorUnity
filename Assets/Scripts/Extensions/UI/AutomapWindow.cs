@@ -88,7 +88,7 @@ namespace UltimateEditor.Uw1.UI
 			var paint = pic.gameObject.AddComponent<MapPaint>();
 			paint.OnTile = (x, y, first) => OnTile(st, x, y, first);
 			var side = UiKit.Column(mapRow, 4);
-			UiKit.Size(side.gameObject, 400, -1);
+			UiKit.Size(side.gameObject, 400 * UiKit.Scale, -1);
 			st.Info = UiKit.Paragraph(side, "", 11, UiKit.TextColor);
 			if (LevArk.Game.Kind == GameKind.UW2) BuildScraps(st, side);
 

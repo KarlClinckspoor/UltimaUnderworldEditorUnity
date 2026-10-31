@@ -99,12 +99,20 @@ namespace UltimateEditor.Uw1.UI
 			return le;
 		}
 
+		/// <summary>The editor's own panels use 14-point text; these windows were written with
+		/// sizes 10-13, so every size given here is raised by FontBoost and every control's
+		/// width and height scaled by Scale to keep the text fitting.</summary>
+		public const int FontBoost = 3;
+		public const float Scale = 1.25f;
+		static float S(float v) { return v < 0 ? v : v * Scale; }
+
 		public static Text Label(Transform parent, string text, int size = 12, FontStyle style = FontStyle.Normal, Color? color = null, float width = -1, float height = 18)
 		{
+			width = S(width); height = S(height);
 			var rt = Rect("Label", parent);
 			var t = rt.gameObject.AddComponent<Text>();
 			t.font = Font;
-			t.fontSize = size;
+			t.fontSize = size + FontBoost;
 			t.fontStyle = style;
 			t.color = color ?? TextColor;
 			t.text = text;
@@ -136,7 +144,7 @@ namespace UltimateEditor.Uw1.UI
 			var t = Label(rt, label, 11, FontStyle.Normal, TextColor);
 			t.alignment = TextAnchor.MiddleCenter;
 			Stretch(t.rectTransform, 2, 2, 0, 0);
-			Size(rt.gameObject, width, height);
+			Size(rt.gameObject, S(width), S(height));
 			if (onClick != null) b.onClick.AddListener(() => onClick());
 			return b;
 		}
@@ -166,7 +174,7 @@ namespace UltimateEditor.Uw1.UI
 			input.contentType = numeric ? InputField.ContentType.Standard : InputField.ContentType.Standard;
 			input.text = value ?? "";
 			if (onEndEdit != null) input.onEndEdit.AddListener(s => onEndEdit(s));
-			Size(rt.gameObject, width, height, width < 0 ? 1 : -1);
+			Size(rt.gameObject, S(width), S(height), width < 0 ? 1 : -1);
 			return input;
 		}
 
@@ -189,7 +197,7 @@ namespace UltimateEditor.Uw1.UI
 			dd.value = Mathf.Clamp(value, 0, Math.Max(0, options.Count - 1));
 			dd.RefreshShownValue();
 			if (onChange != null) dd.onValueChanged.AddListener(i => onChange(i));
-			Size(go, width, height);
+			Size(go, S(width), S(height));
 			return dd;
 		}
 
@@ -242,7 +250,7 @@ namespace UltimateEditor.Uw1.UI
 			h.childForceExpandWidth = false;
 			h.childForceExpandHeight = false;
 			h.childAlignment = TextAnchor.MiddleLeft;
-			Size(rt.gameObject, -1, height);
+			Size(rt.gameObject, -1, S(height));
 			return rt;
 		}
 
@@ -296,7 +304,10 @@ namespace UltimateEditor.Uw1.UI
 		{
 			var root = UiKit.Rect("Window " + title, ui.transform);
 			Root = root.gameObject;
-			width *= 1.2f;	// the windows were tight for their rows
+			// sized with the controls (UiKit.Scale), within the screen
+			var screen = ((RectTransform)ui.transform).rect;
+			width = Mathf.Min(width * UiKit.Scale, screen.width > 100 ? screen.width * 0.95f : float.MaxValue);
+			height = Mathf.Min(height * UiKit.Scale, screen.height > 100 ? screen.height * 0.92f : float.MaxValue);
 			root.sizeDelta = new Vector2(width, height);
 			root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
 			root.anchoredPosition = Vector2.zero;
@@ -306,18 +317,18 @@ namespace UltimateEditor.Uw1.UI
 
 			var bar = UiKit.Rect("TitleBar", root);
 			bar.anchorMin = new Vector2(0, 1); bar.anchorMax = new Vector2(1, 1);
-			bar.pivot = new Vector2(0.5f, 1); bar.sizeDelta = new Vector2(0, 24); bar.anchoredPosition = Vector2.zero;
+			bar.pivot = new Vector2(0.5f, 1); bar.sizeDelta = new Vector2(0, 28); bar.anchoredPosition = Vector2.zero;
 			bar.gameObject.AddComponent<Image>().color = UiKit.BarColor;
 			Title = UiKit.Label(bar, title, 13, FontStyle.Bold);
 			UiKit.Stretch(Title.rectTransform, 8, 30, 0, 0);
 			var close = UiKit.Button(bar, "X", Close, 22, 20, new Color(0.55f, 0.2f, 0.2f));
 			var crt = close.GetComponent<RectTransform>();
 			crt.anchorMin = crt.anchorMax = new Vector2(1, 0.5f); crt.pivot = new Vector2(1, 0.5f);
-			crt.sizeDelta = new Vector2(22, 20); crt.anchoredPosition = new Vector2(-2, 0);
+			crt.sizeDelta = new Vector2(26, 24); crt.anchoredPosition = new Vector2(-2, 0);
 
 			Toolbar = UiKit.Rect("Toolbar", root);
 			Toolbar.anchorMin = new Vector2(0, 1); Toolbar.anchorMax = new Vector2(1, 1);
-			Toolbar.pivot = new Vector2(0.5f, 1); Toolbar.anchoredPosition = new Vector2(0, -26);
+			Toolbar.pivot = new Vector2(0.5f, 1); Toolbar.anchoredPosition = new Vector2(0, -30);
 			Toolbar.sizeDelta = new Vector2(-12, 0);
 			var tv = Toolbar.gameObject.AddComponent<VerticalLayoutGroup>();
 			tv.spacing = 3; tv.childControlWidth = true; tv.childControlHeight = true; tv.childForceExpandHeight = false; tv.childForceExpandWidth = true;
@@ -327,10 +338,10 @@ namespace UltimateEditor.Uw1.UI
 			Status = UiKit.Label(root, "", 11, FontStyle.Normal, UiKit.DimTextColor, -1, 16);
 			var srt = Status.rectTransform;
 			srt.anchorMin = new Vector2(0, 0); srt.anchorMax = new Vector2(1, 0); srt.pivot = new Vector2(0.5f, 0);
-			srt.sizeDelta = new Vector2(-12, 16); srt.anchoredPosition = new Vector2(0, 3);
+			srt.sizeDelta = new Vector2(-12, 20); srt.anchoredPosition = new Vector2(0, 3);
 
 			var scroll = UiKit.Rect("Scroll", root);
-			UiKit.Stretch(scroll, 6, 6, 30, 22);
+			UiKit.Stretch(scroll, 6, 6, 34, 26);
 			var sr = scroll.gameObject.AddComponent<ScrollRect>();
 			sr.horizontal = false; sr.vertical = true; sr.scrollSensitivity = 25; sr.movementType = ScrollRect.MovementType.Clamped;
 			scroll.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.15f);
@@ -383,7 +394,7 @@ namespace UltimateEditor.Uw1.UI
 		void LateUpdate()
 		{
 			if (!toolbar || !body) return;
-			float top = 30 + toolbar.rect.height + (toolbar.childCount > 0 ? 4 : 0);
+			float top = 34 + toolbar.rect.height + (toolbar.childCount > 0 ? 4 : 0);
 			body.offsetMax = new Vector2(-6, -top);
 		}
 	}
