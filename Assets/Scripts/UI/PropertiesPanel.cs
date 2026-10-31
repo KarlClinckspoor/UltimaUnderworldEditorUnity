@@ -176,6 +176,34 @@ public class PropertiesPanel : MonoBehaviour {
 		}
 	}
 
+	/// <summary>Within a fitted row: a slider no longer runs under its label (the label takes
+	/// the left 45%, the slider the rest, short of the edge), and a label too long for its space
+	/// shrinks its text to fit instead of being cut.</summary>
+	static void TidyRow(RectTransform row)
+	{
+		var desc = row.Find("Description") as RectTransform;
+		Text descText = desc ? desc.GetComponent<Text>() : null;
+		for (int i = 0; i < row.childCount; i++)
+		{
+			var c = row.GetChild(i) as RectTransform;
+			if (!c || !c.GetComponent<Slider>())
+				continue;
+			c.anchorMin = new Vector2(Mathf.Max(c.anchorMin.x, 0.46f), c.anchorMin.y);
+			c.anchorMax = new Vector2(Mathf.Min(c.anchorMax.x, 0.97f), c.anchorMax.y);
+			c.sizeDelta = new Vector2(0f, c.sizeDelta.y);
+			c.anchoredPosition = new Vector2(0f, c.anchoredPosition.y);
+			if (desc && desc.anchorMin.x != desc.anchorMax.x)
+				desc.anchorMax = new Vector2(Mathf.Min(desc.anchorMax.x, 0.45f), desc.anchorMax.y);
+		}
+		if (descText)
+		{
+			descText.resizeTextForBestFit = true;
+			descText.resizeTextMaxSize = descText.fontSize;
+			descText.resizeTextMinSize = Mathf.Min(descText.fontSize, 9);
+			descText.horizontalOverflow = HorizontalWrapMode.Wrap;
+		}
+	}
+
 	readonly HashSet<Transform> fittedRows = new HashSet<Transform>();
 
 	/// <summary>The rows of the basic panel are made for the panel's original width: each new
@@ -196,6 +224,7 @@ public class PropertiesPanel : MonoBehaviour {
 			if (row.anchorMin.x != row.anchorMax.x || width < 1f)
 				continue;
 			FitToWidth(row, row.sizeDelta.x);
+			TidyRow(row);
 			row.sizeDelta = new Vector2(width, row.sizeDelta.y);
 		}
 	}
