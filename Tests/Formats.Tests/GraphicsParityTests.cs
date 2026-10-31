@@ -116,6 +116,14 @@ namespace Formats.Tests
 			var b = C.LoadTextures();
 			Assert.NotNull(b);
 			Assert.True(b.Objects.Count > 400);
+			if (game == "UW2")
+			{
+				// UW2's generic heads now come from GHED.GR (about 64x70), not the leftover GENHEAD.GR (34x34)
+				Assert.InRange(b.GenHeads.Count, 32, 64);
+				Assert.All(b.GenHeads.Textures, t => { Assert.InRange(t.width, 48, 80); Assert.InRange(t.height, 48, 80); });
+				a.GenHeads = null;
+				b.GenHeads = null;
+			}
 			Same.Assert(a, b, game + " TextureData");
 		}
 
