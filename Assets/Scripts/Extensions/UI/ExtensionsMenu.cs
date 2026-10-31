@@ -104,6 +104,7 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Find items in all levels...", () => ItemFinderWindow.Show(), true);
 			Entry(root, "Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true);
 			Entry(root, "Triggers and traps of this level (chains)...", () => TriggerMapWindow.Show(), true);
+			Entry(root, "Walk around this level (first person)...", () => UltimateEditor.View.WalkView.Enter(), true);
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
 			Entry(root, "Light levels (SHADES.DAT)...", () => ShadesWindow.Show(), true);

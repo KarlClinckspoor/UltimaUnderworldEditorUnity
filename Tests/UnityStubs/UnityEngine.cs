@@ -319,15 +319,32 @@ namespace UnityEngine
 		public Quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
 		public static Quaternion identity { get { return new Quaternion(0, 0, 0, 1); } }
 		public Vector3 eulerAngles { get { return Vector3.zero; } set { } }
-		public static Quaternion Euler(float x, float y, float z) { return identity; }
-		public static Quaternion Euler(Vector3 v) { return identity; }
-		public static Quaternion AngleAxis(float a, Vector3 axis) { return identity; }
+		// Unity's order: z, then x, then y (degrees)
+		public static Quaternion Euler(float x, float y, float z) { return AngleAxis(y, new Vector3(0, 1, 0)) * AngleAxis(x, new Vector3(1, 0, 0)) * AngleAxis(z, new Vector3(0, 0, 1)); }
+		public static Quaternion Euler(Vector3 v) { return Euler(v.x, v.y, v.z); }
+		public static Quaternion AngleAxis(float a, Vector3 axis)
+		{
+			double h = a * Math.PI / 360.0, s = Math.Sin(h);
+			double len = Math.Sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+			if (len < 1e-12) return identity;
+			return new Quaternion((float)(axis.x / len * s), (float)(axis.y / len * s), (float)(axis.z / len * s), (float)Math.Cos(h));
+		}
 		public static Quaternion LookRotation(Vector3 f) { return identity; }
 		public static Quaternion LookRotation(Vector3 f, Vector3 up) { return identity; }
 		public static Quaternion Lerp(Quaternion a, Quaternion b, float t) { return b; }
 		public static Quaternion Slerp(Quaternion a, Quaternion b, float t) { return b; }
-		public static Quaternion operator *(Quaternion a, Quaternion b) { return a; }
-		public static Vector3 operator *(Quaternion a, Vector3 b) { return b; }
+		public static Quaternion operator *(Quaternion a, Quaternion b)
+		{
+			return new Quaternion(a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y, a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
+				a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x, a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z);
+		}
+		public static Vector3 operator *(Quaternion q, Vector3 v)
+		{
+			// v + 2w(u x v) + 2u x (u x v), u the vector part
+			float cx = q.y * v.z - q.z * v.y, cy = q.z * v.x - q.x * v.z, cz = q.x * v.y - q.y * v.x;
+			float dx = q.y * cz - q.z * cy, dy = q.z * cx - q.x * cz, dz = q.x * cy - q.y * cx;
+			return new Vector3(v.x + 2 * (q.w * cx + dx), v.y + 2 * (q.w * cy + dy), v.z + 2 * (q.w * cz + dz));
+		}
 	}
 	public struct Rect
 	{
@@ -490,6 +507,8 @@ namespace UnityEngine
 		public static bool isDebugBuild { get { return true; } }
 	}
 	public static class QualitySettings { public static int vSyncCount; }
+	public enum FogMode { Linear = 1, Exponential = 2, ExponentialSquared = 3 }
+	public static class RenderSettings { public static bool fog; public static FogMode fogMode; public static Color fogColor; public static float fogStartDistance, fogEndDistance, fogDensity; }
 	public static class Application
 	{
 		public static string dataPath = ".";
@@ -674,7 +693,7 @@ namespace UnityEngine
 		public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu, uint extrude, SpriteMeshType m, Vector4 border) { return Create(t, r, p, ppu); }
 	}
 	public enum SpriteMeshType { FullRect, Tight }
-	public class Shader : Object { public static Shader Find(string n) { return new Shader(); } public static int PropertyToID(string n) { return 0; } }
+	public class Shader : Object { public static Shader Find(string n) { return new Shader(); } public static int PropertyToID(string n) { return 0; } public static void SetGlobalFloat(string n, float v) { } }
 	public class Material : Object
 	{
 		public Material(Shader s) { }

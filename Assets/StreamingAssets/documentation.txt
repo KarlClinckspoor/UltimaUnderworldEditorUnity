@@ -109,7 +109,30 @@ Contents
   Both windows' "Use the selected tile" take the tile selected in tile mode (green outline) or
   the square of the object selected in object mode, not the tile under the mouse.
 
-2.7) When the editor is not in front
+2.7) Walking around a level
+  Tools > Walk around this level puts you inside the shown level at eye height, to check what
+  the map can't show well: the heights of floors, ledges, shelves and pictures, where levers and
+  writings sit on their walls, which way doors and furniture face. It starts on the selected
+  tile, else in the middle of the map view, else at the player's start.
+    W/S/A/D or the arrow keys move (Shift: faster), the right mouse button held looks round.
+    F flies (then Q/E go down and up; walking, they change the eye height) or walks again.
+    G shows or hides the ceiling, L the darkness, R rebuilds the view after edits.
+    Esc (or the button at the top) goes back to the map, centred where you stopped.
+  The level is built as the game builds it: a floor step is a quarter of a square (most
+  corridors, at height 12, are one square high), the ceiling is height 16, a slope rises one
+  step across its square, a diagonal square has a wall along its diagonal. Objects are drawn
+  the game's way, from COMOBJ.DAT's render field: items and critters as pictures that face you
+  (critters as their item icon, not their animation); levers, switches, writings and wall
+  pictures (0x16E, 0x16F) flat on their walls; doors in their frames (an open door swung aside,
+  an open portcullis raised); benches, tables, chairs, barrels, pillars, gravestones, the
+  shrine, the moongate, UW2's beds and shelves... as the 3D models built into UW.EXE / UW2.EXE.
+  Traps,
+  triggers and invisible objects are not drawn. While walking the map does not respond; the
+  view is a snapshot of the level when you started (R rebuilds it).
+  Known differences from the game: no animation, no lighting beyond a fade with distance, and
+  UW2's ceiling is plain grey (UW1's uses the level's floor texture 9, as the game does).
+
+2.8) When the editor is not in front
   While another window has the focus the editor ignores the mouse and keyboard (it no longer
   selects objects under another window) and draws only 5 frames a second. Autosave still runs.
 
@@ -199,6 +222,7 @@ Contents
   Fixes   consistency checks of the level lists (the free lists, objects reached twice or not
        at all, the active critter list, trap trigger counts) with automatic fixes, and an item
        cleaner that removes loose items by category (quest items and Garamon's bones are kept).
+  Walk around this level   a first-person view of the shown level (see 2.7).
   Triggers and traps of this level   every trigger with where it lies, the square its chain
        runs on and the chain itself, then the traps no trigger reaches (door traps, and those a
        schedule, a conversation, a hack or the game's code fires, or nothing). Each entry
