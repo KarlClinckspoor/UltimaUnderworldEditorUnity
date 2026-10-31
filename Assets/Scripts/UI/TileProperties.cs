@@ -17,8 +17,17 @@ public class TileProperties : MonoBehaviour {
 
 
 
+	/// <summary>The square last selected on the map (a tile in tile mode, or the square of an
+	/// object selected in object mode) and its level; Tools windows read it. The tile under the
+	/// mouse is TilePanel.LastTile.</summary>
+	public static MapTile LastSelected;
+	public static int LastSelectedLevel;
+
 	public void SetTile(MapTile tile)
 	{
+		LastSelected = tile;
+		LastSelectedLevel = tile.Level;
+		UltimateEditor.Uw1.UI.LightWindow.OnTileSelected(tile);
 
 		TileType.value = (int)tile.TileType;
 

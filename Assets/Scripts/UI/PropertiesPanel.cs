@@ -141,6 +141,7 @@ public class PropertiesPanel : MonoBehaviour {
 		}
 		clearBasicPanel();
 		BasicInfo.text = so.Name + " [" + so.CurrentAdress + "]";
+		createLinkInfo(so);
 		List<StaticObject> contained = so.GetContainedObjects();
 		if (so.IsContainer())
 		{
@@ -1479,6 +1480,39 @@ public class PropertiesPanel : MonoBehaviour {
 	/// group sizes neither width nor height of its children, so a bare paragraph kept the
 	/// default 100-pixel width and wrapped into a narrow column: this one is as wide as the
 	/// panel, with a small margin, inside a box that grows with the text.</summary>
+	/// <summary>Who links to this object, which triggers aim their chain at its square, and the
+	/// squares it acts on (red crosshairs on the map, TargetMarkers), with buttons to go there.</summary>
+	private void createLinkInfo(StaticObject so)
+	{
+		if (MapCreator.LevelData == null || so.CurrentLevel < 1) return;
+		var from = TrapLinks.LinkedFrom(so);
+		StaticObject container = so.GetContainer();
+		from.RemoveAll(o => o == container && !o.IsTrigger() && !o.IsTrap() && !o.IsLever());
+		bool relevant = so.IsTrap() || so.IsTrigger() || so.IsDoor() || from.Count > 0;
+		foreach (var o in from)
+		{
+			StaticObject target = o;
+			createButtonProperty("Linked from: " + o.Name + " [" + o.CurrentAdress + "] - go", BasicPanel.transform, () => uiManager.SelectObject(target, true));
+		}
+		if (!relevant) return;
+		foreach (var t in TrapLinks.TriggersAimedAt(so))
+		{
+			if (from.Contains(t)) continue;
+			StaticObject target = t;
+			createButtonProperty("Chain aimed at this square: " + t.Name + " [" + t.CurrentAdress + "] - go", BasicPanel.transform, () => uiManager.SelectObject(target, true));
+		}
+		foreach (var t in TrapLinks.Targets(so))
+		{
+			var tt = t;
+			createButtonProperty("Acts on (" + t.X + ", " + t.Y + ")" + (t.Level != so.CurrentLevel ? " of " + LevArk.Game.LevelName(t.Level) : "") + ": " + t.What + " - go", BasicPanel.transform, () =>
+			{
+				if (tt.Level != uiManager.CurrentLevel) uiManager.GoToLevel(tt.Level);
+				float ts = MapCreator.TileSize * 2.0f;
+				Camera.main.transform.position = new Vector3((tt.X + 0.5f) * ts, (tt.Y + 0.5f) * ts, Camera.main.transform.position.z);
+			});
+		}
+	}
+
 	private Text panelParagraph(string text, int size, Color color)
 	{
 		float width = ((RectTransform)BasicPanel.transform).rect.width;
@@ -1646,6 +1680,11 @@ public class PropertiesPanel : MonoBehaviour {
 		{
 			Debug.LogError("Properties Panel : Tried to set object to null (SetObject)");
 			return;
+		}
+		if (so.Tile != null && so.GetContainer() == null)
+		{
+			TileProperties.LastSelected = so.Tile;
+			TileProperties.LastSelectedLevel = so.CurrentLevel;
 		}
 		Adresses.text = string.Format("Adr [{0}], next [{1}], prev [{2}]", so.CurrentAdress, so.NextAdress, so.PrevAdress);
 		XPos.text = so.XPos.ToString();

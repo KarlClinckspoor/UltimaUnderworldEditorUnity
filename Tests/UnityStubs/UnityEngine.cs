@@ -489,6 +489,7 @@ namespace UnityEngine
 		public static void Break() { }
 		public static bool isDebugBuild { get { return true; } }
 	}
+	public static class QualitySettings { public static int vSyncCount; }
 	public static class Application
 	{
 		public static string dataPath = ".";

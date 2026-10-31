@@ -35,7 +35,7 @@ namespace UltimateEditor.Uw1.UI
 			Load(w, saves[current]);
 		}
 
-		static List<string> FindSaves(string root)
+		internal static List<string> FindSaves(string root)
 		{
 			var list = new List<string>();
 			if (root == null || !Directory.Exists(root)) return list;
@@ -65,6 +65,8 @@ namespace UltimateEditor.Uw1.UI
 			{
 				GameWrite.Write(path, p.ToBytes());
 				w.Status.text = "Saved " + path;
+				var ui = UiKit.FindUIManager();
+				if (ui && ui.MapCreator.IsInitialized && GameSession.IsSave) MapCreator.RefreshStartMarker(ui.CurrentLevel);
 			}, 130, 22, UiKit.AccentColor);
 			UiKit.Button(top, "Reload", () => Load(w, path), 70, 22);
 
@@ -123,9 +125,9 @@ namespace UltimateEditor.Uw1.UI
 			var row2 = UiKit.Row(w.Content, 20);
 			UiKit.Button(row2, "Use the selected tile", () =>
 			{
-				var t = TilePanel.LastTile;
-				if (t == null) { w.Status.text = "Select a tile on the map first (tile mode)."; return; }
-				level = TilePanel.LastTileLevel; x = t.Position.x; y = t.Position.y;
+				var t = TileProperties.LastSelected;
+				if (t == null) { w.Status.text = "Select a tile (tile mode) or an object on the floor (object mode) first."; return; }
+				level = TileProperties.LastSelectedLevel; x = t.Position.x; y = t.Position.y;
 				lv.text = level.ToString(); xi.text = x.ToString(); yi.text = y.ToString();
 			}, 150);
 			UiKit.Button(row2, "Set position", () =>

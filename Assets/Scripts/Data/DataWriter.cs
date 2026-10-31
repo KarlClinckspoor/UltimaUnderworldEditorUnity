@@ -271,7 +271,7 @@ public static class DataWriter {
 		//Debug.Log("Save tile");
 		// Every field is masked to its width, so a value out of range can't spill into the next.
 		byte a = (byte)(((int)tile.TileType & 0x0F) + ((tile.FloorHeight & 0x0F) << 4));
-		byte b = (byte)(((tile.FloorTexture & 0x0F) << 2) + ((tile.IsAntimagic == true ? 1 : 0) << 6) + ((tile.IsDoor == true ? 1 : 0) << 7));
+		byte b = (byte)((tile.LightBits & 0x03) + ((tile.FloorTexture & 0x0F) << 2) + ((tile.IsAntimagic == true ? 1 : 0) << 6) + ((tile.IsDoor == true ? 1 : 0) << 7));
 		//byte c = (byte)(tile.WallTexture + ((tile.ObjectAdress & 0x0F) << 4));
 		//byte d = (byte)((tile.ObjectAdress & 0xFF0) >> 4);
 		byte c = (byte)((tile.WallTexture & 0x3F) + ((tile.ObjectAdress & 0x03) << 6));

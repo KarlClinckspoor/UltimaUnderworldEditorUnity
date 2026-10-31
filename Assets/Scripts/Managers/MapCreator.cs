@@ -35,6 +35,10 @@ public class MapCreator : MonoBehaviour {
 
 	private static Material tileMaterial;
 	private static Material spriteMaterial;
+	/// <summary>The material object sprites use (for code-built overlays).</summary>
+	public static Material SpriteMat { get { return spriteMaterial; } }
+	/// <summary>Levels are loaded (LevelData is set).</summary>
+	public static bool IsLoaded { get { return LevelData != null && LevelData.Count > 0; } }
 
 	public static List<LevelData> LevelData { get; private set; }
 	public static TextureData TextureData { get; private set; }
@@ -264,7 +268,104 @@ public class MapCreator : MonoBehaviour {
 
 	public GameObject SpawnStartGO()
 	{
-		return SpawnStartGO(transform, GameStart);
+		FindPlayerStart();
+		GameObject go = SpawnStartGO(transform, new Vector2Int(Mathf.Clamp(StartSquare.x, 0, 63), Mathf.Clamp(StartSquare.y, 0, 63)));
+		StartObject = go;
+		PlaceStartMarker();
+		return go;
+	}
+
+	/// <summary>The level the smiling face is on: 1 for a new game, the save's level in a save.</summary>
+	public static int StartLevel { get; private set; } = 1;
+	/// <summary>The square of the smiling face, and where in it (0-1 across the square).</summary>
+	public static Vector2Int StartSquare { get; private set; }
+	public static Vector2 StartFine { get; private set; } = new Vector2(0.5f, 0.5f);
+	/// <summary>Why the save's player position is not usable (null when it is), for a message
+	/// after loading. The face is then not shown.</summary>
+	public static string StartProblem { get; private set; }
+
+	/// <summary>
+	/// Where the player is: in DATA, the new-game square of level 1 (in the executable); in a
+	/// save, the position in its PLAYER.DAT, which the game restores (uw1/src/inv/INVSAVE.C
+	/// RestorePlayerInv puts the player object back on that square; GAMEWRAP.C RestoreGame
+	/// then loads that level). The game checks none of it: a missing PLAYER.DAT makes the
+	/// restore fail, and a bad level or square is used as it is.
+	/// </summary>
+	public static void FindPlayerStart()
+	{
+		StartLevel = 1;
+		StartSquare = GameStart;
+		StartFine = new Vector2(0.5f, 0.5f);
+		StartProblem = null;
+		if (!GameSession.IsSave)
+			return;
+		string path = UltimateEditor.Games.GameFiles.Resolve(System.IO.Path.Combine(GameSession.SaveFolder, "PLAYER.DAT"));
+		if (!System.IO.File.Exists(path))
+		{
+			StartProblem = "This save has no PLAYER.DAT: the game cannot restore it (RestoreGame stops). The smiling face is not shown.";
+			StartLevel = 0;
+			return;
+		}
+		UltimateEditor.Games.PlayerDat p;
+		try
+		{
+			byte[] bytes = System.IO.File.ReadAllBytes(path);
+			var kind = UltimateEditor.Games.PlayerDat.Detect(bytes);
+			if (kind == null || kind.Value != LevArk.Game.Kind)
+				throw new System.IO.InvalidDataException("it fits neither game's layout, or is the other game's");
+			p = UltimateEditor.Games.PlayerDat.Parse(bytes, kind.Value);
+		}
+		catch (Exception e)
+		{
+			StartProblem = "This save's PLAYER.DAT could not be read (" + e.Message + "). The smiling face is not shown.";
+			StartLevel = 0;
+			return;
+		}
+		int level = p.SavedLevel, x = p.SavedX >> 8, y = p.SavedY >> 8;
+		StartSquare = new Vector2Int(x, y);
+		StartFine = new Vector2((p.SavedX & 0xFF) / 256f, (p.SavedY & 0xFF) / 256f);
+		StartLevel = level;
+		var problems = new List<string>();
+		if (level < 1 || level > LevelData.Count || !LevelData[level - 1].Present)
+		{
+			problems.Add("its level, " + level + ", is not a level of this game (the game would load whatever that block holds)");
+			StartLevel = 0;
+		}
+		if (x < 0 || x > 63 || y < 0 || y > 63)
+		{
+			problems.Add("its square (" + x + ", " + y + ") is off the 64x64 map");
+			StartLevel = 0;
+		}
+		else if (StartLevel > 0)
+		{
+			MapTile t = LevelData[level - 1].MapTiles[x, y];
+			if (x == 0 || y == 0 || x == 63 || y == 63)
+				problems.Add("its square (" + x + ", " + y + ") is on the map's edge, where no level has open squares");
+			if (t.TileType == TileType.Solid)
+				problems.Add("its square (" + x + ", " + y + ") is solid rock: the player would be stuck in the wall");
+		}
+		if (problems.Count > 0)
+			StartProblem = "The player position in this save's PLAYER.DAT: " + string.Join("; ", problems) +
+				". The game does not check this. Fix it in Tools > Character in a save." + (StartLevel == 0 ? " The smiling face is not shown." : "");
+	}
+
+	/// <summary>Puts the smiling face where FindPlayerStart found the player.</summary>
+	public static void PlaceStartMarker()
+	{
+		if (!StartObject || StartLevel < 1 || StartLevel > LevelData.Count)
+			return;
+		MapTile t = LevelData[StartLevel - 1].MapTiles[StartSquare.x, StartSquare.y];
+		float ts = TileSize * 2.0f;
+		StartObject.transform.position = new Vector3((StartSquare.x + StartFine.x) * ts, (StartSquare.y + StartFine.y) * ts, GetTileHeight(t));
+	}
+
+	/// <summary>Moves the face after the start square or the save's position changed.</summary>
+	public static void RefreshStartMarker(int currentLevel)
+	{
+		FindPlayerStart();
+		PlaceStartMarker();
+		if (StartObject)
+			StartObject.SetActive(StartLevel == currentLevel);
 	}
 
 	private void CreateLevel(int level, Transform parentLevel)
@@ -1664,7 +1765,8 @@ public class MapCreator : MonoBehaviour {
 		SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
 		sr.sprite = GetObjectSpriteFromID(127);
 		sr.sortingOrder = 1;
-		float startH = GetTileHeight( LevelData[0].MapTiles[mapPos.x, mapPos.y]);
+		int startLevel = StartLevel >= 1 && StartLevel <= LevelData.Count ? StartLevel : 1;
+		float startH = GetTileHeight(LevelData[startLevel - 1].MapTiles[mapPos.x, mapPos.y]);
 		SetGOPosition(obj, mapPos, new Vector2Int(3, 3), startH);
 		GameObject col = obj.transform.Find("Collider").gameObject;
 		Destroy(col);

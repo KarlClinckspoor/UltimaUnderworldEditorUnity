@@ -70,6 +70,7 @@ public partial class UIManager
 		PropertiesPanel pp = ObjectProperties.GetComponent<PropertiesPanel>();
 		pp.SetObject(so);
 		pp.SetBasicPanel(so);
+		TargetMarkers.Show(this, so);
 		
 	}
 

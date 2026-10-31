@@ -103,11 +103,13 @@ namespace UltimateEditor.Uw1.UI
 			Entry(root, "Object fields (selected object)...", () => FieldInspectorWindow.Show(Selected), true);
 			Entry(root, "Find items in all levels...", () => ItemFinderWindow.Show(), true);
 			Entry(root, "Fixes (consistency checks, item cleaner)...", () => FixesWindow.Show(), true);
+			Entry(root, "Triggers and traps of this level (chains)...", () => TriggerMapWindow.Show(), true);
 			Entry(root, "Class skills and attributes (SKILLS.DAT)...", () => ClassSkillsWindow.Show(), false);
 			Entry(root, "Item combinations (CMB.DAT)...", () => CombinationsWindow.Show(), false);
 			Entry(root, "Light levels (SHADES.DAT)...", () => ShadesWindow.Show(), true);
 			Entry(root, "Saved games (slots, names, conversation variables)...", () => SaveSlotsWindow.Show(), false);
 			Entry(root, "Character in a save (PLAYER.DAT, position)...", () => PlayerWindow.Show(), false);
+			Entry(root, "Quest flags and variables in a save (PLAYER.DAT)...", () => VariablesWindow.Show(), false);
 			Entry(root, "New game start square (in the executable)...", () => StartWindow.Show(), true);
 			Entry(root, "Built-in 3D models (UW.EXE / UW2.EXE)...", () => ModelViewerWindow.Show(), false);
 			Entry(root, "Export as mod (.uwmod package)...", () => ModExportWindow.Show(), false);
@@ -115,6 +117,8 @@ namespace UltimateEditor.Uw1.UI
 			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 || (DataFolder != null && UltimateEditor.Games.GameProfile.Detect(DataFolder) == UltimateEditor.Games.GameKind.UW2))
 				Entry(root, "Schedules (UW2 SCD.ARK)...", () => ScheduleWindow.Show(), false);
 			Entry(root, "Automap and map notes...", () => AutomapWindow.Show(), true);
+			if (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2)
+				Entry(root, "Level light (UW2 DL.DAT, dark and lit squares)...", () => LightWindow.Show(), true);
 			// The randomizer tools are a work in progress: shown only on request (RandomizerToggle)
 			if (RandomizerToggle.Shown)
 			{

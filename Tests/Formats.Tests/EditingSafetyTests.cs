@@ -192,6 +192,43 @@ namespace Formats.Tests
 			Assert.Same(to, setVar.Tile);
 		}
 
+		[GameFact("UW2")]
+		public void Uw2_tile_light_flags_are_read_and_written_with_the_tile()
+		{
+			string dir;
+			var levels = Load("UW2", out dir);
+			var ld = levels[0];
+			// Lord British's castle: DL.DAT 14, the corridors flagged (dark)
+			int flagged = 0;
+			foreach (var t in ld.MapTiles) if (t.LightFlag) flagged++;
+			Assert.InRange(flagged, 1, 4095);
+			byte[] before = CLevArk.BuildLevelBlock(ld, 1);
+			for (int i = 0; i < 4096 * 4; i++) Assert.Equal(ld.SourceBlock[i], before[i]);   // the tiles as shipped
+			var tile = ld.MapTiles[10, 10];
+			tile.LightFlag = !tile.LightFlag;
+			byte[] after = CLevArk.BuildLevelBlock(ld, 1);
+			int at = (10 + 10 * 64) * 4 + 1;
+			Assert.Equal(before[at] ^ 1, after[at]);
+			for (int i = 0; i < 4096 * 4; i++) if (i != at) Assert.Equal(before[i], after[i]);
+		}
+
+		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
+		public void Trap_links_find_the_triggers_and_squares_of_a_chain(string game)
+		{
+			if (!GameData.Has(game)) return;
+			string dir;
+			var levels = Load(game, out dir);
+			// a trigger on the map whose link is a trap
+			var trigger = levels.SelectMany(l => l.Objects).First(o => o != null && o.IsTrigger() && o.Tile != null && current::TrapLinks.LinksTo(o) != null && current::TrapLinks.LinksTo(o).IsTrap());
+			var trap = current::TrapLinks.LinksTo(trigger);
+			Assert.Contains(trigger, current::TrapLinks.LinkedFrom(trap));
+			Assert.Contains(trigger, current::TrapLinks.TriggersReaching(trap));
+			Assert.Contains(current::TrapLinks.Targets(trap), t => t.X == trigger.Quality && t.Y == trigger.Owner && t.Level == trigger.CurrentLevel);
+			var chain = current::TrapLinks.Chain(trigger);
+			Assert.Same(trigger, chain[0]);
+			Assert.Same(trap, chain[1]);
+		}
+
 		[GameTheory, MemberData(nameof(GameData.Available), MemberType = typeof(GameData))]
 		public void Undo_of_a_delete_puts_the_objects_back_and_keeps_later_edits(string game)
 		{

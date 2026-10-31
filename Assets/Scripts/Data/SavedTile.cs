@@ -19,6 +19,7 @@ public class SavedTile
 
 	public bool IsAntimagic;
 	public bool IsDoor;
+	public int LightBits;
 
 	public int ObjectAdress;
 
@@ -33,6 +34,7 @@ public class SavedTile
 		WallTexture = tile.WallTexture;
 		IsAntimagic = tile.IsAntimagic;
 		IsDoor = tile.IsDoor;
+		LightBits = tile.LightBits;
 		ObjectAdress = tile.ObjectAdress;
 	}
 }

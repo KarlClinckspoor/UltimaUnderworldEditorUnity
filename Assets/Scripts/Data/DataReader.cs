@@ -257,6 +257,7 @@ public static class DataReader {
 			tile.FloorTexture = (b & 0x3C) >> 2;
 			tile.IsAntimagic = ((b & 0x40) >> 6) == 1;
 			tile.IsDoor = ((b & 0x80) >> 7) == 1;
+			tile.LightBits = b & 0x03;
 			tile.WallTexture = (c & 0x3F);
 			//tile.ObjectAdress = ((c & 0xC0) >> 4) + (d << 4);
 			tile.ObjectAdress = ((c & 0xC0) >> 6) + (d << 2);

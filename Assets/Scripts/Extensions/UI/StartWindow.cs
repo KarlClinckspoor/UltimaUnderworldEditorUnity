@@ -33,9 +33,9 @@ namespace UltimateEditor.Uw1.UI
 			var row2 = UiKit.Row(w.Content, 22);
 			UiKit.Button(row2, "Use the selected tile", () =>
 			{
-				var t = TilePanel.LastTile;
-				if (t == null) { w.Status.text = "Select a tile on level 1 first (tile mode)."; return; }
-				if (TilePanel.LastTileLevel != 1) { w.Status.text = "A new game always starts on level 1."; return; }
+				var t = TileProperties.LastSelected;
+				if (t == null) { w.Status.text = "Select a tile of level 1 (tile mode) or an object on its floor (object mode) first."; return; }
+				if (TileProperties.LastSelectedLevel != 1) { w.Status.text = "A new game always starts on level 1."; return; }
 				x = t.Position.x; y = t.Position.y; xi.text = x.ToString(); yi.text = y.ToString();
 			}, 150, 22);
 			UiKit.Button(row2, "Write to the executable", () =>
@@ -48,6 +48,8 @@ namespace UltimateEditor.Uw1.UI
 				if (!StartPosition.Patch(b, game, x, y)) { w.Status.text = "The call was not found any more."; return; }
 				GameWrite.Write(exe, b);
 				MapCreator.ExeStart = new Vector2Int(x, y);
+				var ui = UiKit.FindUIManager();
+				if (ui && ui.MapCreator.IsInitialized) MapCreator.RefreshStartMarker(ui.CurrentLevel);
 				w.Status.text = string.Format("New games now start at ({0}, {1}) of level 1.", x, y);
 			}, 170, 22, UiKit.AccentColor);
 			UiKit.Button(row2, "Original", () =>

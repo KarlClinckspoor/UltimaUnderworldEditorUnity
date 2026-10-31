@@ -53,8 +53,46 @@ public class InputManager : MonoBehaviour {
 		UIManager.OnStartLink += (lr) => createTriggerLink(lr);
 	}
 
+	/// <summary>While another window has the focus the editor ignores the mouse (it could
+	/// select objects under another window) and draws only a few frames a second. It keeps
+	/// running, so autosave still works.</summary>
+	const int BackgroundFrameRate = 5;
+	int focusedVSync = -1, focusedFrameRate = -1;
+
+	private void OnApplicationFocus(bool focused)
+	{
+		if (!focused)
+		{
+			focusedVSync = QualitySettings.vSyncCount;
+			focusedFrameRate = Application.targetFrameRate;
+			QualitySettings.vSyncCount = 0;	// targetFrameRate is ignored while vSync is on
+			Application.targetFrameRate = BackgroundFrameRate;
+			// a drag in progress is dropped back where it was
+			if (clickedObject && isDragging)
+			{
+				StaticObjectScript sos = clickedObject.GetComponent<StaticObjectScript>();
+				if (sos && sos.StaticObject) MapCreator.SetGOPosition(sos.StaticObject);
+				BoxCollider col = clickedObject.GetComponentInChildren<BoxCollider>();
+				if (col) col.enabled = true;
+			}
+			if (shadowObject)
+				Destroy(shadowObject);
+			shadowObject = null;
+			dragStart = Vector3.zero;
+			clickedObject = null;
+			isDragging = false;
+		}
+		else if (focusedFrameRate != -1 || focusedVSync != -1)
+		{
+			QualitySettings.vSyncCount = Mathf.Max(0, focusedVSync);
+			Application.targetFrameRate = focusedFrameRate;
+		}
+	}
+
 	private void Update()
 	{
+		if (!Application.isFocused)
+			return;
 		//Debug.Log(MapCreator.GetPositionUnderMouse(true, true));
 		Rect screenRect = new Rect(0, 0, Screen.width, Screen.height);
 		if (!screenRect.Contains(Input.mousePosition))

@@ -16,6 +16,11 @@ public class MapTile {
 
 	public bool IsAntimagic;
 	public bool IsDoor;
+	/// <summary>Bits 8-9 of the tile word. UW2: bit 0 is the light flag, which with the level's
+	/// DL.DAT entry decides whether the level's minimum light applies on this square
+	/// (uw2/src/motion/PHYSICS.C change_GrSq); bit 1 is unused. UW1 reads neither.</summary>
+	public int LightBits;
+	public bool LightFlag { get { return (LightBits & 1) != 0; } set { LightBits = (LightBits & 2) | (value ? 1 : 0); } }
 
 	public int ObjectAdress;
 
@@ -41,6 +46,7 @@ public class MapTile {
 		WallTexture = tile.WallTexture;
 		IsAntimagic = tile.IsAntimagic;
 		IsDoor = tile.IsDoor;
+		LightBits = tile.LightBits;
 		ObjectAdress = tile.ObjectAdress;
 	}
 

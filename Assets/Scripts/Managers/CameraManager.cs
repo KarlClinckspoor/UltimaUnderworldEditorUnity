@@ -34,6 +34,8 @@ public class CameraManager : MonoBehaviour {
 
 	private void Update()
 	{
+		if (!Application.isFocused)	// the mouse wheel over another window must not zoom
+			return;
 		if (uiManager.IsWindowActive())
 		{
 			//Debug.Log("Window active");

@@ -255,10 +255,7 @@ public static class LevArk
 		DataWriter.SaveActiveMobs(ld.MobList, l, 0, ms);
 		DataWriter.SaveFreeListStart(l, 0, ld.ActiveMobs, ld.MobileListStart, ld.StaticListStart, ms);
 		block[LevelBlock.MagicAt] = 0x77; block[LevelBlock.MagicAt + 1] = 0x75;
-		// the tile light bits (word 0 bits 8-9) are not in the editor's model: keep them
-		if (source != null)
-			for (int t = 0; t < 4096; t++)
-				block[t * 4 + 1] = (byte)((block[t * 4 + 1] & 0xFC) | (source[t * 4 + 1] & 0x03));
+		// the tile light bits (word 0 bits 8-9) are MapTile.LightBits, read and written with the tile
 		if (Game.Kind == GameKind.UW2)
 		{
 			WriteUw2Overlays(ld, block, source);

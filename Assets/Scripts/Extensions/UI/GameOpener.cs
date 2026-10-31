@@ -206,6 +206,8 @@ namespace UltimateEditor.Uw1.UI
 			HuffmanNode.SetTree(null);
 			TilePanel.LastTile = null;
 			TilePanel.LastTileLevel = 0;
+			TileProperties.LastSelected = null;
+			TileProperties.LastSelectedLevel = 0;
 			UIManager.ItemDropdownPrefab = null;
 			ZoneTools.Reset();
 			ZoneWindow.ResetState();

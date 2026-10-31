@@ -82,6 +82,10 @@ Contents
   These are the change terrain, set variable and check variable traps, and in UW2 also the
   teleport, hack, inventory, change from, oscillator, proximity and pit traps and the pressure
   plates. A trigger's target square (quality, owner) does not follow it: change it in its panel.
+  The properties panel also lists what links to the object ("Linked from"), the triggers whose
+  chain runs on its square, and the squares it acts on (a trigger's target, a teleport's
+  destination, where a trap's chain runs); each has a button that goes there. Those squares
+  are marked on the map with red crosshairs while the object is selected.
   Right click an object: "Copy", "Remove", "Add trigger", "Inventory" (select an object inside
   it), and "Link trigger", "Link trap" or "Link lever" depending on the object. Right click a
   tile: "Add object", "Add move trigger", "Add trap", "Paste object".
@@ -95,9 +99,18 @@ Contents
   Paints the floor and/or wall texture chosen above the modes panel (toggles choose which).
 
 2.6) Player start
-  The smiling face is where a new game puts the player on level 1. It is not in the level data
-  but in the executable; Tools > New game start square changes it. A saved game keeps the
-  player's position in PLAYER.DAT (Tools > Character in a save).
+  With DATA open, the smiling face is where a new game puts the player on level 1. It is not in
+  the level data but in the executable; Tools > New game start square changes it. With a save
+  open, it is where the save's PLAYER.DAT puts the player, on that level (the editor opens on
+  it); Tools > Character in a save changes it. The game checks none of this when it restores a
+  save: without PLAYER.DAT the restore fails, and a level or square that is wrong (off the map,
+  solid rock) is used as it is. The editor says so after loading and then shows no face.
+  Both windows' "Use the selected tile" take the tile selected in tile mode (green outline) or
+  the square of the object selected in object mode, not the tile under the mouse.
+
+2.7) When the editor is not in front
+  While another window has the focus the editor ignores the mouse and keyboard (it no longer
+  selects objects under another window) and draws only 5 frames a second. Autosave still runs.
 
 
 3) TOP MENU BAR
@@ -185,12 +198,20 @@ Contents
   Fixes   consistency checks of the level lists (the free lists, objects reached twice or not
        at all, the active critter list, trap trigger counts) with automatic fixes, and an item
        cleaner that removes loose items by category (quest items and Garamon's bones are kept).
+  Triggers and traps of this level   every trigger with where it lies, the square its chain
+       runs on and the chain itself, then the traps no trigger reaches (door traps, and those a
+       schedule, a conversation, a hack or the game's code fires, or nothing). Each entry
+       selects its object.
   Class skills and attributes (SKILLS.DAT), Item combinations (CMB.DAT), Light levels
        (SHADES.DAT)
   Saved games   list and rename the save slots, edit each conversation's saved variables
        (BGLOBALS.DAT) by name.
   Character in a save   PLAYER.DAT: name, attributes, skills, vitality, mana, level, experience,
        and the position (level, square, heading).
+  Quest flags and variables in a save   PLAYER.DAT's game state (10.1): UW1's quest flags
+       0-31, quests 32-35 and the 64 game variables; UW2's quest flags 0-127, quests 128-143,
+       the 256 numbered variables and the 16 X clocks. Known meanings are named. "Only
+       non-zero" hides the rest.
   New game start square   writes the start square into the executable.
   Built-in 3D models   view the models drawn from the executable (door frames, pillars, levers,
        benches...) and export them as OBJ.
@@ -199,6 +220,9 @@ Contents
   Autosave and backups   the autosave interval (0 = off) and how many backup versions to keep.
   Schedules (UW2 SCD.ARK)   the schedules that move NPCs and the plot by the clocks (see 10.5).
   Automap and map notes   which squares the player has mapped, and the notes written on the map.
+  Level light (UW2)   DL.DAT's minimum light for the shown level, and the light flag of its
+       squares: shows the flagged squares, toggles the selected tile, or sets or clears the
+       flag on each tile clicked in tile mode (see 10.7).
   Show the randomizer tools   Sector mode and the zone tools (work in progress).
   Log conversation steps   writes every step of converting and playing conversations to the
        Unity log (slow; for debugging).
@@ -2460,6 +2484,21 @@ Contents
     path directly, with nobody as "who": the ward's test fails, the monster is not hurt and
     the ward stays (both games).
 
+
+
+10.7) UW2 light: dark and lit squares
+  UW1's light comes only from what the player carries (and spells). UW2 adds a minimum light per
+  level, in DATA\DL.DAT (one byte per level, 80): the byte mod 10 is a light level (0 none,
+  higher brighter, the levels of SHADES.DAT), and a byte of 10 or more says the minimum applies
+  on squares WITHOUT the light flag, below 10 on squares WITH it [game/PLAYDATA.C load_dl]. The
+  light flag is bit 8 of each square's tile word. When the player steps onto a square whose flag
+  differs from the last square's, the light is redone: the minimum where it applies, otherwise
+  only carried light [motion/PHYSICS.C change_GrSq]. Level 1, Lord British's castle, has 14:
+  light 4 on unflagged squares; its corridors are flagged, so they are dark without a torch.
+  Shipped values: Britannia 14, 13, 3, 3, 6 (the rest 0); the Prison Tower 13 (its top 3);
+  Killorn Keep 13, 11; the Ice Caverns 14, 14; Talorus 12, 11; the Ethereal Void 14 or 15; the
+  rest of those worlds and the Academy, the Tomb and the Pits 3 (4 for the Pits' first level),
+  that is light 3 on flagged squares only. Tools > Level light edits both.
 
 11) RECIPES: BUILDING COMMON EFFECTS
 ------------------------------------

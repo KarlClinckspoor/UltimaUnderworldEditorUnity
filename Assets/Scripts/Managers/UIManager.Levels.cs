@@ -162,10 +162,7 @@ public partial class UIManager
 		CurrentLevel = level;
 		MapCreator.EnsureLevelBuilt(CurrentLevel);
 		levels[CurrentLevel - 1].SetActive(true);
-		if (CurrentLevel == 1)
-			StartGO.SetActive(true);
-		else
-			StartGO.SetActive(false);
+		StartGO.SetActive(CurrentLevel == MapCreator.StartLevel);
 		changeTemplateFloorButton(MapCreator.GetFloorTextureFromIndex(0, CurrentLevel));
 		changeTemplateWallButton(MapCreator.GetWallTextureFromIndex(0, CurrentLevel));
 		syncLevelPicker(CurrentLevel);
@@ -218,7 +215,7 @@ public partial class UIManager
 			changeTemplateFloorButton();
 			changeTemplateWallButton();
 
-			StartGO.SetActive(true);
+			MapCreator.RefreshStartMarker(1);
 			Destroy(createMenuGO);
 		};
 		addButtonToCreateMenu("Clear", mainPanelGO.transform, clear);

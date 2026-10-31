@@ -31,7 +31,7 @@ public class TilePanel : MonoBehaviour {
 		Position.text = "[X : " + tile.Position.x + ", Y : " + tile.Position.y + "]";
 		Type.text = "Type : " + tile.TileType;
 		Height.text = "Height : " + tile.FloorHeight;
-		Antimagic.text = "Antimagic : " + tile.IsAntimagic;
+		Antimagic.text = "Antimagic : " + tile.IsAntimagic + (LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2 && tile.LightFlag ? ", light flag" : "");
 		Door.text = "Door : " + tile.IsDoor;
 		Adress.text = "Object : " + tile.ObjectAdress;
 		FileAdr.text = "File : " + DataReader.ToHex(tile.FileAdress);

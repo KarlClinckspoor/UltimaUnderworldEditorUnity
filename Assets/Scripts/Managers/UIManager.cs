@@ -421,6 +421,7 @@ public partial class UIManager : MonoBehaviour {
 		syncLevelPicker(1);
 		ShowLevelName();
 		levels[0].SetActive(true);
+		StartGO.SetActive(MapCreator.StartLevel == 1);
 		TopBarGO.transform.Find("Levels").GetComponent<Button>().interactable = true;
 		TopBarGO.transform.Find("Objects").GetComponent<Button>().interactable = true;
 		TopBarGO.transform.Find("Textures").GetComponent<Button>().interactable = true;
@@ -435,6 +436,14 @@ public partial class UIManager : MonoBehaviour {
 
 		ItemDropdownPrefab = CreateItemDropdown();	//For conversations only
 		Destroy(popup);
+		// a save opens on the level its player is on
+		if (MapCreator.StartLevel > 1)
+		{
+			showLevel(MapCreator.StartLevel);
+			Camera.main.transform.position = new Vector3(StartGO.transform.position.x, StartGO.transform.position.y, Camera.main.transform.position.z);
+		}
+		if (MapCreator.StartProblem != null)
+			SpawnPopupMessage(MapCreator.StartProblem);
 	}
 
 	#endregion
