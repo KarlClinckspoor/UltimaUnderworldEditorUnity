@@ -6,7 +6,7 @@ using UnityEngine;
 
 /// <summary>
 /// Saves the .GR pictures of both games: DOORS.GR, TMFLAT.GR (levers and switches), TMOBJ.GR
-/// (wall decals), GENHEAD.GR and CHARHEAD.GR (portraits) and OBJECTS.GR. A file is rebuilt
+/// (wall decals), GENHEAD.GR (UW2: GHED.GR) and CHARHEAD.GR (portraits) and OBJECTS.GR. A file is rebuilt
 /// with only the replaced pictures re-encoded (GrFile.Rebuild), so everything else keeps its
 /// bytes and empty pictures stay empty; a file with no replaced picture is not written at all.
 /// A picture counts as replaced when its texture object was swapped (MapCreator.UpdateTexture),
@@ -34,6 +34,9 @@ public static class GrPictures
 	/// own colour or the nearest one.</summary>
 	public static Func<Color32, int> ColorToIndex;
 
+	/// <summary>The file of the generic conversation heads: GENHEAD.GR in UW1, GHED.GR in UW2.</summary>
+	public static string GenericHeadFile(GameKind game) { return game == GameKind.UW2 ? "GHED.GR" : "GENHEAD.GR"; }
+
 	/// <summary>The .GR files this class writes, with the texture list each is shown as.</summary>
 	public static KeyValuePair<string, TextureContainer>[] Files(TextureData t)
 	{
@@ -42,7 +45,7 @@ public static class GrPictures
 			new KeyValuePair<string, TextureContainer>("DOORS.GR", t.Doors),
 			new KeyValuePair<string, TextureContainer>("TMFLAT.GR", t.Levers),
 			new KeyValuePair<string, TextureContainer>("TMOBJ.GR", t.Other),
-			new KeyValuePair<string, TextureContainer>("GENHEAD.GR", t.GenHeads),
+			new KeyValuePair<string, TextureContainer>(GenericHeadFile(LevArk.Game.Kind), t.GenHeads),
 			new KeyValuePair<string, TextureContainer>("CHARHEAD.GR", t.NPCHeads),
 			new KeyValuePair<string, TextureContainer>("OBJECTS.GR", t.Objects),
 		};

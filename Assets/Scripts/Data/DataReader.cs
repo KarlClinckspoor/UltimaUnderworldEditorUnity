@@ -606,11 +606,15 @@ public static class DataReader {
 		TextureContainer other = new TextureContainer(othertex, oFirst, 5, null);
 
 		int pCount = 0, pFirst = 0;		
-		int[] portrOffsets = ReadGraphicOffsets("GENHEAD.GR", ref pCount, ref pFirst);
-		List<int[]> portrRaw = ReadRawTextures("GENHEAD.GR", portrOffsets, 34, 34, 5);
+		// The generic heads: UW1's GENHEAD.GR (34x34); UW2 shows GHED.GR (64x70; its GENHEAD.GR
+		// is a leftover the game never opens: uw2/src/conv/CONVERSE.C strt_converse)
+		string genFile = GrPictures.GenericHeadFile(game.Kind);
+		int[] portrOffsets = ReadGraphicOffsets(genFile, ref pCount, ref pFirst);
+		var genSizes = new Dictionary<int, Vector2Int>();
+		List<int[]> portrRaw = ReadRawTextures(genFile, portrOffsets, 0, 0, 5, true, genSizes);
 		List<Texture2D> portrTex = new List<Texture2D>();
 		for (int i = 0; i < portrRaw.Count; i++)
-			portrTex.Add(ConvertToTexture("Generic_Head_" + i, portrRaw[i], 34, 34, pals[0], true));
+			portrTex.Add(ConvertToTexture("Generic_Head_" + i, portrRaw[i], genSizes[i].x, genSizes[i].y, pals[0], true));
 		TextureContainer genheads = new TextureContainer(portrTex, pFirst, 5, new AdditionalTextureInfo(true, 34, 34, 132, 4));
 		
 		int[] npcOffsets = ReadGraphicOffsets("CHARHEAD.GR", ref pCount, ref pFirst);
@@ -685,7 +689,7 @@ public static class DataReader {
 			GrPictures.Remember("DOORS.GR", GameFiles.Resolve(dataDir + "/DOORS.GR"), doortex, pals[0]);
 			GrPictures.Remember("TMFLAT.GR", GameFiles.Resolve(dataDir + "/TMFLAT.GR"), levertex, pals[0]);
 			GrPictures.Remember("TMOBJ.GR", GameFiles.Resolve(dataDir + "/TMOBJ.GR"), othertex, pals[0]);
-			GrPictures.Remember("GENHEAD.GR", GameFiles.Resolve(dataDir + "/GENHEAD.GR"), portrTex, pals[0]);
+			GrPictures.Remember(genFile, GameFiles.Resolve(dataDir + "/" + genFile), portrTex, pals[0]);
 			GrPictures.Remember("CHARHEAD.GR", GameFiles.Resolve(dataDir + "/CHARHEAD.GR"), npcTex, pals[0]);
 			GrPictures.Remember("OBJECTS.GR", GameFiles.Resolve(dataDir + "/OBJECTS.GR"), itemsTex, pals[0]);
 		}

@@ -190,7 +190,8 @@ Contents
                  the game's palette.
   Switches / Levers, Other   levers, switches, writings, graves, bridges, pillars and so on; the
                  replacement must keep the original size.
-  Generic Portraits / NPC Portraits   conversation portraits (UW2: 64x70).
+  Generic Portraits / NPC Portraits   conversation portraits (UW2: 64x70). The generic ones,
+                 shown for an NPC without his own, are GENHEAD.GR in UW1 and GHED.GR in UW2.
   Object Graphics   object sprites (most 16x16), each with one of the game's 16-colour palettes.
   Export To PNG     writes the game's pictures to the Export folder.
   Only the pictures you replaced are written; a picture that can't be written is listed after
