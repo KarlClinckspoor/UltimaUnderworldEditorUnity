@@ -117,6 +117,8 @@ Contents
     W/S/A/D or the arrow keys move (Shift: faster), the right mouse button held looks round.
     F flies (then Q/E go down and up; walking, they change the eye height) or walks again.
     G shows or hides the ceiling, L the darkness, R rebuilds the view after edits.
+    A left click on an object selects it in the properties panel: change it there (its
+    height, say), then R shows the change.
     Esc (or the button at the top) goes back to the map, centred where you stopped.
   The level is built as the game builds it: a floor step is a quarter of a square (most
   corridors, at height 12, are one square high), the ceiling is height 16, a slope rises one

@@ -36,6 +36,9 @@ namespace UltimateEditor.View
 		bool fly, ceilingOn = true, dark = true;
 		readonly List<Transform> billboards = new List<Transform>();
 		readonly List<Mesh> meshes = new List<Mesh>();
+		/// <summary>What a click can pick: each drawn object, a point in it and a reach.</summary>
+		readonly List<KeyValuePair<StaticObject, Vector4>> pickable = new List<KeyValuePair<StaticObject, Vector4>>();
+		string picked;
 		readonly Dictionary<Texture, Material> materials = new Dictionary<Texture, Material>();
 		Material baseMaterial;
 		Uw1ExeModels models;
@@ -156,6 +159,7 @@ namespace UltimateEditor.View
 		{
 			if (world) Destroy(world);
 			billboards.Clear();
+			pickable.Clear();
 			foreach (var old in meshes) if (old) Destroy(old);
 			meshes.Clear();
 			world = new GameObject("Walk world");
@@ -279,6 +283,12 @@ namespace UltimateEditor.View
 			if (kind == WalkObjects.Kind.None) return;
 			Vector3 at = Place(so, x, y);
 			float heading = so.Direction * 45f;
+			// a click near this point picks the object (doors and wall objects a bit higher up)
+			float lift = kind == WalkObjects.Kind.Critter ? CritterHeight / 2 : kind == WalkObjects.Kind.Door ? 0.4f : 0.1f;
+			Vector3 c = at + Vector3.up * lift;
+			if (kind == WalkObjects.Kind.TmapLever || kind == WalkObjects.Kind.TmapWall)
+				c += Quaternion.Euler(0, heading, 0) * new Vector3(0.06f, kind == WalkObjects.Kind.TmapWall ? 0.4f : 0.06f, 0.06f);
+			pickable.Add(new KeyValuePair<StaticObject, Vector4>(so, new Vector4(c.x, c.y, c.z, kind == WalkObjects.Kind.TmapWall || kind == WalkObjects.Kind.Door ? 0.45f : 0.2f)));
 			Uw1ExeModels.Model m = models != null && model >= 0 && model < models.Models.Count ? models.Models[model] : null;
 			bool usable = m != null && m.Faces.Count > 0;
 			switch (kind)
@@ -389,6 +399,8 @@ namespace UltimateEditor.View
 			if (Input.GetKeyDown(KeyCode.L)) { dark = !dark; ApplyDarkness(); }
 			if (Input.GetKeyDown(KeyCode.R)) Build();
 
+			if (Input.GetMouseButtonDown(0) && !OverUi())
+				Pick();
 			if (Input.GetMouseButton(1))
 			{
 				yaw += Input.GetAxis("Mouse X") * 3f;
@@ -455,6 +467,34 @@ namespace UltimateEditor.View
 				fly = true;   // in rock: stays flying
 		}
 
+		static bool OverUi()
+		{
+			var es = UnityEngine.EventSystems.EventSystem.current;
+			return es && es.IsPointerOverGameObject();
+		}
+
+		/// <summary>Selects the object nearest along the line under the mouse, in the editor's
+		/// properties panel (edit it there, then R shows the change).</summary>
+		void Pick()
+		{
+			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+			Vector3 o = ray.origin - Origin, d = ray.direction;
+			StaticObject best = null;
+			float bestT = float.MaxValue;
+			foreach (var kv in pickable)
+			{
+				Vector3 c = new Vector3(kv.Value.x, kv.Value.y, kv.Value.z);
+				float t = Vector3.Dot(c - o, d);
+				if (t <= 0 || t > 30f) continue;
+				float dist = (o + d * t - c).magnitude;
+				if (dist <= kv.Value.w && t < bestT) { bestT = t; best = kv.Key; }
+			}
+			if (!best) { picked = null; UpdateHud(); return; }
+			ui.SelectObject(best, false);
+			picked = best.Name + " [" + best.CurrentAdress + "]";
+			UpdateHud();
+		}
+
 		static bool Typing()
 		{
 			var es = UnityEngine.EventSystems.EventSystem.current;
@@ -499,9 +539,9 @@ namespace UltimateEditor.View
 			if (!hud) return;
 			int tx = Mathf.FloorToInt(pos.x), tz = Mathf.FloorToInt(pos.z);
 			string where = tx >= 0 && tz >= 0 && tx < 64 && tz < 64 ? string.Format("square ({0}, {1}), floor height {2}", tx, tz, tiles[tx, tz].FloorHeight) : "outside the map";
-			hud.text = string.Format("{0}: {1}{2}. W/S/A/D or arrows move (Shift faster), right mouse looks, Q/E {3}, F {4}, G ceiling {5}, L darkness {6}.{7}",
+			hud.text = string.Format("{0}: {1}{2}. W/S/A/D or arrows move (Shift faster), right mouse looks, Q/E {3}, F {4}, G ceiling {5}, L darkness {6}. Click an object to select it.{7}{8}",
 				LevArk.Game.LevelName(level), where, fly ? ", flying" : "", fly ? "down/up" : "eye height", fly ? "walks" : "flies",
-				ceilingOn ? "on" : "off", dark ? "on" : "off", note != null ? "\n" + note : "");
+				ceilingOn ? "on" : "off", dark ? "on" : "off", picked != null ? "\nSelected: " + picked + " (edit it in the panel, then R)" : "", note != null ? "\n" + note : "");
 		}
 
 		public void Exit()
