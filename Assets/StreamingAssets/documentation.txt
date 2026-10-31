@@ -85,13 +85,14 @@ Contents
   The properties panel also lists what links to the object ("Linked from"), the triggers whose
   chain runs on its square, and the squares it acts on (a trigger's target, a teleport's
   destination, where a trap's chain runs); each has a button that goes there. Those squares
-  are marked on the map with red crosshairs while the object is selected.
+  are marked on the map with magenta crosshairs while the object is selected.
   Right click an object: "Copy", "Remove", "Add trigger", "Inventory" (select an object inside
   it), and "Link trigger", "Link trap" or "Link lever" depending on the object. Right click a
   tile: "Add object", "Add move trigger", "Add trap", "Paste object".
 
 2.4) Tile mode
-  Left click selects a tile and shows its properties. Holding the right button paints tiles with
+  Left click selects a tile and shows its properties: type, height, door, antimagic and, in UW2,
+  the light flag (10.7). Holding the right button paints tiles with
   the template shown above the modes panel. The mouse wheel over the selected tile changes its
   height; objects lying on the floor move with it, doors are repositioned.
 
@@ -221,7 +222,7 @@ Contents
   Schedules (UW2 SCD.ARK)   the schedules that move NPCs and the plot by the clocks (see 10.5).
   Automap and map notes   which squares the player has mapped, and the notes written on the map.
   Level light (UW2)   DL.DAT's minimum light for the shown level, and the light flag of its
-       squares: shows the flagged squares, toggles the selected tile, or sets or clears the
+       squares: shows the flagged squares in blue, toggles the selected tile, or sets or clears the
        flag on each tile clicked in tile mode (see 10.7).
   Show the randomizer tools   Sector mode and the zone tools (work in progress).
   Log conversation steps   writes every step of converting and playing conversations to the

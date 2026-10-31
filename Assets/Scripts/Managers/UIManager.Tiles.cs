@@ -48,6 +48,11 @@ public partial class UIManager
 			tile.IsDoor = tog.isOn;
 		else if (tog.gameObject.name == "Antimagic")
 			tile.IsAntimagic = tog.isOn;
+		else if (tog.gameObject.name == "LightFlag")
+		{
+			tile.LightFlag = tog.isOn;
+			UltimateEditor.Uw1.UI.LightWindow.Changed();
+		}
 	}
 
 	public void ChangeTileProperty(InputField input)

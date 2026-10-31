@@ -37,6 +37,21 @@ public class MapCreator : MonoBehaviour {
 	private static Material spriteMaterial;
 	/// <summary>The material object sprites use (for code-built overlays).</summary>
 	public static Material SpriteMat { get { return spriteMaterial; } }
+	static Material overlayMaterial;
+	/// <summary>A copy of the sprite material with a white tint, so code-built overlays show
+	/// their own colours (the sprite material's tint turned them green).</summary>
+	public static Material OverlayMaterial
+	{
+		get
+		{
+			if (!overlayMaterial && spriteMaterial)
+			{
+				overlayMaterial = new Material(spriteMaterial);
+				overlayMaterial.color = Color.white;
+			}
+			return overlayMaterial;
+		}
+	}
 	/// <summary>Levels are loaded (LevelData is set).</summary>
 	public static bool IsLoaded { get { return LevelData != null && LevelData.Count > 0; } }
 

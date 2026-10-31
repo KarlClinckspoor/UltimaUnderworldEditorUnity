@@ -183,11 +183,11 @@ public class TargetMarkers : MonoBehaviour
 		var go = new GameObject("crosshair");
 		go.transform.SetParent(transform, false);
 		var lr = go.AddComponent<LineRenderer>();
-		if (MapCreator.SpriteMat) lr.material = MapCreator.SpriteMat;
+		if (MapCreator.OverlayMaterial) lr.material = MapCreator.OverlayMaterial;
 		lr.sortingLayerName = "Items";
 		lr.sortingOrder = 5;
-		lr.startWidth = lr.endWidth = 0.025f;
-		lr.startColor = lr.endColor = new Color(1f, 0.15f, 0.1f, 0.95f);
+		lr.startWidth = lr.endWidth = 0.04f;
+		lr.startColor = lr.endColor = new Color(1f, 0f, 1f, 1f);	// magenta
 		lr.positionCount = 2;
 		lr.SetPositions(new[] { a, b });
 	}

@@ -82,8 +82,22 @@ public class PropertiesPanel : MonoBehaviour {
 		}
 	}
 
+	/// <summary>How much wider than the scene's 257 pixels the panel is made: its rows were
+	/// too tight for the longer labels.</summary>
+	const float WidthScale = 1.3f;
+
 	private void Awake()
 	{
+		var panelRect = transform as RectTransform;
+		if (panelRect)
+			panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * WidthScale, panelRect.sizeDelta.y);
+		// the rows of the basic panel stretch to its width
+		var rows = BasicPanel ? BasicPanel.GetComponent<VerticalLayoutGroup>() : null;
+		if (rows)
+		{
+			rows.childControlWidth = true;
+			rows.childForceExpandWidth = true;
+		}
 		//Types.AddOptions(StaticObject.GetTypes());
 		List<int> statics = StaticObject.GetStaticTypes();
 		for (int i = 0; i < statics.Count; i++)

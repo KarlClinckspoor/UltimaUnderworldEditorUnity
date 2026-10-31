@@ -296,6 +296,7 @@ namespace UltimateEditor.Uw1.UI
 		{
 			var root = UiKit.Rect("Window " + title, ui.transform);
 			Root = root.gameObject;
+			width *= 1.2f;	// the windows were tight for their rows
 			root.sizeDelta = new Vector2(width, height);
 			root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
 			root.anchoredPosition = Vector2.zero;

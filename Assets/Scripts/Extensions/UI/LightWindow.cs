@@ -126,7 +126,7 @@ namespace UltimateEditor.Uw1.UI
 			Changed();
 		}
 
-		static void Changed()
+		public static void Changed()
 		{
 			if (overlay) overlay.Dirty = true;
 		}
@@ -164,17 +164,18 @@ namespace UltimateEditor.Uw1.UI
 				Destroy(transform.GetChild(i).gameObject);
 			var ld = MapCreator.LevelData[shownLevel - 1];
 			float ts = MapCreator.TileSize * 2.0f;
-			var color = new Color(0.2f, 0.45f, 1f, 0.35f);
+			var color = new Color(0.15f, 0.45f, 1f, 0.5f);
 			foreach (var t in ld.MapTiles)
 			{
 				if (t == null || !t.LightFlag || t.TileType == TileType.Solid) continue;
 				var q = new GameObject("flag " + t.Position.x + "/" + t.Position.y);
 				q.transform.SetParent(transform, false);
-				q.transform.position = new Vector3(t.Position.x * ts, t.Position.y * ts, MapCreator.GetTileHeight(t) - 0.002f);
+				q.transform.position = new Vector3(t.Position.x * ts, t.Position.y * ts, MapCreator.GetTileHeight(t) - 0.01f);
 				var sr = q.AddComponent<SpriteRenderer>();
 				sr.sprite = sprite;
 				sr.color = color;
-				if (MapCreator.SpriteMat) sr.material = MapCreator.SpriteMat;
+				if (MapCreator.OverlayMaterial) sr.material = MapCreator.OverlayMaterial;
+				sr.sortingLayerName = "Items";	// as the crosshairs, which draw above the floor
 				sr.sortingOrder = 0;
 			}
 		}

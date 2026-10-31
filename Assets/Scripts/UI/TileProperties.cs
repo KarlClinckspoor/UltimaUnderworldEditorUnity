@@ -23,11 +23,57 @@ public class TileProperties : MonoBehaviour {
 	public static MapTile LastSelected;
 	public static int LastSelectedLevel;
 
+	Toggle lightFlag;
+	GameObject lightFlagLabel;
+	bool settingUp;
+
+	/// <summary>UW2's light flag (MapTile.LightFlag): a copy of the Door toggle and its label,
+	/// on the free right half of the Door row. UW1 has no use for the bit, so it is hidden there.</summary>
+	void ensureLightFlagToggle()
+	{
+		if (lightFlag)
+			return;
+		Transform label = Door.transform.parent.Find("DoorT");
+		if (label)
+		{
+			lightFlagLabel = Instantiate(label.gameObject, label.parent);
+			lightFlagLabel.name = "LightFlagT";
+			var lrt = (RectTransform)lightFlagLabel.transform;
+			lrt.anchoredPosition += new Vector2(112f, 0f);
+			var text = lightFlagLabel.GetComponentInChildren<Text>();
+			if (text) text.text = "Light flag";
+			UltimateEditor.Uw1.UI.UiKit.Tooltip(lightFlagLabel, "UW2: with the level's DL.DAT entry, decides whether the level's minimum light applies on this square (Tools > Level light).");
+		}
+		GameObject copy = Instantiate(Door.gameObject, Door.transform.parent);
+		copy.name = "LightFlag";	// UIManager.ChangeTileFlag knows it by this name
+		var rt = (RectTransform)copy.transform;
+		rt.anchoredPosition = new Vector2(-18.5f, rt.anchoredPosition.y);
+		lightFlag = copy.GetComponent<Toggle>();
+		lightFlag.onValueChanged.AddListener(v =>
+		{
+			if (settingUp || LastSelected == null || LastSelected.LightFlag == v)
+				return;
+			LastSelected.LightFlag = v;
+			UltimateEditor.Uw1.UI.LightWindow.Changed();
+		});
+	}
+
 	public void SetTile(MapTile tile)
 	{
 		LastSelected = tile;
 		LastSelectedLevel = tile.Level;
 		UltimateEditor.Uw1.UI.LightWindow.OnTileSelected(tile);
+		bool uw2 = LevArk.Game.Kind == UltimateEditor.Games.GameKind.UW2;
+		if (uw2)
+			ensureLightFlagToggle();
+		if (lightFlag)
+		{
+			lightFlag.gameObject.SetActive(uw2);
+			if (lightFlagLabel) lightFlagLabel.SetActive(uw2);
+			settingUp = true;
+			try { lightFlag.isOn = tile.LightFlag; }
+			finally { settingUp = false; }
+		}
 
 		TileType.value = (int)tile.TileType;
 
